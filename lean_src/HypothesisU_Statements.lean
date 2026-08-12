@@ -1,6 +1,11 @@
-/- STATUS: DRAFT - AWAITING HUMAN STATEMENT-ADEQUACY AUDIT (PLAN.md F2).
-   Not yet cited by LEDGER.md. Statements here define what will be proven; per the project's
-   oversight split the machine checks proofs, the human audits the questions. -/
+/- STATUS: DRAFT v2 - the two open statement-level questions (Q1, Q2) were DECIDED BY THE
+   HUMAN OWNER on 2026-08-12 and are implemented below:
+     Q1 -> initial data is PROJECTED at each cutoff (`truncate N u0`), mirroring the continuum
+           definition u(0) = J_{sqrt(alpha')} u0 and closing the vacuity leak at every N.
+     Q2 -> the enstrophy weight is CONCRETE: w n = (k n)^2 = 4^n with dyadic k n = 2^n
+           (`dyadicWeight`), making enstrophy provably nonnegative (`enstrophy_nonneg_dyadic`).
+   Remaining audit: overall statement adequacy (does `HypothesisU` below mean what
+   docs/HYPOTHESIS_U_SPECIFICATION.md section I means). Not yet cited by LEDGER.md as a claim. -/
 
 import Mathlib.Analysis.Calculus.Deriv.Basic
 import Mathlib.Algebra.BigOperators.Group.Finset.Basic
@@ -31,13 +36,14 @@ below are the machine-checked form of exactly that refutation, so the defect is 
 as a proved fact rather than as prose.
 
 **How `IsGalerkinSolution` blocks the scaling counterexample.** The scaling map
-`u ↦ (fun s n => c * u s n)` sends the initial condition `u 0 = u₀` to `c • u₀ ≠ u₀` (for
-`c ≠ 1`, `u₀ ≠ 0`), so a rescaled solution no longer satisfies clause (i) with the *same*
-fixed data. It also fails clause (ii): the drift term `B n (u t)` is a fixed given function of
-the state, not assumed homogeneous, while the viscous term `- ν · w n · u t n` is linear, so
+`u ↦ (fun s n => c * u s n)` sends the initial condition `u 0 = truncate N u₀` to
+`c • truncate N u₀ ≠ truncate N u₀` (for `c ≠ 1` and `u₀` not identically `0` on modes `≤ N`),
+so a rescaled solution no longer satisfies clause (i) with the *same* fixed data. It also
+fails clause (ii): the drift term `B n (u t)` is a fixed given function of the state, not
+assumed homogeneous, while the viscous term `- ν · w n · u t n` is linear, so
 `c · (dependence)` cannot in general reproduce the right-hand side at the rescaled state. The
-family being bounded is thus the (single) orbit of one datum under one evolution law, indexed
-by the cutoff `N` — not a linear space closed under dilation.
+family being bounded is thus the (single) orbit of one *projected* datum under one evolution
+law, indexed by the cutoff `N` — not a linear space closed under dilation.
 
 ## Scope — deliberately modest (declared for the audit)
 
@@ -58,15 +64,21 @@ per PLAN.md rule E-1 and the instruction to reduce scope rather than admit an un
   * The identification `N ≈ 1/√α'`: `N` is left as a bare cutoff index; the correspondence to
     the T-dual parameter `α'` is narrative and is not asserted formally here.
 
-## Two questions this draft raises FOR THE HUMAN AUDIT (not decided here)
+## Two questions raised by the v1 draft — DECIDED by the human owner, 2026-08-12
 
-  Q1. `HypothesisU` fixes one `u₀ : ℕ → ℝ` across all cutoffs `N`. Clause (iii) forces
-      `u₀ n = 0` for `n > N`, so for a `u₀` with modes above `N` the hypothesis set is empty
-      and the bound holds vacuously at that `N`. The alternative — projecting `u₀` onto modes
-      `≤ N` at each cutoff — is a *statement-level* choice (PLAN.md E-4) and is therefore
-      **not** made by this agent. The literal reading prescribed by the task is implemented.
-  Q2. Whether `w` should be constrained (e.g. `0 < w n`, or `w n = k n ^ 2`) is likewise left
-      open: `w` is an unconstrained parameter here, so `enstrophy` is not asserted nonnegative.
+  Q1 (was open). `HypothesisU` fixes one `u₀ : ℕ → ℝ` across all cutoffs `N`; clause (iii)
+      forces `u t n = 0` for `n > N`. The v1 draft used the *literal* `u 0 = u0`, which is
+      empty (vacuous) at any `N` below `u₀`'s support. **Decision: project `u₀` at each
+      cutoff.** Clause (i) is now `u 0 = truncate N u0` (see `truncate` below), mirroring the
+      continuum definition `u(0) = J_{√α'} u₀` in `docs/HYPOTHESIS_U_SPECIFICATION.md` §I. A
+      solution family now exists at *every* `N` for *every* `u₀` — `truncate_zero` witnesses
+      this is not itself a vacuity trick (the zero-flow instance still needs `hB`, unchanged).
+  Q2 (was open). **Decision: `w` is fixed concretely to `dyadicWeight n = (2^n)²`** — the
+      squared dyadic wavenumber, morally `k_n²` from the Katz–Pavlović model in
+      `lean_src/DyadicShells.lean`. `enstrophy_nonneg_dyadic` below proves the resulting
+      functional is genuinely a sum of squares (nonnegative), so "enstrophy" is not merely a
+      name. The general (abstract-`w`) definitions are kept — `HypothesisU_dyadic` is the
+      concrete specialization built from them, not a replacement.
 -/
 
 namespace MechanicaFluidorum
@@ -85,10 +97,24 @@ Conventions, all of which are **quantified parameters, never global constants** 
   is deferred, and that instantiation is where the entire mathematical content of the program
   resides. Inventing a specific convolution at this point is banned by PLAN.md rule E-1. -/
 
+/-- Projection of an initial datum `u0` onto the modes retained at cutoff `N`: identity below
+(and at) the cutoff, zero above. This is the discrete analogue of the continuum projection
+`J_{√α'}` applied to the initial data (`docs/HYPOTHESIS_U_SPECIFICATION.md` §I). -/
+def truncate (N : ℕ) (u0 : ℕ → ℝ) : ℕ → ℝ := fun n => if n ≤ N then u0 n else 0
+
+/-- The zero datum truncates to the zero datum, at every cutoff. Non-vacuity check that
+`truncate` is not itself hiding a vacuity trick: it acts as the identity on the only case that
+matters for the `zero_isGalerkinSolution` witness below. -/
+theorem truncate_zero (N : ℕ) : truncate N (fun _ => (0 : ℝ)) = fun _ => (0 : ℝ) := by
+  funext n; unfold truncate; split_ifs <;> rfl
+
 /-- `IsGalerkinSolution N nu B w u0 u` says the time-dependent mode-amplitude vector
 `u : ℝ → (ℕ → ℝ)` is a solution of the `N`-truncated system with initial datum `u0`:
 
-1. **initial condition** `u 0 = u0`;
+1. **initial condition** `u 0 = truncate N u0` — the datum *projected onto the retained
+   modes*, decided 2026-08-12 (Q1 above) to close the vacuity leak of the v1 draft: with the
+   literal `u 0 = u0`, any `u0` carrying a mode above `N` made the hypothesis set at that `N`
+   empty, so `HypothesisU` held there vacuously;
 2. **evolution law** for every time `t` and every retained mode `n ≤ N`,
    `d/ds (u s n) |_{s = t} = B n (u t) - nu * w n * u t n`;
 3. **truncation** every discarded mode `n > N` vanishes identically in time.
@@ -97,7 +123,7 @@ Clauses (1) and (2) are precisely what the prior formalization omitted (finding 
 what makes the family in `HypothesisU` a genuine constraint rather than "all smooth fields". -/
 def IsGalerkinSolution (N : ℕ) (nu : ℝ) (B : ℕ → (ℕ → ℝ) → ℝ) (w : ℕ → ℝ)
     (u0 : ℕ → ℝ) (u : ℝ → ℕ → ℝ) : Prop :=
-  u 0 = u0
+  u 0 = truncate N u0
   ∧ (∀ t : ℝ, ∀ n : ℕ, n ≤ N →
       HasDerivAt (fun s : ℝ => u s n) (B n (u t) - nu * w n * u t n) t)
   ∧ (∀ t : ℝ, ∀ n : ℕ, N < n → u t n = 0)
@@ -131,6 +157,45 @@ def HypothesisU (nu T : ℝ) (B : ℕ → (ℕ → ℝ) → ℝ) (w : ℕ → �
 -- (`zero_isGalerkinSolution`), which is the non-vacuity obligation of SPEC §7.5 for the
 -- definitions this file introduces.
 
+/-! ## 1b. The concrete dyadic weight (Q2, decided 2026-08-12)
+
+`enstrophy` above is parametric in `w`, so it is not provably nonnegative in general — a
+functional called "enstrophy" that could be negative is a name with no content. The general
+form is kept (it is the honest level of abstraction while `B`'s instantiation is open), and
+the concrete instance intended by the program — matching the Katz–Pavlović wavenumbers of
+`lean_src/DyadicShells.lean` — is fixed here. -/
+
+/-- Dyadic wavenumber `k n = 2ⁿ`, matching `lean_src/DyadicShells.lean`. -/
+noncomputable def dyadicWavenumber (n : ℕ) : ℝ := (2 : ℝ) ^ n
+
+/-- The concrete enstrophy weight: squared dyadic wavenumber, `w n = 4ⁿ`. -/
+noncomputable def dyadicWeight (n : ℕ) : ℝ := (dyadicWavenumber n) ^ 2
+
+/-- The dyadic weight is strictly positive at every mode. -/
+theorem dyadicWeight_pos (n : ℕ) : 0 < dyadicWeight n := by
+  unfold dyadicWeight dyadicWavenumber; positivity
+
+/-- **General nonnegativity.** For any weight bounded below by `0`, `enstrophy` is a
+nonnegative sum of squares — the minimal fact that makes the name "enstrophy" honest. -/
+theorem enstrophy_nonneg (N : ℕ) (w : ℕ → ℝ) (hw : ∀ n, 0 ≤ w n)
+    (u : ℝ → ℕ → ℝ) (t : ℝ) : 0 ≤ enstrophy N w u t := by
+  unfold enstrophy
+  exact Finset.sum_nonneg (fun n _ => mul_nonneg (hw n) (sq_nonneg _))
+
+/-- Specialization to the concrete dyadic weight: enstrophy is genuinely nonnegative for the
+weight the program actually uses. -/
+theorem enstrophy_nonneg_dyadic (N : ℕ) (u : ℝ → ℕ → ℝ) (t : ℝ) :
+    0 ≤ enstrophy N dyadicWeight u t :=
+  enstrophy_nonneg N dyadicWeight (fun n => (dyadicWeight_pos n).le) u t
+
+/-- **Hypothesis U (dyadic-concrete form).** `HypothesisU` specialized to the weight the
+program actually studies — the same statement as `HypothesisU` with `w := dyadicWeight`
+pinned. This is the object `docs/HYPOTHESIS_U_SPECIFICATION.md` §I refers to informally as
+"the enstrophy of the regularized velocity field"; the connection to the true `L²(𝕋³)` norm
+remains outside this file's scope (declared exclusion, above). -/
+def HypothesisU_dyadic (nu T : ℝ) (B : ℕ → (ℕ → ℝ) → ℝ) (u0 : ℕ → ℝ) : Prop :=
+  HypothesisU nu T B dyadicWeight u0
+
 /-! ## 2. Non-vacuity: `IsGalerkinSolution` is inhabited -/
 
 /-- The zero flow solves the truncated system with zero data, provided the interaction term
@@ -141,7 +206,7 @@ quantifies over *all* solutions with the given data, not merely over one. -/
 theorem zero_isGalerkinSolution (N : ℕ) (nu : ℝ) (B : ℕ → (ℕ → ℝ) → ℝ) (w : ℕ → ℝ)
     (hB : ∀ n : ℕ, B n (fun _ => (0 : ℝ)) = 0) :
     IsGalerkinSolution N nu B w (fun _ => (0 : ℝ)) (fun _ _ => (0 : ℝ)) := by
-  refine ⟨rfl, ?_, ?_⟩
+  refine ⟨(truncate_zero N).symm, ?_, ?_⟩
   · intro t n _
     have h : B n (fun _ => (0 : ℝ)) - nu * w n * 0 = 0 := by rw [hB n]; ring
     rw [h]
@@ -242,7 +307,11 @@ interaction term to vanish at the zero state (it is not a free lunch). NC3 check
 refutation of the unconstrained statement is not vacuous: it really needs one retained mode to
 carry positive weight. -/
 
+#print axioms truncate_zero
 #print axioms zero_isGalerkinSolution
+#print axioms dyadicWeight_pos
+#print axioms enstrophy_nonneg
+#print axioms enstrophy_nonneg_dyadic
 #print axioms enstrophy_zero
 #print axioms enstrophy_smul
 #print axioms enstrophy_unbounded_under_scaling

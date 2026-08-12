@@ -59,23 +59,25 @@ abstract classes — not yet about fluids.*
 | **Dyadic energy flux telescopes** (exact ℚ, N=1..12, 240 cases) + partial-sum form (1800 cases); negative control (k_{n-1}→k_n) fails with residual 2/3 | D1 | `tests/tier_b_dyadic_checks.py` |
 | Exact 3-D periodic percolation instrument: union-find, wrap detection, 27 checks; negative control (drop x-periodicity) fails | T0.3 | `symbolic/percolation_exact.py`, `tests/test_percolation.py` |
 
-## Awaiting human statement-adequacy audit (NOT tiered — no claim may cite these)
+## Tier A — `lean_src/HypothesisU_Statements.lean` (statement shape; audited 2026-08-12)
 
-`lean_src/HypothesisU_Statements.lean` compiles clean (5 theorems, clean footprints) but its
-*statements* are unaudited, so nothing in it is a claim yet. Notably it **proves the prior
-formalization was false**: `unconstrained_bound_false` machine-checks that "for all fields u,
-enstrophy ≤ C" is refutable (via degree-2 homogeneity `enstrophy_smul`), converting
-REVIEW finding L3 from prose into a theorem.
+Q1 and Q2 (below) were **decided by the human owner 2026-08-12** and implemented same day;
+recompiled independently, 9 theorems, all footprints clean. The *shape* of the statement is
+now audited; the *instantiation* of `B` by the true NSE nonlinearity remains explicitly
+out of scope (declared exclusion in the file) and is where the program's real content lives.
 
-**Two questions the authoring agent raised and correctly refused to decide (PLAN.md E-4):**
+| Claim | Formal name | Decision |
+|---|---|---|
+| `truncate` projects `u₀` onto modes ≤ N; `truncate 0-datum = 0-datum` | `truncate`, `truncate_zero` | Q1: projected initial data, mirroring `u(0)=J_{√α'}u₀` |
+| `IsGalerkinSolution` clause (i) is `u 0 = truncate N u0` — no vacuity leak across cutoffs | `IsGalerkinSolution` | Q1 |
+| Concrete weight `w n = (2ⁿ)²`, matching `DyadicShells.lean`'s `k_n` | `dyadicWavenumber`, `dyadicWeight` | Q2: concrete `w n = k n²` |
+| Enstrophy is genuinely nonnegative (general `w ≥ 0`, and the concrete dyadic instance) | `enstrophy_nonneg`, `enstrophy_nonneg_dyadic` | Q2 |
+| Concrete top-level statement | `HypothesisU_dyadic` | Q1+Q2 combined |
+| **The prior formalization is provably false** (machine-checked, not prose) | `unconstrained_bound_false` (via `enstrophy_smul`) | — |
+| `IsGalerkinSolution` is inhabited (non-vacuity, §7.5) | `zero_isGalerkinSolution` | — |
 
-- **Q1 (vacuity leak, load-bearing).** `HypothesisU` fixes one `u₀` across all cutoffs `N`,
-  while clause (iii) forces `u t n = 0` for `n > N`. So if `u₀` has any mode above `N`, no
-  solution exists at that `N` and the bound holds **vacuously** there. Fix requires choosing
-  between (a) projecting `u₀` onto modes ≤ N at each cutoff, or (b) restricting to finitely
-  supported `u₀`. **This is a statement-level decision for the human owner.**
-- **Q2.** Whether the weight `w` should be constrained (`0 < w n`, or `w n = k n²`). Currently
-  unconstrained, so `enstrophy` is not even asserted nonnegative.
+*Remaining open item, unaffected by Q1/Q2:* `B` (the mode-interaction term) is still an
+abstract parameter; no claim about actual Navier–Stokes solutions may be drawn from this file.
 
 ## Tier C — conjectures, analogies, unformalized arguments
 
@@ -92,6 +94,7 @@ REVIEW finding L3 from prose into a theorem.
 | OP-1: Derive J_{√α'} dynamics from Reff metric | Open problem; metric = inspiration only | Research frontier (deferred). |
 | Sym² lock relevance to NSE cascade | To be earned in Stage 1 dyadic lab | Validated empirically + formally (Stage 1). |
 | All physical narrative (cosmology, dark sector) | Quarantined in `docs/narrative/` | Never imported by `lean_src/`. |
+| **OP-2…OP-5 draft definitions** (Sym²-spectrum embedding, enstrophy echo, entropy functional, percolation coupling) | Drafted 2026-08-12, **awaiting human audit** (PLAN.md §6 — audit is what unblocks, not authorship) | `docs/designs/TRACK_DEFINITIONS_DRAFT.md`. Surfaces a structural finding: the proposed T3 (`h=Ω, ū=0`) collapses into the direct production-identity attack rather than being independent; T1 and T4 share the OP-2 embedding and so are correlated, not independent, measurements. |
 
 ## Retired / corrected claims
 
