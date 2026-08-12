@@ -1,0 +1,31 @@
+== Gate 1: Tier B exact-arithmetic harness ==
+[B1] Sym² lock, constant coefficients (exact ℚ sweep)
+  196 (a,b,u0,u1) cases × 11 indices, all exact
+[B2] Sym² lock, variable coefficients (exact ℚ sweep)
+  13 indices, all exact
+[B3] Reff laws over ℚ (sqrt-free: square comparisons)
+  35 (α,R) pairs, all exact
+[B4] Guess-and-prove: recover L3 coefficients from data (exact ℚ)
+  recovered (X,Y,Z)=(43/28,-215/196,125/343) — matches closed form, predicts 6 unseen indices
+[B5] Sharpness at the self-dual radius + piecewise equivalence
+  sharpness strict off the self-dual point; piecewise ≡ max for R>0; differs at R=-1 (−4 vs −1) as required
+[B6] Spectral form of the Sym² lock (elementary symmetric functions)
+  5 root pairs: e1/e2/e3 match L3 coefficients exactly
+
+TIER B GATE: PASS (all checks exact, zero floating point)
+
+== Gate 2: Lean 4 kernel (Tier A) ==
+'CallensDualScale.Reff_pos' depends on axioms: [propext, Classical.choice, Quot.sound]
+'CallensDualScale.Reff_ge_sqrt' depends on axioms: [propext, Classical.choice, Quot.sound]
+'CallensDualScale.Reff_bounce' depends on axioms: [propext, Classical.choice, Quot.sound]
+'CallensDualScale.Reff_inertial' depends on axioms: [propext, Classical.choice, Quot.sound]
+'CallensDualScale.Reff_tdual' depends on axioms: [propext, Classical.choice, Quot.sound]
+'CallensDualScale.Reff_gt_sqrt_of_ne' depends on axioms: [propext, Classical.choice, Quot.sound]
+'CallensDualScale.Reff_eq_sqrt_iff' depends on axioms: [propext, Classical.choice, Quot.sound]
+'CallensDualScale.tDualRadius_eq_Reff' depends on axioms: [propext, Classical.choice, Quot.sound]
+'CallensDualScale.genesis_no_singularity' depends on axioms: [propext, Classical.choice, Quot.sound]
+'CallensDualScale.sym2_recurrence' depends on axioms: [propext, Classical.choice, Quot.sound]
+'CallensDualScale.sym2_recurrence_seq' depends on axioms: [propext, Classical.choice, Quot.sound]
+'CallensDualScale.sym2_symmetric_functions' depends on axioms: [propext, Classical.choice, Quot.sound]
+'CallensDualScale.wave_mass_nonzero' depends on axioms: [propext, Classical.choice, Quot.sound]
+TIER A GATE: PASS (clean 3-axiom footprint, zero sorry)

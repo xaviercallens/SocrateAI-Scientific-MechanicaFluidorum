@@ -1,0 +1,41 @@
+/tmp/claude-1000/-home-xavkal-xdev-SocrateAI-Scientific-MechanicaFluidorum/aa73f732-7658-48bb-b3f8-97e4fdeaffa0/scratchpad/Proposed.lean:65:6: error: Type mismatch
+  Eq.symm (Real.sq_sqrt (le_of_lt alpha_prime_pos))
+has type
+  alpha_prime = √alpha_prime ^ 2
+but is expected to have type
+  alpha_prime = √alpha_prime * √alpha_prime
+/tmp/claude-1000/-home-xavkal-xdev-SocrateAI-Scientific-MechanicaFluidorum/aa73f732-7658-48bb-b3f8-97e4fdeaffa0/scratchpad/Proposed.lean:72:6: error: Type mismatch
+  mul_div_assoc (√alpha_prime) (√alpha_prime) R
+has type
+  √alpha_prime * √alpha_prime / R = √alpha_prime * (√alpha_prime / R)
+but is expected to have type
+  √alpha_prime * (√alpha_prime / R) = √alpha_prime * √alpha_prime / R
+/tmp/claude-1000/-home-xavkal-xdev-SocrateAI-Scientific-MechanicaFluidorum/aa73f732-7658-48bb-b3f8-97e4fdeaffa0/scratchpad/Proposed.lean:73:8: error: Tactic `rewrite` failed: Did not find an occurrence of the pattern
+  √alpha_prime * √alpha_prime / R
+in the target expression
+  √alpha_prime * (√alpha_prime / R) > √alpha_prime
+
+case pos
+R : ℝ
+hR : 0 < R
+h : R < √alpha_prime
+h_sqrt_pos : 0 < √alpha_prime
+h1 : R < √alpha_prime
+h2 : 0 < √alpha_prime
+h3 : alpha_prime = √alpha_prime * √alpha_prime
+h4 : √alpha_prime / R > 1
+h5 : √alpha_prime * (√alpha_prime / R) > √alpha_prime
+h6 : √alpha_prime * (√alpha_prime / R) = √alpha_prime * √alpha_prime / R
+⊢ √(√alpha_prime * √alpha_prime) ≤ √alpha_prime * √alpha_prime / R
+/tmp/claude-1000/-home-xavkal-xdev-SocrateAI-Scientific-MechanicaFluidorum/aa73f732-7658-48bb-b3f8-97e4fdeaffa0/scratchpad/Proposed.lean:76:4: error: Type mismatch
+  h
+has type
+  ¬R < √alpha_prime
+but is expected to have type
+  √alpha_prime ≤ R
+'CallensDualScale.genesis_no_singularity' depends on axioms: [propext,
+ CallensDualScale.alpha_prime_pos,
+ Classical.choice,
+ Quot.sound]
+'CallensDualScale.Reff_ge_sqrt' depends on axioms: [propext, sorryAx, Classical.choice, Quot.sound]
+'CallensDualScale.sym2_recurrence' depends on axioms: [propext, Classical.choice, Quot.sound]
