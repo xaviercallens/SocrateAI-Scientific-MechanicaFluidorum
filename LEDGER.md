@@ -99,21 +99,40 @@ abstract classes — not yet about fluids.*
 | Claim | Formal name | Since |
 |---|---|---|
 | Untruncated (`N→∞`) solution family is inhabited (zero flow, given `hB`) | `zero_isFullSolution` | 2026-08-12 |
-| **The reduction itself**: `HypothesisU` + `AubinLionsStatement` + `ProdiSerrinStatement` ⇒ `GlobalRegularityStatement` | `millennium_reduction` | 2026-08-12 |
+| Sobolev-level weight `k_n^{2s}` is nonnegative for any `k` (even exponent) | `sobolevWeight_nonneg` | 2026-08-12 |
+| Zero flow is spatially smooth (every Sobolev class `H^s`) at every time | `zero_isSpatiallySmooth` | 2026-08-12 |
+| **The reduction itself**: `∀T,HypothesisU` + `AubinLionsStatement` + `ProdiSerrinStatement` ⇒ `GlobalRegularityStatement` (time- and space-regular) | `millennium_reduction` | 2026-08-12 |
 | `HasBoundedFullLimit`/`GlobalRegularityStatement` are satisfiable, not vacuous (zero-flow witnesses) | `zero_has_bounded_full_limit`, `zero_global_regularity` | 2026-08-12 |
 
-5 theorems, all footprints clean, independently recompiled. **CONDITIONAL SKELETON — proves no
+7 theorems, all footprints clean, independently recompiled. **CONDITIONAL SKELETON — proves no
 PDE content.** `AubinLionsStatement` and `ProdiSerrinStatement` are named `Prop`-valued
 hypothesis parameters (never axioms, per `docs/REVIEW-2026-08-12.md` L7) standing for the
 undischarged Aubin–Lions compactness step and Prodi–Serrin regularity criterion
 (SPEC.md §1.1 / `docs/HYPOTHESIS_U_SPECIFICATION.md` §II); `millennium_reduction`'s proof is the
 one-line composition `hPS (hAL hU)` — all analytic weight is parked in the two hypotheses'
 *types*, not proved here. Design + derivation: `docs/designs/F3_MILLENNIUM_REDUCTION_SKELETON.md`.
-Three hand-derived negative controls run against scratch perturbed copies and confirmed to fail
-exactly as predicted (type mismatches at the `hAL`/`hPS` join point; `unknown identifier hB`).
-**Status: awaiting human statement-adequacy audit** (PLAN.md's oversight split — authorship by
-the top-tier agent never itself licenses the claim; same DRAFT-pending-audit posture as F2's
-`HypothesisU_Statements.lean` before its Q1/Q2 audit).
+
+**Audit round 1 (2026-08-12), human-owner decisions recorded (Q3/Q4/Q5, same pattern as F2's
+Q1/Q2):** the author's own adversarial self-review against SPEC.md's actual Proposition 5.1
+text found — and the human owner accepted repairs for — three adequacy gaps in the first
+version: **Q3** `GlobalRegularityStatement` covered only time-regularity (`HasDerivAt`
+existing for all `t`), not spatial smoothness; repaired by adding `IsSpatiallySmooth`
+(membership in the Fourier-side Sobolev class `H^s` for *every* `s`, the standard
+Fourier-coefficient-decay characterization of `C^∞` on a torus) and a genuine wavenumber
+parameter `k` with `w n = (k n)²` (`hwk`). **Q4** the theorem took a single fixed `T` yet
+concluded a `T`-independent result, silently absorbing SPEC.md's "for all T" into
+`ProdiSerrinStatement`'s undischarged content; repaired by quantifying `hU` over all `T`
+explicitly. **Q5** `HasBoundedFullLimit` didn't require `w ≥ 0` (unlike F2's own
+`enstrophy_nonneg`), so "bounded partial sums" didn't cleanly mean "enstrophy controlled";
+repaired by threading `hw : ∀ n, 0 ≤ w n` through. Four hand-derived negative controls
+(NC1–NC3 re-verified against the revised structure, NC4 newly added — a statement-adequacy
+risk, not a compile-time-checkable one) confirmed to behave as predicted. Both gates
+independently re-run and PASS after the revision.
+
+**Status: awaiting full human statement-adequacy audit** (PLAN.md's oversight split —
+authorship by the top-tier agent, even through a self-review pass, never itself licenses the
+claim; same DRAFT-pending-audit posture as F2's `HypothesisU_Statements.lean` before its
+Q1/Q2 audit — Q3/Q4/Q5 fixed three found gaps, they do not certify no others remain).
 
 ## Tier B — exact-arithmetic verified (ℚ, zero floats)
 

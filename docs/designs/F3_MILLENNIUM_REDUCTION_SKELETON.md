@@ -116,6 +116,38 @@ exactly what makes the join point robust to this class of edit. The table above 
 version of NC1 that actually exercises the risk — a caller inlining a slightly different type
 instead of using the shared name.)
 
+## Audit round 1 (2026-08-12) — self-review findings and human-owner decisions
+
+Before handing this off for a full statement-adequacy audit, the author re-read the file
+adversarially against SPEC.md's actual Proposition 5.1 text (not just PLAN.md's one-line F3
+objective) and found three gaps. The human owner reviewed all three and accepted the proposed
+repair for each (recorded here, and inline in the Lean file as Q3/Q4/Q5, matching the F2 Q1/Q2
+precedent):
+
+- **Q3 — space vs. time regularity.** v1's `GlobalRegularityStatement` only required each mode
+  to be `C¹` in time (`HasDerivAt`); nothing constrained behavior *across* modes at a fixed
+  time, so it captured "no finite-time amplitude blow-up" but not spatial smoothness — the real
+  Millennium statement's "smooth" needs both. **Decision: extend.** New `IsSpatiallySmooth`
+  requires membership in the Fourier-side Sobolev class `H^s` (bounded finite partial sums of
+  `k_n^{2s} u(t,n)²`) for *every* `s : ℕ`, at every `t ≥ 0` — the standard textbook
+  characterization of `C^∞` on a torus, not invented content. Required introducing a genuine
+  wavenumber `k : ℕ → ℝ`, related to the existing weight by `w n = (k n)²` (`hwk`) — making
+  explicit what `HypothesisU_Statements.lean`'s own docstring already asserts informally.
+- **Q4 — missing `∀T`.** v1 took a single fixed `T` yet concluded a `T`-independent result,
+  silently smuggling SPEC.md's "for all T" into `ProdiSerrinStatement`'s undischarged content
+  without saying so. **Decision: quantify explicitly** — `hU : ∀ T, HypothesisU nu T B w u0`,
+  and `AubinLionsStatement`/`ProdiSerrinStatement` correspondingly traffic in `∀ T,
+  HasBoundedFullLimit …`.
+- **Q5 — missing `w ≥ 0`.** v1's `HasBoundedFullLimit` bounded finite partial sums of
+  `w n * u(t,n)²` without requiring `w ≥ 0`, unlike F2's own `enstrophy_nonneg`. For signed
+  `w`, "partial sums bounded" doesn't mean "enstrophy controlled." **Decision: add**
+  `hw : ∀ n, 0 ≤ w n` as an explicit parameter, threaded through.
+
+Result: 7 theorems (up from 5), all footprints clean, all four negative controls (NC1–NC3
+re-verified against the new structure, NC4 added — a statement-adequacy risk rather than a
+compile-time one, see the file's own comment) confirmed to behave as predicted. Both gates
+independently re-run and PASS.
+
 ## DoD checklist (PLAN.md §4 F3)
 
 - [ ] Compiles clean (Gate 2, wired into `scripts/verify.sh`'s file loop).
