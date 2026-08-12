@@ -280,6 +280,23 @@ Smallest question whose answer unblocks me
 `<taskID>: <one-line outcome>` + body listing DoD items satisfied + the standard
 Co-Authored-By trailer. One task per commit. Artifact + ledger + report together.
 
+### 9.4 The `git add -A` race (recorded 2026-08-12 after it happened twice in one session)
+
+When a background workflow is writing files to the repo concurrently with the orchestrator's
+own integration work, `git add -A` stages **whatever is on disk at that instant** — including
+another agent's file mid-edit, before its own gate check ran. This produced two real broken
+commits in one session: a Tier-B harness that happened to already be correct when swept in
+(lucky), and a Lean proof that was mid-fix and carried `sorryAx` in five theorems (not lucky —
+caught only because the authoring agent's own report flagged the discrepancy on its next run).
+
+**Rule:** while any background workflow may still be writing to this repo, `git add` **by
+path**, never `-A`/`.`, and re-run the relevant gate (`./scripts/verify.sh` or the specific
+harness/`lake env lean` command) on the **exact file about to be staged** immediately before
+staging it — not on a cached belief that it was checked a few tool-calls ago. If a workflow's
+completion notification arrives with files already partially staged from a broad `add`, treat
+every one of those files as unverified regardless of what the last gate run said, and re-check
+each individually before the next commit.
+
 ---
 
 *This plan is the operational law of the campaign. Where it conflicts with the roadmap's

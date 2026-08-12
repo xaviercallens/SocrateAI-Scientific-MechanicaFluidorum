@@ -85,7 +85,8 @@ production of the shell below. -/
 theorem prodIn_succ_eq_four_mul_prodOut (k a : ℕ → ℝ) (n : ℕ)
     (hdouble : k (n + 1) = 2 * k n) :
     prodIn k a (n + 1) = 4 * prodOut k a n := by
-  unfold prodIn prodOut
+  show (k (n + 1)) ^ 2 * a (n + 1) * (k n) * (a n) ^ 2 = 4 * prodOut k a n
+  unfold prodOut
   rw [hdouble]
   ring
 
@@ -187,20 +188,35 @@ theorem witness_theorem_gives_294 :
   refine ⟨?_, witness_lhs⟩
   exact enstrophy_production_dyadic_NL kW aW 2 (fun n _ => kW_double n) aW_bc
 
-/-- **Sharpness of the doubling hypothesis.**  For the non-doubling wavenumbers
-    `k n = n + 1` (the Tier B negative control) with the SAME coefficient `3`,
-    the identity FAILS: at `N = 1`, `a = (1, 1, 0, …)` the left side is `-1`
-    while `3 ×` the right side is `-3`.  Hence `hdouble` cannot be dropped. -/
+/-- Negative-control wavenumbers: `k n = n + 1` (arithmetic, NOT doubling —
+    `k 2 = 3 ≠ 4 = 2 * k 1`).  This is the Tier B negative control `k_n = n+1`. -/
+noncomputable def kNeg : ℕ → ℝ := fun n => (n : ℝ) + 1
+
+/-- Negative-control state: `a = (1, 1, 1, 0, 0, …)`, so `a (N+1) = a 3 = 0` at `N = 2`. -/
+noncomputable def aNeg : ℕ → ℝ := fun n => if n ≤ 2 then 1 else 0
+
+/-- **Sharpness of the doubling hypothesis (negative control).**  For the
+    non-doubling wavenumbers `k n = n + 1` with the SAME coefficient `3` and the
+    boundary condition `a (N+1) = 0` still satisfied, the identity FAILS at
+    `N = 2`, `a = (1, 1, 1, 0, …)`: the left side is `13`, the right side is `27`.
+    Hence `hdouble` is load-bearing and cannot be dropped. -/
 theorem negative_control_nondoubling :
-    (Finset.range 2).sum
-        (fun n => prodIn (fun m => (m : ℝ) + 1) (fun m => if m ≤ 1 then 1 else 0) n
-                  - prodOut (fun m => (m : ℝ) + 1) (fun m => if m ≤ 1 then 1 else 0) n)
-      ≠ 3 * (Finset.range 1).sum
-        (fun n => prodOut (fun m => (m : ℝ) + 1) (fun m => if m ≤ 1 then 1 else 0) n) := by
-  rw [Finset.sum_range_succ, Finset.sum_range_succ, Finset.sum_range_succ,
-      Finset.sum_range_zero]
-  unfold prodIn prodOut
-  norm_num
+    aNeg (2 + 1) = 0 ∧
+    (Finset.range 3).sum (fun n => prodIn kNeg aNeg n - prodOut kNeg aNeg n) = 13 ∧
+    3 * (Finset.range 2).sum (fun n => prodOut kNeg aNeg n) = 27 ∧
+    (Finset.range 3).sum (fun n => prodIn kNeg aNeg n - prodOut kNeg aNeg n)
+      ≠ 3 * (Finset.range 2).sum (fun n => prodOut kNeg aNeg n) := by
+  have hbc : aNeg (2 + 1) = 0 := by unfold aNeg; norm_num
+  have hl : (Finset.range 3).sum (fun n => prodIn kNeg aNeg n - prodOut kNeg aNeg n) = 13 := by
+    rw [Finset.sum_range_succ, Finset.sum_range_succ, Finset.sum_range_succ,
+        Finset.sum_range_zero]
+    unfold prodIn prodOut kNeg aNeg
+    norm_num
+  have hr : 3 * (Finset.range 2).sum (fun n => prodOut kNeg aNeg n) = 27 := by
+    rw [Finset.sum_range_succ, Finset.sum_range_succ, Finset.sum_range_zero]
+    unfold prodOut kNeg aNeg
+    norm_num
+  exact ⟨hbc, hl, hr, by rw [hl, hr]; norm_num⟩
 
 #print axioms enstrophyTerm_eq
 #print axioms prodIn_succ_eq_four_mul_prodOut

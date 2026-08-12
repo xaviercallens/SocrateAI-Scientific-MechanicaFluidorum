@@ -1,0 +1,54 @@
+generating_command: python3 symbolic/dyadic_imex.py
+python_version: 3.12.3 (3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0])
+git_commit: f279312a7679e2ff69ac49bc8b16596acde0de6f
+sha256sum: 8844dd2ebf1ce31fb27eaa9db40e778c85cbcd0e53505185bf35db6682deba6f  dyadic_omega_sup_imex.csv
+row_count: 45 (0 OK, 45 DIVERGED)
+digit_guard: 200 decimal digits (numerator or denominator of any a_n)
+csv 'steps' column = steps completed by the dt run (coarser step); the dt/2 run's own completed-step count is listed per-row below since it is not a CSV column (see script docstring).
+ANOMALY (see script module docstring for full detail): exact-Fraction IMEX-Euler bit-complexity roughly doubles in decimal digits every step independent of N/nu/profile/dt magnitude; the task prompt's feasibility estimate of up to 160 steps being 'very feasible' is measured false -- every row below diverges (digit guard) within single-digit step counts, far short of the requested T=10 horizon. This is a representational blow-up of exact rational iteration, not a claim about the trajectory's numerical magnitude or about cutoff uniformity.
+per_row_detail (N,nu,profile,status_dt,steps_dt/target_dt,status_dt_half,steps_dt_half/target_dt_half):
+  N=8 nu=1/10 profile=P1 status_dt=DIVERGED steps_dt=6/40 status_dt_half=DIVERGED steps_dt_half=6/80
+  N=8 nu=1/10 profile=P2 status_dt=DIVERGED steps_dt=4/40 status_dt_half=DIVERGED steps_dt_half=4/80
+  N=8 nu=1/10 profile=P3 status_dt=DIVERGED steps_dt=6/80 status_dt_half=DIVERGED steps_dt_half=5/160
+  N=8 nu=1/100 profile=P1 status_dt=DIVERGED steps_dt=5/40 status_dt_half=DIVERGED steps_dt_half=5/80
+  N=8 nu=1/100 profile=P2 status_dt=DIVERGED steps_dt=4/40 status_dt_half=DIVERGED steps_dt_half=4/80
+  N=8 nu=1/100 profile=P3 status_dt=DIVERGED steps_dt=5/80 status_dt_half=DIVERGED steps_dt_half=5/160
+  N=8 nu=1/1000 profile=P1 status_dt=DIVERGED steps_dt=5/40 status_dt_half=DIVERGED steps_dt_half=5/80
+  N=8 nu=1/1000 profile=P2 status_dt=DIVERGED steps_dt=4/40 status_dt_half=DIVERGED steps_dt_half=4/80
+  N=8 nu=1/1000 profile=P3 status_dt=DIVERGED steps_dt=5/80 status_dt_half=DIVERGED steps_dt_half=4/160
+  N=12 nu=1/10 profile=P1 status_dt=DIVERGED steps_dt=6/40 status_dt_half=DIVERGED steps_dt_half=6/80
+  N=12 nu=1/10 profile=P2 status_dt=DIVERGED steps_dt=3/40 status_dt_half=DIVERGED steps_dt_half=3/80
+  N=12 nu=1/10 profile=P3 status_dt=DIVERGED steps_dt=6/80 status_dt_half=DIVERGED steps_dt_half=5/160
+  N=12 nu=1/100 profile=P1 status_dt=DIVERGED steps_dt=5/40 status_dt_half=DIVERGED steps_dt_half=5/80
+  N=12 nu=1/100 profile=P2 status_dt=DIVERGED steps_dt=3/40 status_dt_half=DIVERGED steps_dt_half=4/80
+  N=12 nu=1/100 profile=P3 status_dt=DIVERGED steps_dt=5/80 status_dt_half=DIVERGED steps_dt_half=5/160
+  N=12 nu=1/1000 profile=P1 status_dt=DIVERGED steps_dt=5/40 status_dt_half=DIVERGED steps_dt_half=5/80
+  N=12 nu=1/1000 profile=P2 status_dt=DIVERGED steps_dt=4/40 status_dt_half=DIVERGED steps_dt_half=4/80
+  N=12 nu=1/1000 profile=P3 status_dt=DIVERGED steps_dt=5/80 status_dt_half=DIVERGED steps_dt_half=4/160
+  N=16 nu=1/10 profile=P1 status_dt=DIVERGED steps_dt=6/40 status_dt_half=DIVERGED steps_dt_half=6/80
+  N=16 nu=1/10 profile=P2 status_dt=DIVERGED steps_dt=3/40 status_dt_half=DIVERGED steps_dt_half=3/80
+  N=16 nu=1/10 profile=P3 status_dt=DIVERGED steps_dt=6/80 status_dt_half=DIVERGED steps_dt_half=5/160
+  N=16 nu=1/100 profile=P1 status_dt=DIVERGED steps_dt=5/40 status_dt_half=DIVERGED steps_dt_half=5/80
+  N=16 nu=1/100 profile=P2 status_dt=DIVERGED steps_dt=3/40 status_dt_half=DIVERGED steps_dt_half=3/80
+  N=16 nu=1/100 profile=P3 status_dt=DIVERGED steps_dt=5/80 status_dt_half=DIVERGED steps_dt_half=5/160
+  N=16 nu=1/1000 profile=P1 status_dt=DIVERGED steps_dt=5/40 status_dt_half=DIVERGED steps_dt_half=5/80
+  N=16 nu=1/1000 profile=P2 status_dt=DIVERGED steps_dt=3/40 status_dt_half=DIVERGED steps_dt_half=3/80
+  N=16 nu=1/1000 profile=P3 status_dt=DIVERGED steps_dt=5/80 status_dt_half=DIVERGED steps_dt_half=4/160
+  N=20 nu=1/10 profile=P1 status_dt=DIVERGED steps_dt=6/40 status_dt_half=DIVERGED steps_dt_half=6/80
+  N=20 nu=1/10 profile=P2 status_dt=DIVERGED steps_dt=3/40 status_dt_half=DIVERGED steps_dt_half=3/80
+  N=20 nu=1/10 profile=P3 status_dt=DIVERGED steps_dt=6/80 status_dt_half=DIVERGED steps_dt_half=5/160
+  N=20 nu=1/100 profile=P1 status_dt=DIVERGED steps_dt=5/40 status_dt_half=DIVERGED steps_dt_half=5/80
+  N=20 nu=1/100 profile=P2 status_dt=DIVERGED steps_dt=3/40 status_dt_half=DIVERGED steps_dt_half=3/80
+  N=20 nu=1/100 profile=P3 status_dt=DIVERGED steps_dt=5/80 status_dt_half=DIVERGED steps_dt_half=5/160
+  N=20 nu=1/1000 profile=P1 status_dt=DIVERGED steps_dt=5/40 status_dt_half=DIVERGED steps_dt_half=5/80
+  N=20 nu=1/1000 profile=P2 status_dt=DIVERGED steps_dt=3/40 status_dt_half=DIVERGED steps_dt_half=3/80
+  N=20 nu=1/1000 profile=P3 status_dt=DIVERGED steps_dt=5/80 status_dt_half=DIVERGED steps_dt_half=4/160
+  N=24 nu=1/10 profile=P1 status_dt=DIVERGED steps_dt=6/40 status_dt_half=DIVERGED steps_dt_half=6/80
+  N=24 nu=1/10 profile=P2 status_dt=DIVERGED steps_dt=2/40 status_dt_half=DIVERGED steps_dt_half=2/80
+  N=24 nu=1/10 profile=P3 status_dt=DIVERGED steps_dt=6/80 status_dt_half=DIVERGED steps_dt_half=5/160
+  N=24 nu=1/100 profile=P1 status_dt=DIVERGED steps_dt=5/40 status_dt_half=DIVERGED steps_dt_half=5/80
+  N=24 nu=1/100 profile=P2 status_dt=DIVERGED steps_dt=2/40 status_dt_half=DIVERGED steps_dt_half=2/80
+  N=24 nu=1/100 profile=P3 status_dt=DIVERGED steps_dt=5/80 status_dt_half=DIVERGED steps_dt_half=5/160
+  N=24 nu=1/1000 profile=P1 status_dt=DIVERGED steps_dt=5/40 status_dt_half=DIVERGED steps_dt_half=5/80
+  N=24 nu=1/1000 profile=P2 status_dt=DIVERGED steps_dt=2/40 status_dt_half=DIVERGED steps_dt_half=3/80
+  N=24 nu=1/1000 profile=P3 status_dt=DIVERGED steps_dt=5/80 status_dt_half=DIVERGED steps_dt_half=4/160

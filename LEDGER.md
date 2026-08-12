@@ -37,6 +37,37 @@ solutions — no existence theory is invoked. They establish the ENERGY identity
 enstrophy bound; the enstrophy question (the Hypothesis U analogue) remains untouched.
 Non-vacuity: witness pins `energyRate = −1` exactly, so `≤ 0` is not `0 ≤ 0`.*
 
+### `lean_src/EnstrophyProduction.lean` — the dyadic enstrophy-production identity
+
+| Claim | Formal name | Since |
+|---|---|---|
+| Pointwise doubling lemma: `prodIn(n+1) = 4·prodOut(n)` given `k(n+1)=2·k(n)` | `prodIn_succ_eq_four_mul_prodOut` | 2026-08-12 |
+| Sum form of the doubling lemma | `sum_prodIn_eq_four_mul_sum_prodOut` | 2026-08-12 |
+| **The production identity**: `Σ(prodIn−prodOut) = 3·Σ_{n<N} prodOut(n)` under truncation | `enstrophy_production_dyadic` | 2026-08-12 |
+| Physical form: `dΩ/dt`'s nonlinear part `= 3·Σ k_n³ a_n² a_{n+1}` | `enstrophy_production_dyadic_NL`, `enstrophyTerm_eq` | 2026-08-12 |
+| Negative control (non-doubling `k`) is kernel-verified to fail, not merely asserted | `negative_control_nondoubling` | 2026-08-12 |
+| Non-vacuity: N=2 witness computes both sides to exactly 294 in Lean, matching independent hand and Tier B computation | `witness_lhs`, `witness_rhs`, `witness_theorem_gives_294` | 2026-08-12 |
+
+**This is the dyadic analogue of vortex stretching, made exact.** `dΩ/dt = 3Σk_n³a_n²a_{n+1}
+− νΣk_n⁴a_n²` — a signed production term against dissipation. The coefficient 3 is not a fit;
+it is `r²−1` for doubling ratio `r=2`, and the Tier B harness independently confirms the
+general formula holds at `r=3` (coefficient 8). **Scope (honesty clause):** an exact algebraic
+identity between finite sums, not a bound — it does not by itself say whether production stays
+dominated by dissipation as `N→∞`; that is the still-open dyadic Hypothesis U question this
+identity was built to attack. General form proven (`k`,`a` arbitrary subject to the doubling
+hypothesis), not merely the concrete `k_n=2^n` case — stronger and reusable.
+
+**Tier B mirror** (`tests/tier_b_enstrophy_production.py`, wired into Gate 1): 240 exact-ℚ
+cases at `k_n=2^n`, sanity case reproduces 294 exactly by hand/Python/Lean independently
+(three-way agreement), negative control (`k_n=n+1`, non-doubling) fails with a nonzero
+residual as required, bonus confirmation at ratio 3 (coefficient 8).
+
+**Process note (recorded honestly):** the first commit of this file (`f279312`) was captured
+mid-edit by `git add -A` while the authoring agent was still fixing a tactic failure (`rw
+[hdouble]` did not see through an unreduced `match`); the committed version carried `sorryAx`
+in five theorems. Caught and corrected same day — see the commit that follows this entry in
+`git log` and the process-fix note in `PLAN.md` §2.
+
 *22 theorems total across the three files; all footprints verified
 `[propext, Classical.choice, Quot.sound]` by independent recompilation 2026-08-12.*
 
@@ -58,6 +89,8 @@ abstract classes — not yet about fluids.*
 | Lattice counts r₃(n), n ≤ 10000; Legendre anchors incl. r₃(7)=r₃(15)=0; negative control fails | T0.1 | `data/r3_counts.csv` (sha256 `4d51aa5a…33f1`) |
 | **Dyadic energy flux telescopes** (exact ℚ, N=1..12, 240 cases) + partial-sum form (1800 cases); negative control (k_{n-1}→k_n) fails with residual 2/3 | D1 | `tests/tier_b_dyadic_checks.py` |
 | Exact 3-D periodic percolation instrument: union-find, wrap detection, 27 checks; negative control (drop x-periodicity) fails | T0.3 | `symbolic/percolation_exact.py`, `tests/test_percolation.py` |
+| **Dyadic enstrophy-production identity** (mirrors `EnstrophyProduction.lean` above): `Σk_n²a_nNL_n = 3Σ_{n<N}k_n³a_n²a_{n+1}` for `k_n=2^n`, 240 exact cases; negative control (`k_n=n+1`, non-doubling) fails; bonus confirms general formula (ratio `r`, coeff `r²−1`) at `r=3` | P1 | `tests/tier_b_enstrophy_production.py` |
+| Rational IMEX-Euler discretization of the truncated dyadic shell model, negative control (perturbed influx term) fails as required — **instrument verified; the intended measurement was NOT obtained, see escalation** | D5 | `symbolic/dyadic_imex.py`, `data/dyadic_omega_sup_imex.csv` (sha256 `8844dd2e…3580128`) |
 
 ## Tier A — `lean_src/HypothesisU_Statements.lean` (statement shape; audited 2026-08-12)
 
