@@ -1,9 +1,19 @@
 # AgoraAI-Agentic-Core: 6-Month Operational Roadmap
 
-**Program:** Hypothesis U Resolution (Conjecture 5.2, Main)  
+**Program:** Hypothesis U Campaign (Conjecture 5.2, Main)  
 **Timeline:** 26 weeks (6 months)  
 **Staging:** Five incremental stages, four parallel analytical tracks in Stage 3  
 **Gate Criterion:** Each milestone is falsifiable; kill-criteria are pre-committed.
+
+> **Operational status (Fable 5 review, 2026-08-12).** This calendar is the *aspirational
+> campaign schedule*; the normative, agent-executable instructions are in **`PLAN.md`**.
+> Honest framing per SPEC §7.6: a Millennium-class conjecture is not schedulable. The
+> campaign's deliverables are **verdicts and datasets under pre-committed kill criteria**
+> — the dyadic-laboratory verdict, the formalized reduction skeleton, and the four track
+> milestone measurements. Week-26 "success" means the synthesis *attempt* is assembled and
+> audited, with whatever verdict the evidence supports — not that Hypothesis U is resolved
+> on schedule. All "Expected" predictions below have been struck: a prediction may be
+> registered only with a derivation, otherwise the quantity is a measurement.
 
 ---
 
@@ -47,7 +57,12 @@
 **Milestone 1.M1 (Tier B):** Dyadic models do NOT blow up under Sym² locks.
 - **Quantitative Gate:** All 100 empirical runs show E(T) < 10 E₀.
 - **Kill Criterion:** If ANY run exhibits E(t) → ∞ before time T, the mechanism is inert; program refocuses.
-- **Expected Outcome:** ✅ PASS (dyadic models are known to be globally well-posed under dissipation).
+- **Claim landscape (to re-verify Week 3, Tier C until cited precisely):** blow-up is known
+  for dyadic models in inviscid/weak-dissipation regimes (Katz–Pavlović; Cheskidov); global
+  regularity is known for sufficiently strong dissipation (Barbato–Morandin–Romito). The
+  honest laboratory question is **uniformity of the enstrophy bound in the cutoff** in a
+  regime where the unregularized model misbehaves — a negative answer is informative (it
+  proves truncation alone is not the mechanism and the burden falls on the Sym² lock).
 
 **Milestone 1.M2 (Tier A):** Grönwall bound is proven in Lean, footprint clean.
 
@@ -104,7 +119,9 @@
 **Week 19 Falsifiable Milestone T1.M1 (Tier B):**
 - Gate: η(M) ≪ 1 (e.g., η ≈ 0.01–0.1 even at M = 2¹⁵).
 - Kill Criterion: If η(M) → 1 as M increases, the Sym² lock provides negligible depletion.
-- **Expected:** η ≈ 0.05 (strong depletion).
+- **No committed prediction** — η is a measurement. **BLOCKED-ON-DEFINITION:** the
+  Sym²-constrained spectrum of the 𝕋³ flow is not yet defined (see PLAN.md §6, OP-2);
+  counting cannot begin until that definition is authored and human-audited.
 
 **Weeks 20–22:** ℓ² Decoupling (Paper-Level Tier B/A)
 - **Task T1.2:** Given the depleted resonance set, apply Bourgain-Demeter ℓ² decoupling.
@@ -134,7 +151,8 @@
 - Gate: Echo amplitude decays exponentially: $A_{\text{echo}}(t) \leq A_0 e^{-\lambda t}$, λ > 0.
 - Verify in dyadic model: Run numerical simulations isolating echo contribution (Tier B).
 - Kill Criterion: If echoes persist with A(t) → const, the Gevrey mechanism fails.
-- **Expected:** λ ≈ ν/(enstrophy scale), so echoes decay on viscous timescale.
+- **No committed prediction** — the decay rate λ is a measurement. **BLOCKED-ON-DEFINITION:**
+  "enstrophy echo" has no precise definition yet (PLAN.md §6).
 
 **Weeks 21–22:** Gevrey Regularity Formalization (Paper-Level Tier A draft)
 - **Task T2.3:** Prove H¹ bound via controlled echo sums: ‖u‖²_{H¹} ≤ C(1 + ∑ A_echo(t)).
@@ -160,7 +178,8 @@
 - Gate: Entropy dissipation bound holds at fixed α' (Tier A proof).
 - Verify uniformity as α' → 0 (Tier B). Run numerical checks for α' ∈ {0.1, 0.01, 0.001, 0.0001}.
 - Kill Criterion: If dissipation rate diverges as α' → 0 (e.g., grows like 1/α'), the track fails.
-- **Expected:** Dissipation rate is O(1) uniformly.
+- **No committed prediction** — uniformity is the open question, not an expectation.
+  **BLOCKED-ON-DEFINITION:** the functional h and reference state ū are unspecified (PLAN.md §6).
 
 **Weeks 22–24:** Compactness & Convergence (Tier A draft)
 - **Task T3.3:** Prove weak convergence of {u^(α')} to classical Leray-Hopf u with ‖∇u‖_{L^∞_t L^2_x} < ∞.
@@ -182,7 +201,10 @@
 - Gate: Percolation is **subcritical** under Sym² locks: $P_{\text{perc}} < p_c$ (critical threshold).
 - Hausdorff dimension: dim_H(singular set) < 1 - ε for ε > 0.
 - Kill Criterion: If percolation is supercritical or dimension ≥ 1, singular vortex filaments persist; Duminil-Copin track fails.
-- **Expected:** Dimension ≈ 0.3–0.7 (strictly less than 1).
+- **No committed prediction** — the dimension is a measurement. Reference point: CKN (1982)
+  already gives 1-D parabolic Hausdorff measure zero; this track must do strictly better to
+  add anything. **BLOCKED-ON-DEFINITION:** the coupling of the percolation field to the
+  Sym² constraint is unspecified (PLAN.md §6).
 
 **Weeks 22–24:** Scaling-Limit Theorem (Tier A draft)
 - **Task T4.4:** Prove formal scaling-limit result: as α' → 0, the limit of percolation clusters has zero Hausdorff dimension.
@@ -221,8 +243,10 @@
   -- Should output: [propext, Classical.choice, Quot.sound]
   ```
 - **Task 4.5:** Generate PDF of the full proof with Lean syntax highlighting.
-- **Task 4.6:** Prepare manuscript for submission (target venue: Annals of Mathematics, Acta Mathematica, or Inventiones).
-- **Deliverable:** `HypothesisU_FinalProof.pdf` (publication-ready).
+- **Task 4.6:** Commission **independent external expert audit** of statement adequacy (the
+  human-audits-the-question half of the oversight split). No venue targets, no submission,
+  and no public claim until that audit passes — the §1 retraction pitfall applies to us most of all.
+- **Deliverable:** internal proof package + external-audit request.
 
 **Final Gate (Week 26, Tier A):** Lean kernel accepts the proof; axiom footprint is clean.
 
@@ -232,7 +256,7 @@
 
 ### Stage 3 Outcomes:
 
-1. **All Four Tracks Pass (≥3 milestones hit):** → Stage 4 proceeds as planned. Hypothesis U is resolved.
+1. **All Four Tracks Pass (≥3 milestones hit):** → the Stage-4 synthesis *attempt* proceeds. Resolution of Hypothesis U may be claimed only upon a kernel-verified, sorry-free Stage-4 proof **plus** external expert audit — milestone passage is evidence, never proof.
 2. **Three Tracks Pass, One Fails:** → Four-track proof is partial. Revise the failed track or concede.
 3. **Two or Fewer Tracks Pass:** → Program pivots. Re-examine mechanism or seek alternative approaches.
 

@@ -149,7 +149,8 @@ way into the core only through Tiers B and A.
 
 ```
 SocrateAI-Scientific-MechanicaFluidorum/
-├── SPEC.md                          ← this file (single active spec)
+├── SPEC.md                          ← this file (single active spec — rules)
+├── PLAN.md                          ← agent execution plan (operational law; tasks, DoD, escalation)
 ├── LEDGER.md                        ← normative claim inventory with tiers
 ├── README.md
 ├── docs/

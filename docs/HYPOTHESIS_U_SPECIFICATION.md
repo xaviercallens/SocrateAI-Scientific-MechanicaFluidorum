@@ -145,7 +145,14 @@ The resolution of Conjecture U is organized through five stages, advancing from 
 
 **Objective:** Prove that the T-dual regularized dyadic shell models (Katz–Pavlović, Desnyansky–Novikov) are globally well-posed under the Sym² constraint.
 
-**Classical Context:** The bare Katz–Pavlović and Desnyansky–Novikov models are **proven to blow up in finite time** under classical viscosity (Kiselev–Zlatoš, 2012; Cheskidov, 2013). They serve as pedagogical laboratories where global regularity is known to fail without regularization.
+**Classical Context (Tier C until re-verified with precise citations — Stage 1, Week 3 deliverable):**
+For dyadic shell models, finite-time blow-up is known in the inviscid and weak-dissipation
+regimes (Katz–Pavlović 2005; Cheskidov 2008), while global regularity is known under
+sufficiently strong dissipation (Barbato–Morandin–Romito). The laboratory must therefore
+work in a regime where the *unregularized* model misbehaves, and measure whether the
+enstrophy bound of the regularized family is **uniform in the cutoff** — the dyadic analogue
+of Hypothesis U. A negative verdict is informative: it proves truncation alone is not the
+mechanism, placing the full burden on the Sym² lock.
 
 **Program Task:**
 1. Formalize the shell models in Lean 4 with initial data quantified.
@@ -222,7 +229,10 @@ where $E_j^{(\alpha')}(t)$ is the enstrophy in the frequency annulus $[2^j, 2^{j
 3. Synthesizes them into the uniform enstrophy bound.
 4. Compiles kernel-clean.
 
-**Canonical Form:** A published paper + formalization package ready for submission to a tier-1 venue (Annals of Mathematics, Acta Mathematica, or Inventiones Mathematicae).
+**Canonical Form:** An internal proof package (paper + formalization) submitted to
+**independent external expert audit** of statement adequacy before any public claim or
+venue decision. Machine verification checks the proof; only human audit can check that
+the formal statements mean what the Millennium problem asks.
 
 **Target Timeline:** Month 6 (final verification).
 
