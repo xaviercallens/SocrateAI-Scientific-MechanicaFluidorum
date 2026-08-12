@@ -40,10 +40,22 @@ S_N² = (Σ (k_n²a_n²)(k_n a_{n+1}))²  ≤  (Σ k_n⁴a_n⁴) · (Σ k_n²a_{
 ## Numerical sanity check (before dispatch — same instance as the identity's own witness)
 
 `N=2, k=(1,2,4), a=(1,2,3)`: `S_N = 98` (from the identity's own worked example), `Ω_N = 80.5`.
-- Step 1: `Σk_n²a_{n+1}² = 40 ≤ Ω_N/2 = 40.25` ✓ (tight — expected, only 2 terms)
-- Step 2: `Σx_n² = 20993 ≤ (Σx_n)² = 25921` ✓
+- Step 1: `Σ_{n<N}k_n²a_{n+1}² = 40 ≤ Ω_N/2 = 40.25` ✓ (tight — expected, only 2 terms)
+- Step 2: `Σx_n² = 20993 ≤ (Σx_n)² = 25921` ✓ (`x_n=k_n²a_n²` summed over the **full** range
+  `n=0..N`, i.e. `Σ_{n≤N}k_n⁴a_n⁴` — see the erratum below on which range Step 3 actually uses)
 - Main: `S_N² = 9604 ≤ 2Ω_N³ = 1043320.25` ✓ (loose here; Cauchy–Schwarz is rarely tight on
   arbitrary data — this checks the *direction* and absence of a sign error, not sharpness)
+
+**Erratum (found by the Tier B certification agent, 2026-08-12 — recorded, not silently
+fixed).** Step 2 above is stated over the full range `n=0..N` (giving `20993` on this
+instance), but Step 3's Cauchy–Schwarz combination needs both factors summed over the
+**restricted** range `n=0..N-1` (matching `S_N`'s own range). On this instance the restricted
+quantity is `257`, not `20993`. This is a bookkeeping mismatch in this note's own exposition,
+**not an error in the bound**: the restricted sum is a sub-sum of nonnegative terms of the
+full sum, so `257 ≤ 20993 ≤ (Σx_n)² = 25921` regardless — Step 2's inequality and the final
+`S_N² ≤ 2Ω_N³` are unaffected either way. The certifying harness
+(`tests/tier_b_production_bound.py`) computes both quantities explicitly and gates on the
+restricted one, as Step 3 requires; the Lean proof does the same.
 
 ## What this bound honestly does NOT give
 

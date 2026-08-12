@@ -295,7 +295,7 @@ harness/`lake env lean` command) on the **exact file about to be staged** immedi
 staging it — not on a cached belief that it was checked a few tool-calls ago. If a workflow's
 completion notification arrives with files already partially staged from a broad `add`, treat
 every one of those files as unverified regardless of what the last gate run said, and re-check
-each individually before the next commit.
+each individually before the next commit. Full incident writeup: `LL.md` LL-1.
 
 ---
 

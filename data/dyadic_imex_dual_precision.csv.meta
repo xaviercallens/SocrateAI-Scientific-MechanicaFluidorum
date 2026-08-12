@@ -1,0 +1,56 @@
+generating_command: python3 exploration/dyadic_imex_dual_precision.py
+python_version: 3.12.3 (3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0])
+mpmath_version: 1.3.0
+mpmath_mp_dps: 50
+git_commit: 0fc03e555df255cc1a6fcd30532c55fe55bede58
+sha256sum: 02256f875858811b9d2ee67feb84c0d23ff9f7b18c53c5616ec196ac90bc103d  dyadic_imex_dual_precision.csv
+row_count: 45 (20 DIVERGED at fp64, 20 DIVERGED at mp50)
+magnitude_guard: |a_n| > 1e+15 or non-finite
+csv 'steps' column = steps completed by the fp64 run (equal to the target step count T/dt when status_fp64==OK); the mp50 run's own completed-step count is listed per-row below since both runs share one 'steps' column.
+SANITY CHECK (N=8, nu=1.0, P1, fp64, energy 0.5*sum(a_n^2) non-increasing step-to-step to within 1e-6 relative tolerance, 40 steps): held=True
+per_row_detail (N,nu,profile,steps_fp64/target,status_fp64,steps_mp50/target,status_mp50,rel_diff):
+  N=8 nu=0.1 profile=P1 steps_fp64=40/40 status_fp64=OK steps_mp50=40/40 status_mp50=OK rel_diff=1.3884278281774718e-16
+  N=8 nu=0.1 profile=P2 steps_fp64=40/40 status_fp64=OK steps_mp50=40/40 status_mp50=OK rel_diff=0.0
+  N=8 nu=0.1 profile=P3 steps_fp64=80/80 status_fp64=OK steps_mp50=80/80 status_mp50=OK rel_diff=0.0
+  N=8 nu=0.01 profile=P1 steps_fp64=14/40 status_fp64=DIVERGED steps_mp50=14/40 status_mp50=DIVERGED rel_diff=2.2441792558593274e-14
+  N=8 nu=0.01 profile=P2 steps_fp64=40/40 status_fp64=OK steps_mp50=40/40 status_mp50=OK rel_diff=6.080679569751647e-16
+  N=8 nu=0.01 profile=P3 steps_fp64=80/80 status_fp64=OK steps_mp50=80/80 status_mp50=OK rel_diff=2.4208823226827854e-15
+  N=8 nu=0.001 profile=P1 steps_fp64=11/40 status_fp64=DIVERGED steps_mp50=11/40 status_mp50=DIVERGED rel_diff=1.922541989286865e-15
+  N=8 nu=0.001 profile=P2 steps_fp64=9/40 status_fp64=DIVERGED steps_mp50=9/40 status_mp50=DIVERGED rel_diff=2.2391861725490733e-14
+  N=8 nu=0.001 profile=P3 steps_fp64=14/80 status_fp64=DIVERGED steps_mp50=14/80 status_mp50=DIVERGED rel_diff=1.293452095988586e-13
+  N=12 nu=0.1 profile=P1 steps_fp64=40/40 status_fp64=OK steps_mp50=40/40 status_mp50=OK rel_diff=1.3884278281774718e-16
+  N=12 nu=0.1 profile=P2 steps_fp64=40/40 status_fp64=OK steps_mp50=40/40 status_mp50=OK rel_diff=0.0
+  N=12 nu=0.1 profile=P3 steps_fp64=80/80 status_fp64=OK steps_mp50=80/80 status_mp50=OK rel_diff=0.0
+  N=12 nu=0.01 profile=P1 steps_fp64=14/40 status_fp64=DIVERGED steps_mp50=14/40 status_mp50=DIVERGED rel_diff=2.226225821813071e-14
+  N=12 nu=0.01 profile=P2 steps_fp64=40/40 status_fp64=OK steps_mp50=40/40 status_mp50=OK rel_diff=1.7025902795305028e-15
+  N=12 nu=0.01 profile=P3 steps_fp64=80/80 status_fp64=OK steps_mp50=80/80 status_mp50=OK rel_diff=2.4208823226827854e-15
+  N=12 nu=0.001 profile=P1 steps_fp64=11/40 status_fp64=DIVERGED steps_mp50=11/40 status_mp50=DIVERGED rel_diff=1.922541989286865e-15
+  N=12 nu=0.001 profile=P2 steps_fp64=9/40 status_fp64=DIVERGED steps_mp50=9/40 status_mp50=DIVERGED rel_diff=1.7830922959061315e-14
+  N=12 nu=0.001 profile=P3 steps_fp64=14/80 status_fp64=DIVERGED steps_mp50=14/80 status_mp50=DIVERGED rel_diff=6.929792421707626e-14
+  N=16 nu=0.1 profile=P1 steps_fp64=40/40 status_fp64=OK steps_mp50=40/40 status_mp50=OK rel_diff=1.3884278281774718e-16
+  N=16 nu=0.1 profile=P2 steps_fp64=40/40 status_fp64=OK steps_mp50=40/40 status_mp50=OK rel_diff=0.0
+  N=16 nu=0.1 profile=P3 steps_fp64=80/80 status_fp64=OK steps_mp50=80/80 status_mp50=OK rel_diff=0.0
+  N=16 nu=0.01 profile=P1 steps_fp64=14/40 status_fp64=DIVERGED steps_mp50=14/40 status_mp50=DIVERGED rel_diff=2.226225821813071e-14
+  N=16 nu=0.01 profile=P2 steps_fp64=40/40 status_fp64=OK steps_mp50=40/40 status_mp50=OK rel_diff=1.7025902795305028e-15
+  N=16 nu=0.01 profile=P3 steps_fp64=80/80 status_fp64=OK steps_mp50=80/80 status_mp50=OK rel_diff=2.4208823226827854e-15
+  N=16 nu=0.001 profile=P1 steps_fp64=11/40 status_fp64=DIVERGED steps_mp50=11/40 status_mp50=DIVERGED rel_diff=1.922541989286865e-15
+  N=16 nu=0.001 profile=P2 steps_fp64=9/40 status_fp64=DIVERGED steps_mp50=9/40 status_mp50=DIVERGED rel_diff=1.7830922959061315e-14
+  N=16 nu=0.001 profile=P3 steps_fp64=14/80 status_fp64=DIVERGED steps_mp50=14/80 status_mp50=DIVERGED rel_diff=6.929792421707626e-14
+  N=20 nu=0.1 profile=P1 steps_fp64=40/40 status_fp64=OK steps_mp50=40/40 status_mp50=OK rel_diff=1.3884278281774718e-16
+  N=20 nu=0.1 profile=P2 steps_fp64=40/40 status_fp64=OK steps_mp50=40/40 status_mp50=OK rel_diff=0.0
+  N=20 nu=0.1 profile=P3 steps_fp64=80/80 status_fp64=OK steps_mp50=80/80 status_mp50=OK rel_diff=0.0
+  N=20 nu=0.01 profile=P1 steps_fp64=14/40 status_fp64=DIVERGED steps_mp50=14/40 status_mp50=DIVERGED rel_diff=2.226225821813071e-14
+  N=20 nu=0.01 profile=P2 steps_fp64=40/40 status_fp64=OK steps_mp50=40/40 status_mp50=OK rel_diff=1.7025902795305028e-15
+  N=20 nu=0.01 profile=P3 steps_fp64=80/80 status_fp64=OK steps_mp50=80/80 status_mp50=OK rel_diff=2.4208823226827854e-15
+  N=20 nu=0.001 profile=P1 steps_fp64=11/40 status_fp64=DIVERGED steps_mp50=11/40 status_mp50=DIVERGED rel_diff=1.922541989286865e-15
+  N=20 nu=0.001 profile=P2 steps_fp64=9/40 status_fp64=DIVERGED steps_mp50=9/40 status_mp50=DIVERGED rel_diff=1.7830922959061315e-14
+  N=20 nu=0.001 profile=P3 steps_fp64=14/80 status_fp64=DIVERGED steps_mp50=14/80 status_mp50=DIVERGED rel_diff=6.929792421707626e-14
+  N=24 nu=0.1 profile=P1 steps_fp64=40/40 status_fp64=OK steps_mp50=40/40 status_mp50=OK rel_diff=1.3884278281774718e-16
+  N=24 nu=0.1 profile=P2 steps_fp64=40/40 status_fp64=OK steps_mp50=40/40 status_mp50=OK rel_diff=0.0
+  N=24 nu=0.1 profile=P3 steps_fp64=80/80 status_fp64=OK steps_mp50=80/80 status_mp50=OK rel_diff=0.0
+  N=24 nu=0.01 profile=P1 steps_fp64=14/40 status_fp64=DIVERGED steps_mp50=14/40 status_mp50=DIVERGED rel_diff=2.226225821813071e-14
+  N=24 nu=0.01 profile=P2 steps_fp64=40/40 status_fp64=OK steps_mp50=40/40 status_mp50=OK rel_diff=1.7025902795305028e-15
+  N=24 nu=0.01 profile=P3 steps_fp64=80/80 status_fp64=OK steps_mp50=80/80 status_mp50=OK rel_diff=2.4208823226827854e-15
+  N=24 nu=0.001 profile=P1 steps_fp64=11/40 status_fp64=DIVERGED steps_mp50=11/40 status_mp50=DIVERGED rel_diff=1.922541989286865e-15
+  N=24 nu=0.001 profile=P2 steps_fp64=9/40 status_fp64=DIVERGED steps_mp50=9/40 status_mp50=DIVERGED rel_diff=1.7830922959061315e-14
+  N=24 nu=0.001 profile=P3 steps_fp64=14/80 status_fp64=DIVERGED steps_mp50=14/80 status_mp50=DIVERGED rel_diff=6.929792421707626e-14

@@ -152,6 +152,8 @@ SocrateAI-Scientific-MechanicaFluidorum/
 ├── SPEC.md                          ← this file (single active spec — rules)
 ├── PLAN.md                          ← agent execution plan (operational law; tasks, DoD, escalation)
 ├── LEDGER.md                        ← normative claim inventory with tiers
+├── LL.md                            ← lessons learned: why each process rule exists, with evidence
+├── CLAUDE.md                        ← build/verify commands and architecture, for Claude Code sessions
 ├── README.md
 ├── docs/
 │   ├── SPEC_v0.1_original.md        ← frozen record of the received spec

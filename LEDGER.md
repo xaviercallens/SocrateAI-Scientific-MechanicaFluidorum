@@ -66,7 +66,27 @@ residual as required, bonus confirmation at ratio 3 (coefficient 8).
 mid-edit by `git add -A` while the authoring agent was still fixing a tactic failure (`rw
 [hdouble]` did not see through an unreduced `match`); the committed version carried `sorryAx`
 in five theorems. Caught and corrected same day — see the commit that follows this entry in
-`git log` and the process-fix note in `PLAN.md` §2.
+`git log` and `LL.md` LL-1.
+
+### `lean_src/EnstrophyProductionBound.lean` — local production bound
+
+| Claim | Formal name | Since |
+|---|---|---|
+| Pure algebra (doubling only): `Σ_{n<N}k_n²a_{n+1}² ≤ Ω_N` | `step1_flux_bound` (+ tighter `_half`) | 2026-08-12 |
+| Sum-of-squares bound: `Σ_{n<N}k_n⁴a_n⁴ ≤ 4Ω_N²` | `step2_quartic_bound` | 2026-08-12 |
+| Squared Cauchy–Schwarz combination | `step3_cauchy_schwarz` | 2026-08-12 |
+| **`S_N² ≤ 2Ω_N³`** — the local production bound itself | `enstrophy_production_bound` | 2026-08-12 |
+
+15 theorems, all footprints clean, independently recompiled. **Tier B mirror**
+(`tests/tier_b_production_bound.py`, wired into Gate 1): 240 exact-ℚ cases per step;
+negative control genuinely breaks Step 1 under non-doubling `k` (211/240 and 230/240 cases
+for `k_n=n+1` and `k_n=1` respectively) — but did **not** break the final `MAIN` bound itself
+on the tested state family, an honest, non-forced finding (Steps 2–3 don't use doubling at
+all; whether `MAIN` can be violated under non-doubling `k` for some other state is open and
+unexplored). **Erratum caught by the certifying agent, corrected same day**: the design
+note's own Step 2 worked example quoted the full-range sum, not the restricted range Step 3
+actually needs — does not affect the bound's validity (a sub-sum of nonnegative terms is
+trivially ≤ the full sum); see the design note's erratum and `LL.md` LL-7.
 
 *22 theorems total across the three files; all footprints verified
 `[propext, Classical.choice, Quot.sound]` by independent recompilation 2026-08-12.*
@@ -91,6 +111,17 @@ abstract classes — not yet about fluids.*
 | Exact 3-D periodic percolation instrument: union-find, wrap detection, 27 checks; negative control (drop x-periodicity) fails | T0.3 | `symbolic/percolation_exact.py`, `tests/test_percolation.py` |
 | **Dyadic enstrophy-production identity** (mirrors `EnstrophyProduction.lean` above): `Σk_n²a_nNL_n = 3Σ_{n<N}k_n³a_n²a_{n+1}` for `k_n=2^n`, 240 exact cases; negative control (`k_n=n+1`, non-doubling) fails; bonus confirms general formula (ratio `r`, coeff `r²−1`) at `r=3` | P1 | `tests/tier_b_enstrophy_production.py` |
 | Rational IMEX-Euler discretization of the truncated dyadic shell model, negative control (perturbed influx term) fails as required — **instrument verified; the intended measurement was NOT obtained, see escalation** | D5 | `symbolic/dyadic_imex.py`, `data/dyadic_omega_sup_imex.csv` (sha256 `8844dd2e…3580128`) |
+
+**Dual-precision (Tier C, quarantined) steering data**: `exploration/dyadic_imex_dual_precision.py`,
+`data/dyadic_imex_dual_precision.csv` (sha256 `02256f87…c103d`, verified independently). Same
+IMEX-Euler scheme in float64 + mpmath-50-digit, full N∈{8..24} grid, T=10. 45 rows; several
+configurations at low ν (0.01, 0.001) show `status=DIVERGED` with fp64/mp50 agreeing to
+~1e-14–1e-16 — agreement this tight rules out ordinary floating-point rounding as the cause,
+but does **not** distinguish genuine trajectory divergence from a `dt` that is simply too
+coarse: the design memo's `dt` formula depends only on the initial profile's excited scale,
+never on `ν`, so it was never re-tuned for the low-viscosity configurations that diverge. **No
+verdict is drawn here** — this is exactly the caveat PLAN.md §8 requires, and it is the kind
+of finding that would need a `ν`-aware `dt` before being informative either way.
 
 ## Tier A — `lean_src/HypothesisU_Statements.lean` (statement shape; audited 2026-08-12)
 
@@ -127,7 +158,7 @@ abstract parameter; no claim about actual Navier–Stokes solutions may be drawn
 | OP-1: Derive J_{√α'} dynamics from Reff metric | Open problem; metric = inspiration only | Research frontier (deferred). |
 | Sym² lock relevance to NSE cascade | To be earned in Stage 1 dyadic lab | Validated empirically + formally (Stage 1). |
 | All physical narrative (cosmology, dark sector) | Quarantined in `docs/narrative/` | Never imported by `lean_src/`. |
-| **Local bound derivation** `S_N² ≤ 2Ω_N³` (docs/designs/ENSTROPHY_PRODUCTION_BOUND.md) | Hand-derived + numerically sanity-checked (N=2 instance) 2026-08-12; dispatched for Tier B/A verification | Sqrt-free, three-step (algebra + `Σx²≤(Σx)²` + Cauchy-Schwarz), reuses two confirmed-built Mathlib lemmas. **Local only** — does not use dissipation, does not address uniformity in N. |
+| **Local bound derivation** `S_N² ≤ 2Ω_N³` (docs/designs/ENSTROPHY_PRODUCTION_BOUND.md) | **Tier A** — proven (see below); **Tier B** mirror in `tests/tier_b_production_bound.py` | Sqrt-free, three-step (algebra + `Σx²≤(Σx)²` + Cauchy-Schwarz). **Local only** — does not use dissipation, does not address uniformity in N. |
 | Barbato–Morandin–Romito, *"Smooth solutions for the dyadic model,"* arXiv:1007.3401 (2010) | Abstract verified via WebFetch 2026-08-12; full proof NOT reviewed | Proves well-posedness of **positive** solutions of the viscous dyadic model in the NSE-matching scaling range — a real, precisely-scoped result, not unconditional global regularity. Do not cite more broadly than this. |
 | **OP-2…OP-5 draft definitions** (Sym²-spectrum embedding, enstrophy echo, entropy functional, percolation coupling) | Drafted 2026-08-12, **awaiting human audit** (PLAN.md §6 — audit is what unblocks, not authorship) | `docs/designs/TRACK_DEFINITIONS_DRAFT.md`. Surfaces a structural finding: the proposed T3 (`h=Ω, ū=0`) collapses into the direct production-identity attack rather than being independent; T1 and T4 share the OP-2 embedding and so are correlated, not independent, measurements. |
 
