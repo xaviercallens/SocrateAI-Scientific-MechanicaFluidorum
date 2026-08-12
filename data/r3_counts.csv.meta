@@ -1,0 +1,4 @@
+# Metadata for r3_counts.csv
+command: python3 /home/xavkal/xdev/SocrateAI-Scientific-MechanicaFluidorum/symbolic/r3_counts.py
+python_version: 3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]
+sha256sum: 4d51aa5a9a1487e8f2ec3b17f08f520777b5a4535bd8f48eb32390b83eeb33f1

@@ -205,6 +205,49 @@ theorem sym2_symmetric_functions (a b lam mu : ℝ)
   rw [show lam ^ 2 * (lam * mu) * mu ^ 2 = (lam * mu) ^ 3 by ring, hprod]
   ring
 
+/-- Variable-coefficient Sym² lock (Tier A migration, ported verbatim from
+    `SocrateAI-Scientific-RajMathRecovery/dualscale/lean/DualScale/K3Lock/Basic.lean`,
+    theorem `sym2_recurrence_variable`).
+
+    **CONVENTION WARNING**: this theorem uses the source file's own PLUS/left
+    form of the recurrence,
+      `u (n+2) + a n * u (n+1) + b n * u n = 0`,
+    i.e. coefficients moved to the left with a plus sign — NOT the MINUS/solved
+    form `u (n+2) = a * u (n+1) + b * u n` used by `sym2_recurrence` and
+    `sym2_recurrence_seq` above in this same file. The two conventions differ
+    by an overall sign on `a` and `b` and are NOT interchangeable term-by-term.
+    This is a verbatim port: the sign convention is preserved exactly as given
+    in the source, per PLAN.md rule E-4 (no re-deriving/no statement-level
+    judgement calls in a migration task). Do not conflate this theorem's `a`,
+    `b` with the `a`, `b` of `sym2_recurrence` above. -/
+theorem sym2_recurrence_variable (a b : ℕ → ℝ) (u : ℕ → ℝ) (ha : ∀ n, a n ≠ 0)
+    (hL2 : ∀ n, u (n + 2) + a n * u (n + 1) + b n * u n = 0) :
+    ∃ (A B C : ℕ → ℝ), ∀ n,
+      (u (n + 3))^2 + A n * (u (n + 2))^2 + B n * (u (n + 1))^2 + C n * (u n)^2 = 0 := by
+  use (fun n => -a (n + 1) * (a (n + 1) * a n - b (n + 1)) / a n),
+      (fun n => a (n + 1) * a n * b (n + 1) - (b (n + 1))^2),
+      (fun n => -a (n + 1) * b (n + 1) * (b n)^2 / a n)
+  intro n
+  have h1 : u (n + 2) = -a n * u (n + 1) - b n * u n := by linarith [hL2 n]
+  have h2 : u (n + 3) = -a (n + 1) * u (n + 2) - b (n + 1) * u (n + 1) := by linarith [hL2 (n + 1)]
+  have han : a n ≠ 0 := ha n
+  have h_sub : u (n + 3) = -a (n + 1) * (-a n * u (n + 1) - b n * u n) - b (n + 1) * u (n + 1) := by rw [h2, h1]
+  rw [h_sub, h1]
+  dsimp
+  have h_mul : a n * ((-a (n + 1) * (-a n * u (n + 1) - b n * u n) - b (n + 1) * u (n + 1)) ^ 2 +
+      -a (n + 1) * (a (n + 1) * a n - b (n + 1)) / a n * (-a n * u (n + 1) - b n * u n) ^ 2 +
+      (a (n + 1) * a n * b (n + 1) - b (n + 1) ^ 2) * u (n + 1) ^ 2 +
+      -a (n + 1) * b (n + 1) * b n ^ 2 / a n * u n ^ 2) = 0 := by
+    field_simp [han]
+    ring
+  exact (mul_eq_zero.mp h_mul).resolve_left han
+
+/-- Non-vacuity witness (§7.5): `a n = 1`, `b n = 0`, `u n = (-1)ⁿ` satisfies
+    the PLUS-form `L2` hypothesis of `sym2_recurrence_variable` above, with
+    `a n ≠ 0` as required. -/
+example : ∀ n : ℕ, ((-1:ℝ))^(n+2) + 1 * ((-1:ℝ))^(n+1) + 0 * ((-1:ℝ))^n = 0 := by
+  intro n; ring
+
 /-! ### Pillar 3: abstract operator geometry (with inhabitation witnesses) -/
 
 class QuantumFiber (F : Type u) where
@@ -273,6 +316,7 @@ instance : WaveCoupling ℝ ℝ where
 #print axioms sym2_recurrence
 #print axioms sym2_recurrence_seq
 #print axioms sym2_symmetric_functions
+#print axioms sym2_recurrence_variable
 #print axioms wave_mass_nonzero
 
 end CallensDualScale

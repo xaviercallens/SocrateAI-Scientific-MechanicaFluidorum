@@ -1,0 +1,29 @@
+generating_command: python3 exploration/dyadic_cascade.py
+python_version: 3.12.3 (3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0])
+numba_used: True
+git_commit: 1a44748eab383560a61e27ecb632084069372869
+sha256sum: d02e1f99e150615847197c00309efbf337f3c118c60d3458a60f5f884d25b594  dyadic_omega_sup.csv
+sanity_check: nu=1.0 N=8 profile=P1 energy non-increasing (tol 1e-9/step) -> held=True worst_increase=0.0 steps_checked=6579200
+feasibility_step_cap: 20000000 (configs requiring more RK4 steps than this to reach T=10 are marked status=INFEASIBLE and NOT integrated; see file docstring)
+infeasible_config_count: 21 of 36
+  INFEASIBLE: N=12 nu=0.1 profile=P1 dt=5.9459480029225526e-08 steps_required=168181760
+  INFEASIBLE: N=12 nu=0.1 profile=P2 dt=5.9459480029225526e-08 steps_required=168181760
+  INFEASIBLE: N=12 nu=0.1 profile=P3 dt=5.9459480029225526e-08 steps_required=168181760
+  INFEASIBLE: N=16 nu=0.1 profile=P1 dt=2.3279512193726543e-10 steps_required=42956226560
+  INFEASIBLE: N=16 nu=0.1 profile=P2 dt=2.3279512193726543e-10 steps_required=42956226560
+  INFEASIBLE: N=16 nu=0.1 profile=P3 dt=2.3279512193726543e-10 steps_required=42956226560
+  INFEASIBLE: N=16 nu=0.01 profile=P1 dt=2.3247591356115546e-09 steps_required=4301520896
+  INFEASIBLE: N=16 nu=0.01 profile=P2 dt=2.3247591356115546e-09 steps_required=4301520896
+  INFEASIBLE: N=16 nu=0.01 profile=P3 dt=2.3247591356115546e-09 steps_required=4301520896
+  INFEASIBLE: N=16 nu=0.001 profile=P1 dt=2.2933132533515693e-08 steps_required=436050330
+  INFEASIBLE: N=16 nu=0.001 profile=P2 dt=2.2933132533515693e-08 steps_required=436050330
+  INFEASIBLE: N=16 nu=0.001 profile=P3 dt=2.2933132533515693e-08 steps_required=436050330
+  INFEASIBLE: N=20 nu=0.1 profile=P1 dt=9.094860282382656e-13 steps_required=10995221135360
+  INFEASIBLE: N=20 nu=0.1 profile=P2 dt=9.094860282382656e-13 steps_required=10995221135360
+  INFEASIBLE: N=20 nu=0.1 profile=P3 dt=9.094860282382656e-13 steps_required=10995221135360
+  INFEASIBLE: N=20 nu=0.01 profile=P1 dt=9.094079738701468e-12 steps_required=1099616485376
+  INFEASIBLE: N=20 nu=0.01 profile=P2 dt=9.094079738701468e-12 steps_required=1099616485376
+  INFEASIBLE: N=20 nu=0.01 profile=P3 dt=9.094079738701468e-12 steps_required=1099616485376
+  INFEASIBLE: N=20 nu=0.001 profile=P1 dt=9.086281664274431e-11 steps_required=110056020378
+  INFEASIBLE: N=20 nu=0.001 profile=P2 dt=9.086281664274431e-11 steps_required=110056020378
+  INFEASIBLE: N=20 nu=0.001 profile=P3 dt=9.086281664274431e-11 steps_required=110056020378

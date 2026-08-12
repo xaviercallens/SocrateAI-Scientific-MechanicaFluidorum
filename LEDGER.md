@@ -22,7 +22,23 @@ Last verified: 2026-08-12 (`scripts/verify.sh` → both gates PASS).
 | Wave-mass nonzero (sanity lemma; one-step consequence of `resonance_law`) | `wave_mass_nonzero` | ibid. | 2026-08-12 |
 | All Pillar-3 classes are inhabited (non-vacuity §7.5) | instances on ℝ | ibid. | 2026-08-12 |
 
-*13 theorems total; all footprints verified `[propext, Classical.choice, Quot.sound]`.*
+| Sym² lock, variable coefficients (ported from prior tree, source's `+` convention) | `sym2_recurrence_variable` | ibid. | 2026-08-12 (F1) |
+
+### `lean_src/DyadicShells.lean` — dyadic laboratory (Stage 1)
+
+| Claim | Formal name | Since |
+|---|---|---|
+| Nonlinear energy flux telescopes to −outFlux N (arbitrary `k`, `a`) | `dyadic_flux_telescopes` | 2026-08-12 (D2) |
+| Net nonlinear flux vanishes under truncation `a_{N+1}=0` | `dyadic_flux_zero_of_boundary` | 2026-08-12 (D2) |
+| **Energy monotonicity** `dE/dt ≤ 0` for `ν ≥ 0` under truncation | `energyRate_nonpos` | 2026-08-12 (D3) |
+
+*Scope (honesty clause): these are statements about a **finite sum**, not yet about ODE
+solutions — no existence theory is invoked. They establish the ENERGY identity, **not** an
+enstrophy bound; the enstrophy question (the Hypothesis U analogue) remains untouched.
+Non-vacuity: witness pins `energyRate = −1` exactly, so `≤ 0` is not `0 ≤ 0`.*
+
+*22 theorems total across the three files; all footprints verified
+`[propext, Classical.choice, Quot.sound]` by independent recompilation 2026-08-12.*
 
 *Scope note (honesty clause): these are lemmas about `max(R, α/R)`, scalar recurrences, and
 abstract classes — not yet about fluids.*
@@ -39,6 +55,27 @@ abstract classes — not yet about fluids.*
 | Spectral form of the Sym² lock over root pairs | B6 | ibid. |
 | Guesser negative control: u³ refused at order 3, verified at order 4 (Sym³) | — | `symbolic/picard_fuchs_generator.py` |
 | Unconstrained triads N(M) = #{ (k₁,k₂,k₃) ∈ (ℤ³)³ : k₁ + k₂ = k₃, \|kᵢ\|² ≤ M² }, M ∈ {2,4,8,16}, negative control (< vs ≤) | T0.2 | `data/triads_free.csv` |
+| Lattice counts r₃(n), n ≤ 10000; Legendre anchors incl. r₃(7)=r₃(15)=0; negative control fails | T0.1 | `data/r3_counts.csv` (sha256 `4d51aa5a…33f1`) |
+| **Dyadic energy flux telescopes** (exact ℚ, N=1..12, 240 cases) + partial-sum form (1800 cases); negative control (k_{n-1}→k_n) fails with residual 2/3 | D1 | `tests/tier_b_dyadic_checks.py` |
+| Exact 3-D periodic percolation instrument: union-find, wrap detection, 27 checks; negative control (drop x-periodicity) fails | T0.3 | `symbolic/percolation_exact.py`, `tests/test_percolation.py` |
+
+## Awaiting human statement-adequacy audit (NOT tiered — no claim may cite these)
+
+`lean_src/HypothesisU_Statements.lean` compiles clean (5 theorems, clean footprints) but its
+*statements* are unaudited, so nothing in it is a claim yet. Notably it **proves the prior
+formalization was false**: `unconstrained_bound_false` machine-checks that "for all fields u,
+enstrophy ≤ C" is refutable (via degree-2 homogeneity `enstrophy_smul`), converting
+REVIEW finding L3 from prose into a theorem.
+
+**Two questions the authoring agent raised and correctly refused to decide (PLAN.md E-4):**
+
+- **Q1 (vacuity leak, load-bearing).** `HypothesisU` fixes one `u₀` across all cutoffs `N`,
+  while clause (iii) forces `u t n = 0` for `n > N`. So if `u₀` has any mode above `N`, no
+  solution exists at that `N` and the bound holds **vacuously** there. Fix requires choosing
+  between (a) projecting `u₀` onto modes ≤ N at each cutoff, or (b) restricting to finitely
+  supported `u₀`. **This is a statement-level decision for the human owner.**
+- **Q2.** Whether the weight `w` should be constrained (`0 < w n`, or `w n = k n²`). Currently
+  unconstrained, so `enstrophy` is not even asserted nonnegative.
 
 ## Tier C — conjectures, analogies, unformalized arguments
 
