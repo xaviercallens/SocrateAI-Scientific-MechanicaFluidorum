@@ -1,0 +1,4 @@
+# Metadata for triads_free.csv
+command: python3 /home/xavkal/xdev/SocrateAI-Scientific-MechanicaFluidorum/symbolic/triads_free.py
+python_version: 3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]
+sha256sum: 84d6af8fbef3e3c5bc4946e939b9ad06484a3f5c7ec45a8c065ba4caf3d92fb3

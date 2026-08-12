@@ -38,6 +38,7 @@ abstract classes — not yet about fluids.*
 | Sharpness at self-dual radius; piecewise ≡ max for R>0; disagreement at R=−1 | B5 | ibid. |
 | Spectral form of the Sym² lock over root pairs | B6 | ibid. |
 | Guesser negative control: u³ refused at order 3, verified at order 4 (Sym³) | — | `symbolic/picard_fuchs_generator.py` |
+| Unconstrained triads N(M) = #{ (k₁,k₂,k₃) ∈ (ℤ³)³ : k₁ + k₂ = k₃, \|kᵢ\|² ≤ M² }, M ∈ {2,4,8,16}, negative control (< vs ≤) | T0.2 | `data/triads_free.csv` |
 
 ## Tier C — conjectures, analogies, unformalized arguments
 
