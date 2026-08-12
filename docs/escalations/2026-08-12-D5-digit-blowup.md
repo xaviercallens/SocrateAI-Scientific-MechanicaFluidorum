@@ -73,3 +73,22 @@ production/dissipation competition).
 ## Smallest question that unblocks the `[any]` rerun
 
 Which of options 1–4 above (or a combination — e.g. 1 now, 2 as a later Stage-1 deliverable)?
+
+## Resolution — human owner decision, 2026-08-12
+
+**Option 3 accepted.** D5's exact-rational certification is closed; no further attempt will be
+made to certify the trajectory measurement in ℚ. Steering data (`exploration/dyadic_imex_dual_
+precision.py`) is retained as permanent Tier C.
+
+**Accepted follow-up before drawing any conclusion from the dual-precision divergences:**
+re-run the diverging low-ν configurations at successively finer `dt` and check whether the
+divergence survives refinement. Done: `exploration/dyadic_imex_dt_refinement.py`,
+`data/dyadic_imex_dt_refinement.csv`. Result: all 4 distinct `(ν, profile)` pairs that diverged
+flip to `status=OK` at a finite refinement level and stay `OK` at every finer level tested, with
+`sup_Omega` decreasing (not diverging) as `dt` shrinks further — the signature of a
+discretization artifact resolving under refinement, not a fixed-time genuine blow-up. Full
+numbers and the standard reporting-discipline caveat (no verdict asserted; see PLAN.md §8): the
+new LEDGER.md entry adjacent to the dual-precision row.
+
+This escalation is now CLOSED. It does not need to be reopened unless a genuinely new
+long-horizon Tier B measurement is attempted by some other method.

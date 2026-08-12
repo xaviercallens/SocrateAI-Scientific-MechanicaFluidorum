@@ -1,0 +1,8 @@
+generating_command: python3 exploration/dyadic_imex_dt_refinement.py
+python_version: 3.12.3 (3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0])
+git_commit: e6930c4b4ed87f61fe1f3041bcb412e43ea92d08
+sha256sum: 3ed7295718e0591194615d672dbab903bb356555dddad44041b8805bc1500ecf  dyadic_imex_dt_refinement.csv
+row_count: 40 (15 DIVERGED, 25 OK)
+magnitude_guard: |a_n| > 1e+15 or non-finite
+purpose: dt-refinement (divisors 1,2,4,8,16 of the original dyadic_imex_dual_precision.py dt) for the 4 distinct (nu,profile) pairs that DIVERGED there, at N=24 (primary) and N=8 (cross-check for N-independence). Reports divergence_time = steps_completed * dt (meaningful only when status==DIVERGED), not merely step count, since step count alone is not comparable across dt levels.
+REPORTING DISCIPLINE: no verdict is drawn on whether divergence is genuine or a dt-resolution artifact. That judgment is reserved to the human owner (PLAN.md section 8) and should read divergence_time's trend as dt_divisor increases: roughly constant -> evidence of a genuine, dt-independent phenomenon; growing without an apparent limit -> evidence the original dt was under-resolving the trajectory.

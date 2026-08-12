@@ -131,18 +131,41 @@ the top-tier agent never itself licenses the claim; same DRAFT-pending-audit pos
 | **Dyadic energy flux telescopes** (exact ℚ, N=1..12, 240 cases) + partial-sum form (1800 cases); negative control (k_{n-1}→k_n) fails with residual 2/3 | D1 | `tests/tier_b_dyadic_checks.py` |
 | Exact 3-D periodic percolation instrument: union-find, wrap detection, 27 checks; negative control (drop x-periodicity) fails | T0.3 | `symbolic/percolation_exact.py`, `tests/test_percolation.py` |
 | **Dyadic enstrophy-production identity** (mirrors `EnstrophyProduction.lean` above): `Σk_n²a_nNL_n = 3Σ_{n<N}k_n³a_n²a_{n+1}` for `k_n=2^n`, 240 exact cases; negative control (`k_n=n+1`, non-doubling) fails; bonus confirms general formula (ratio `r`, coeff `r²−1`) at `r=3` | P1 | `tests/tier_b_enstrophy_production.py` |
-| Rational IMEX-Euler discretization of the truncated dyadic shell model, negative control (perturbed influx term) fails as required — **instrument verified; the intended measurement was NOT obtained, see escalation** | D5 | `symbolic/dyadic_imex.py`, `data/dyadic_omega_sup_imex.csv` (sha256 `8844dd2e…3580128`) |
+| Rational IMEX-Euler discretization of the truncated dyadic shell model, negative control (perturbed influx term) fails as required — **instrument verified; the intended cutoff-uniformity measurement was NOT obtained; DEMOTED to Tier C, see decision below** | D5 | `symbolic/dyadic_imex.py`, `data/dyadic_omega_sup_imex.csv` (sha256 `8844dd2e…3580128`) |
+
+**Human-owner decision on `docs/escalations/2026-08-12-D5-digit-blowup.md`, recorded 2026-08-12
+(PLAN.md §8 — verdicts are human-owner-only):** option 3 accepted. D5's exact-rational
+certification attempt is closed; no further work will try to certify the trajectory
+measurement in ℚ (confirmed twice now, by two independent redesigns — D4 explicit float RK4,
+D5 rational IMEX-Euler — that exact/rational iteration of this nonlinear recurrence is
+structurally unworkable, not a bug in either design). Steering data is retained as permanent
+Tier C, per the caveats below.
 
 **Dual-precision (Tier C, quarantined) steering data**: `exploration/dyadic_imex_dual_precision.py`,
 `data/dyadic_imex_dual_precision.csv` (sha256 `02256f87…c103d`, verified independently). Same
 IMEX-Euler scheme in float64 + mpmath-50-digit, full N∈{8..24} grid, T=10. 45 rows; several
 configurations at low ν (0.01, 0.001) show `status=DIVERGED` with fp64/mp50 agreeing to
 ~1e-14–1e-16 — agreement this tight rules out ordinary floating-point rounding as the cause,
-but does **not** distinguish genuine trajectory divergence from a `dt` that is simply too
-coarse: the design memo's `dt` formula depends only on the initial profile's excited scale,
-never on `ν`, so it was never re-tuned for the low-viscosity configurations that diverge. **No
-verdict is drawn here** — this is exactly the caveat PLAN.md §8 requires, and it is the kind
-of finding that would need a `ν`-aware `dt` before being informative either way.
+but did **not by itself** distinguish genuine trajectory divergence from a `dt` that was simply
+too coarse: the design memo's `dt` formula depends only on the initial profile's excited scale,
+never on `ν`, so it was never re-tuned for the low-viscosity configurations that diverge.
+
+**Follow-up dt-refinement study (accepted 2026-08-12 as the concrete next step, resolves the
+caveat above):** `exploration/dyadic_imex_dt_refinement.py`, `data/dyadic_imex_dt_refinement.csv`
+(sha256 `3ed72957…500ecf`, verified independently, bit-for-bit reproducible on rerun). All 4
+distinct `(ν, profile)` pairs that diverged in the dual-precision sweep were re-run at
+`dt, dt/2, dt/4, dt/8, dt/16` (fp64; N=24 primary + N=8 cross-check, identical at every level —
+confirms the phenomenon is N-independent under refinement too). **In every one of the 4 cases,
+`status` flips from `DIVERGED` to `OK` at a finite refinement level and stays `OK` at every
+finer level tested**, with `sup_Omega` monotonically *decreasing* as `dt` shrinks further within
+the `OK` regime (e.g. ν=0.01,P1: 45.1 → 21.8 → 17.3 → 15.8 across the last four levels) rather
+than converging to a large or unbounded value — the signature of a discretization artifact
+resolving under refinement, not of a fixed-time genuine blow-up (which would keep reappearing,
+at a stable time, however fine `dt` gets). **No verdict is drawn here per PLAN.md §8** — this is
+reported as the raw finding for the human owner's read, not asserted as a proof that no genuine
+divergence exists in the true (continuum-time) dyadic model; it only shows the specific
+divergences observed at the original `dt` do not survive step-size refinement of this discrete
+scheme.
 
 ## Tier A — `lean_src/HypothesisU_Statements.lean` (statement shape; audited 2026-08-12)
 

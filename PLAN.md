@@ -195,6 +195,11 @@ for fixed data and ν, is `sup_t Ω_N(t)` bounded *uniformly in N*?
   infeasible (denominators explode — E-5 if you hit this); the top-tier design will specify
   a per-step certified inequality scheme. **Do not start the `[any]` half before the design
   memo exists** (`docs/designs/D5-certified-integration.md`).
+- **Status: CLOSED at Tier B, 2026-08-12** (`docs/escalations/2026-08-12-D5-digit-blowup.md`,
+  human-owner decision = option 3). Exact-rational certification is not further pursued; see
+  LEDGER.md for the accepted decision and the follow-up dt-refinement finding (all 4 diverging
+  low-ν dual-precision configs resolve to `OK` under step-size refinement, `sup_Omega`
+  decreasing rather than diverging — reported as raw finding, no verdict drawn per §8).
 - **DoD (run half):** dataset + meta as in D4, produced by the certified scheme; escalation
   E-3/E-5 filed if anomalies. **Verdict on uniformity: human owner only.**
 
