@@ -118,13 +118,19 @@ ESCALATED in your report, and stop. Escalate when:
   (definitions compile) with the *statement-adequacy* box ticked by the human.
 - **Status:** OPEN for the top-tier authoring step.
 
-### F3 — Conditional Millennium Reduction skeleton  `[top]`
+### F3 — Conditional Millennium Reduction skeleton  `[top]` — DONE 2026-08-12, awaiting audit
 - **Objective:** `theorem millennium_reduction (hU : HypothesisU …) (hAL : AubinLionsStatement …)
   (hPS : ProdiSerrinStatement …) : GlobalRegularityStatement …` — the implication chain with
   unproven analysis as named hypothesis parameters (never axioms).
 - **Prereq:** F2 merged. **DoD:** compiles clean; the hypothesis parameters are *bona fide
   statements* (audited), not `Prop` placeholders; ledger row at Tier A explicitly scoped as
   "conditional skeleton — the analytic content remains open".
+- **Implemented:** `lean_src/MillenniumReduction.lean` (5 theorems, clean footprints, wired
+  into `scripts/verify.sh` Gate 2). Design: `docs/designs/F3_MILLENNIUM_REDUCTION_SKELETON.md`.
+  Compilation and 3 negative controls independently verified by the top-tier author itself
+  before commit. **Remaining:** human statement-adequacy audit (this task's `[top]` authoring
+  step does not itself license the claim — see LEDGER.md's entry for the same posture as F2's
+  pre-audit `HypothesisU_Statements.lean`).
 
 ---
 

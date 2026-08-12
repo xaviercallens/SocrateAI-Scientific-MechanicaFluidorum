@@ -26,7 +26,7 @@ LEAN_ENV_DIR="${LEAN_ENV_DIR:-$HOME/xdev/SocrateAI-Scientific-RajMathRecovery/du
 # (PLAN.md F2); it is gated for compilation so it cannot rot, but its claims are
 # NOT ledgered until the audit passes.
 FAILED=0
-for f in CallensDualScale DyadicShells HypothesisU_Statements EnstrophyProduction EnstrophyProductionBound; do
+for f in CallensDualScale DyadicShells HypothesisU_Statements EnstrophyProduction EnstrophyProductionBound MillenniumReduction; do
   echo "-- lean_src/$f.lean"
   OUT=$(cd "$LEAN_ENV_DIR" && lake env lean "$ROOT/lean_src/$f.lean" 2>&1)
   if echo "$OUT" | grep -qiE "^.*error|sorry"; then
