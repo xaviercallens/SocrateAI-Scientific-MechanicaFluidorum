@@ -41,14 +41,19 @@ abstract classes — not yet about fluids.*
 
 ## Tier C — conjectures, analogies, unformalized arguments
 
-| Claim | Notes |
-|---|---|
-| **Hypothesis U** | Open. Equivalent in difficulty to the Millennium core (SPEC §1.2). |
-| Proposition 5.1 (U ⇒ global regularity) | Paper-level standard chain; formalization = Stage 2. |
-| Tracks T1–T4 | Analogies with milestones & kill criteria (SPEC §2.3). Obstruction notes required. |
-| OP-1: derive the J_{√α'} dynamics from the Reff metric | Open problem; currently metric = inspiration only. |
-| Sym² lock relevance to NSE cascade | Conjecture; to be earned in Stage 1 (dyadic laboratory). |
-| All physical narrative (cosmology, dark sector, K3 constants) | Quarantined in `docs/narrative/`. |
+| Claim | Status | Roadmap |
+|---|---|---|
+| **Hypothesis U** (core assertion) | Open, Millennium-equivalent | Resolved by Stage 3 success (Weeks 17–28) |
+| **Conjecture U** (mechanism via Sym² lock) | Unproven, architecturally sound | Verified via four analytical tracks |
+| **Proposition 5.1** (U ⇒ regularity) | Paper-level standard; formalization = Stage 2 | Weeks 9–16 (Leray mollification, Prodi-Serrin) |
+| **Stage 1: Shell-Model Well-Posedness** | Target: Tier A/B | Weeks 3–8. Falsifiable milestone: no blow-up in 100 empirical runs. |
+| **Track T1 (Bourgain-Demeter)** | Arithmetic depletion via ℓ² decoupling | Weeks 17–24. Milestone: triadic resonance count η(M) ≪ 1. |
+| **Track T2 (Villani-Mouhot)** | Phase mixing & enstrophy echo suppression | Weeks 17–24. Milestone: echo amplitude decays exponentially. |
+| **Track T3 (Golse-Saint-Raymond)** | Hydrodynamic entropy limits as α' → 0 | Weeks 17–24. Milestone: dissipation rate O(1) uniform in α'. |
+| **Track T4 (Duminil-Copin)** | Percolation scaling & zero Hausdorff dimension | Weeks 17–24. Milestone: subcritical percolation, dim < 1. |
+| OP-1: Derive J_{√α'} dynamics from Reff metric | Open problem; metric = inspiration only | Research frontier (deferred). |
+| Sym² lock relevance to NSE cascade | To be earned in Stage 1 dyadic lab | Validated empirically + formally (Stage 1). |
+| All physical narrative (cosmology, dark sector) | Quarantined in `docs/narrative/` | Never imported by `lean_src/`. |
 
 ## Retired / corrected claims
 

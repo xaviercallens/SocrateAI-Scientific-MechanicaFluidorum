@@ -217,10 +217,21 @@ and data as constraints** (repairing review-L3); Prop 5.1 with unproven infrastr
 honesty: full analytic formalization is a multi-year Mathlib-scale effort; the paper proof +
 Tier B numerics carry the interim weight, and the ledger says so.
 
-**Stage 3 — Tracks T1–T4 as parallel exploratory programs.**
-Each track runs: (i) precise conjecture statement, human-audited; (ii) §5.3 counterexample
-search; (iii) toy-model theorem (Tier B → A); (iv) milestone/kill review against §1.3.
-Progression to continuum statements only after the Stage-1 laboratory validates the mechanism.
+**Stage 2 — Classical PDE Consolidation.**
+Reassemble the global theory of Leray-type mollified NSE, tracking explicit dependence on α'.
+Energy inequalities, Aubin-Lions embedding, Prodi-Serrin criterion application. Target: paper-level Tier A formalization.
+
+**Stage 3 — Enstrophy Bounds (The Four Tracks).**
+Scale-by-scale proof of Hypothesis U via four deep mathematical disciplines:
+1. **T1 (Bourgain-Demeter):** ℓ² decoupling to show triadic resonant depletion under Sym² lock.
+2. **T2 (Villani-Mouhot):** Gevrey-regularity Newton iteration proving enstrophy echo exponential decay.
+3. **T3 (Golse-Saint-Raymond):** Relative-entropy functional showing dissipation uniformly bounds enstrophy as α' → 0.
+4. **T4 (Duminil-Copin):** Percolation scaling limits proving zero-dimensional singular set.
+
+Each track has a falsifiable milestone (Tier B computation or Tier A proof). Each has a kill criterion.
+
+**Stage 4 — Formal Audit.**
+Translate Stage 3 analytics into machine-checked Lean 4. Final verification: `#print axioms` footprint = `[propext, Classical.choice, Quot.sound]`.
 
 **Stage 4 — Synthesis.** Only entered if a track survives Stage 3 with a continuum-level
 Tier B result. Integration of partial bounds toward Hypothesis U; adversarial review; outside
