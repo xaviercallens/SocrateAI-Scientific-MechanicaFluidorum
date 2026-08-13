@@ -82,6 +82,10 @@ import Mathlib.Data.Finset.Basic
 import Mathlib.Tactic.Ring
 import Mathlib.Tactic.Linarith
 import Mathlib.Tactic.NormNum
+import Mathlib.Tactic.Positivity
+import Mathlib.Topology.Algebra.InfiniteSum.Order
+import Mathlib.Topology.Algebra.InfiniteSum.NatInt
+import Mathlib.Analysis.PSeries
 
 namespace MechanicaFluidorum.MillenniumReduction
 
@@ -187,101 +191,186 @@ theorem zero_isSpatiallySmooth (k : ℕ → ℝ) (t : ℝ) :
   rw [Finset.sum_congr rfl this, Finset.sum_const_zero]
   exact zero_le_one
 
-/-! ## 4. The two undischarged analytic steps, as named hypothesis parameters -/
+/-! ## 3b. Concrete objects for the dyadic target (Task 4, D1/D2/D3 decided 2026-08-13)
 
-/-- **Compactness-step output.** `HasGlobalBoundedLimit nu B w hw u0` says: there is an
-untruncated solution `ulim` of the same evolution law and data, and a bound `C > 0`, such that
-EVERY finite partial enstrophy sum of `ulim` (cutoff `M`, arbitrary) stays `≤ C` on `[0, T]`.
-This is the finite-partial-sum avatar of "the limit inherits a uniform `H¹`-type bound" — the
-combined content of SPEC.md §II Steps 1–2. `hw` (Q5) makes "enstrophy controlled" honest: for
-nonnegative `w`, bounded finite partial sums IS equivalent to the (possibly infinite) sum
-converging with value `≤ C`. Named separately from `AubinLionsStatement`/`ProdiSerrinStatement`
-so their two types are SYNTACTICALLY identical at the join point — see NC1/NC2 below for why
-that identity is load-bearing. -/
-def HasGlobalBoundedLimit (nu : ℝ) (B : ℕ → (ℕ → ℝ) → ℝ) (w : ℕ → ℝ) (hw : ∀ n, 0 ≤ w n)
-    (u0 : ℕ → ℝ) : Prop :=
-  ∃ ulim : ℝ → ℕ → ℝ,
-    IsFullSolution nu B w u0 ulim ∧
-    ∀ T : ℝ, ∃ C : ℝ, 0 < C ∧
-      ∀ M : ℕ, ∀ t : ℝ, 0 ≤ t → t ≤ T → enstrophy M w ulim t ≤ C
+Audit verdict **B4** (REVISE) required the reduction to be specialised to the concrete object
+being audited, and **A5** required `B` to carry real structure. Both are addressed by working
+with the Katz–Pavlović nonlinearity directly.
 
-/-- **Aubin–Lions compactness (SPEC.md §II Steps 1–2), as a hypothesis parameter.**
-`docs/REVIEW-2026-08-12.md` L7: the prior tree's `axiom aubin_lions_compactness` is replaced by
-this named `Prop`, supplied by the caller of `millennium_reduction` rather than asserted
-unconditionally. Quantifies over `T` explicitly (Q4): SPEC.md §1.1 requires Hypothesis U "for
-… all T", not one fixed horizon. NOT proved in this file — this is exactly the undischarged
-analytic content the reduction is conditional on. -/
-def AubinLionsStatement (nu : ℝ) (B : ℕ → (ℕ → ℝ) → ℝ) (w : ℕ → ℝ) (hw : ∀ n, 0 ≤ w n)
-    (u0 : ℕ → ℝ) : Prop :=
-  (∀ T : ℝ, HypothesisU nu T B w u0) → HasGlobalBoundedLimit nu B w hw u0
+`shellB`, `dyadicWavenumber` and `dyadicWeight` below are **verbatim re-declarations** of the
+canonical definitions in `lean_src/DyadicShell_Statements.lean`, forced by the standalone-compile
+convention (see the BUILD NOTE in this file's header). **They must be kept in sync by hand;
+that duplication is a known and accepted cost of Gate 2 compiling each file in isolation.** -/
 
-/-- **Global regularity of the untruncated system.** Existence of a genuine solution that is
-BOTH globally-in-time defined (`IsFullSolution`'s `∀ t ≥ 0` clause) AND spatially smooth at
-every time (`IsSpatiallySmooth`, Q3) — the honest two-axis (time × space) translation of
-"globally smooth", not merely the time axis alone. `T`-independent by construction, matching
-SPEC.md §1.1's "for all T" hypothesis producing a `T`-independent conclusion. -/
-def GlobalRegularityStatement (nu : ℝ) (B : ℕ → (ℕ → ℝ) → ℝ) (w : ℕ → ℝ) (k : ℕ → ℝ)
-    (u0 : ℕ → ℝ) : Prop :=
-  ∃ u : ℝ → ℕ → ℝ, IsFullSolution nu B w u0 u ∧ ∀ t : ℝ, 0 ≤ t → IsSpatiallySmooth k u t
+noncomputable def dyadicWavenumber (n : ℕ) : ℝ := (2 : ℝ) ^ n
+noncomputable def dyadicWeight (n : ℕ) : ℝ := (dyadicWavenumber n) ^ 2
 
-/-- **Prodi–Serrin regularity criterion (SPEC.md §II Step 3), as a hypothesis parameter.**
-Promotes the compactness-step's family of bounded limits (`H¹`-type control at every `T`, via
-`HasGlobalBoundedLimit`) to global regularity in BOTH time and space (`u ∈ L^∞_t L^6_x` via
-Sobolev embedding, then Prodi–Serrin's parabolic bootstrap to full smoothness). `hwk` ties the
-wavenumber `k` used in the conclusion's `IsSpatiallySmooth` to the weight `w` used in the
-hypothesis's `HasGlobalBoundedLimit` (`w n = (k n)²`) — without it `k` would be an unrelated,
-meaningless parameter. NOT proved in this file, for the same reason as `AubinLionsStatement`. -/
-def ProdiSerrinStatement (nu : ℝ) (B : ℕ → (ℕ → ℝ) → ℝ) (w : ℕ → ℝ) (hw : ∀ n, 0 ≤ w n)
-    (k : ℕ → ℝ) (hwk : ∀ n, w n = (k n) ^ 2) (u0 : ℕ → ℝ) : Prop :=
-  HasGlobalBoundedLimit nu B w hw u0 → GlobalRegularityStatement nu B w k u0
+theorem dyadicWeight_nonneg : ∀ n, 0 ≤ dyadicWeight n := by
+  intro n; unfold dyadicWeight dyadicWavenumber; positivity
+
+/-- Katz–Pavlović shell nonlinearity (verbatim from `DyadicShell_Statements.shellB`). -/
+noncomputable def shellB (k : ℕ → ℝ) : ℕ → (ℕ → ℝ) → ℝ
+  | 0,     v => -(k 0 * v 0 * v 1)
+  | m + 1, v => k m * v m ^ 2 - k (m + 1) * v (m + 1) * v (m + 2)
+
+/-! ## 3c. The ℓ² upgrade (decision D1: ADD + BRIDGE, localised)
+
+**Where the upgrade is needed, and where it is not.** `HypothesisU` quantifies over *Galerkin*
+solutions, whose clause (iii) forces `u t n = 0` for `n > N`. So `enstrophy N w u t`, a sum over
+`range (N+1)`, already captures **every nonzero mode**: the finite sum there is exact, not an
+approximation, and rewriting it as a `tsum` would change nothing mathematically while disturbing
+the convention `EnstrophyProduction.lean` shares. The genuine `tsum` objects are the ones with
+**no cutoff**: the untruncated limit and its Sobolev regularity. The upgrade is therefore
+localised to those, per decision D1.
+
+Design memo: `docs/designs/TASK4_ELL2_REPAIR.md`; the bridge below is the compiled snippet
+`docs/designs/snippets/task4_bridge.lean`. -/
+
+/-- Finite enstrophy for an untruncated state: the weighted square-sum is summable. This is the
+shell-model analogue of `H¹`, and is a genuine ℓ²-type condition rather than a partial-sum
+bound — there is no cutoff to make the sum finite. -/
+def HasFiniteEnstrophy (w : ℕ → ℝ) (u : ℝ → ℕ → ℝ) (t : ℝ) : Prop :=
+  Summable (fun n => w n * (u t n) ^ 2)
+
+/-- Enstrophy of an untruncated state as an infinite series. -/
+noncomputable def enstrophyTsum (w : ℕ → ℝ) (u : ℝ → ℕ → ℝ) (t : ℝ) : ℝ :=
+  ∑' n, w n * (u t n) ^ 2
+
+/-- **The bridge (D1).** For a nonnegative weight, the finite-partial-sum bound used throughout
+the earlier formulation yields summability together with the corresponding `tsum` bound. This is
+what makes the ℓ² upgrade a *conservative extension*: every statement previously proven in the
+partial-sum form still holds, and nothing already verified is invalidated. -/
+theorem hasFiniteEnstrophy_of_bounded (w : ℕ → ℝ) (hw : ∀ n, 0 ≤ w n)
+    (u : ℝ → ℕ → ℝ) (t : ℝ) (C : ℝ) (hbd : ∀ M : ℕ, enstrophy M w u t ≤ C) :
+    HasFiniteEnstrophy w u t ∧ enstrophyTsum w u t ≤ C := by
+  have hf : ∀ n, 0 ≤ w n * (u t n) ^ 2 := fun n => mul_nonneg (hw n) (sq_nonneg _)
+  have hall : ∀ M : ℕ, ∑ n ∈ Finset.range M, w n * (u t n) ^ 2 ≤ C := by
+    intro M
+    cases M with
+    | zero => simpa using le_trans (Finset.sum_nonneg (fun i _ => hf i)) (hbd 0)
+    | succ m => exact hbd m
+  have hs : Summable (fun n => w n * (u t n) ^ 2) := summable_of_sum_range_le hf hall
+  exact ⟨hs, hs.tsum_le_of_sum_range_le hall⟩
+
+/-! ## 4. The two undischarged analytic steps — now with content (audit verdict B1)
+
+Verdict B1 (NO): bare `Prop → Prop` arrows "completely bypass PDE theory. The Lean kernel is
+merely verifying a logical tautology." Accepted. The repair is **not** to prove these steps —
+parking undischarged analysis in a named hypothesis parameter rather than an `axiom` is the
+pattern `docs/REVIEW-2026-08-12.md` L7 prescribes, and it stays. The repair is to give the
+types real analytic content, so that a supplier of `hAL` must actually produce the object a
+compactness argument produces, instead of any function whatsoever between two `Prop`s. -/
+
+/-- **What a compactness argument actually delivers** (audit B1 + decision D3). `ulim` is the
+limit of the Galerkin family, and the four clauses are all load-bearing:
+
+1. it solves the untruncated system;
+2. it has **finite enstrophy** at every time (an ℓ² statement, D1);
+3. that enstrophy is **bounded on every horizon**, with `∃C` *inside* `∀T` — the honest form,
+   since compactness gives no uniformity in `T`;
+4. **(decision D3)** it is genuinely the limit of the family, modewise, along a
+   **subsequence** `φ`. Clause 4 is what makes this Aubin–Lions rather than the far weaker
+   assertion that *some* bounded solution exists. The subsequence is not a technicality: a
+   compactness argument extracts one, and claiming convergence of the full sequence would
+   overstate what the analysis gives. -/
+def IsGalerkinLimit (nu : ℝ) (u0 : ℕ → ℝ)
+    (galerkin : ℕ → ℝ → ℕ → ℝ) (ulim : ℝ → ℕ → ℝ) : Prop :=
+  IsFullSolution nu (shellB dyadicWavenumber) dyadicWeight u0 ulim
+  ∧ (∀ t : ℝ, 0 ≤ t → HasFiniteEnstrophy dyadicWeight ulim t)
+  ∧ (∀ T : ℝ, ∃ C : ℝ, 0 < C ∧
+      ∀ t : ℝ, 0 ≤ t → t ≤ T → enstrophyTsum dyadicWeight ulim t ≤ C)
+  ∧ (∃ φ : ℕ → ℕ, StrictMono φ ∧
+      ∀ n : ℕ, ∀ t : ℝ, 0 ≤ t →
+        Filter.Tendsto (fun j => galerkin (φ j) t n) Filter.atTop (nhds (ulim t n)))
+
+/-- **Aubin–Lions compactness for the dyadic shell model**, as a hypothesis parameter with
+genuine content. A supplier must, from a uniformly-enstrophy-bounded family of Galerkin
+solutions, produce a limit satisfying all four clauses of `IsGalerkinLimit`. Specialised to
+`shellB`/`dyadicWeight` throughout, closing audit verdict B4. NOT proved here. -/
+def AubinLionsStatement (nu : ℝ) (u0 : ℕ → ℝ) : Prop :=
+  ∀ galerkin : ℕ → ℝ → ℕ → ℝ,
+    (∀ N : ℕ, IsGalerkinSolution N nu (shellB dyadicWavenumber) dyadicWeight u0 (galerkin N)) →
+    (∀ T : ℝ, ∃ C : ℝ, 0 < C ∧
+        ∀ N : ℕ, ∀ t : ℝ, 0 ≤ t → t ≤ T →
+          enstrophy N dyadicWeight (galerkin N) t ≤ C) →
+    ∃ ulim : ℝ → ℕ → ℝ, IsGalerkinLimit nu u0 galerkin ulim
+
+/-- Global regularity of the untruncated dyadic shell system: a solution that is global in time
+and spatially smooth (in every Sobolev class) at every time. -/
+def GlobalRegularityStatement (nu : ℝ) (u0 : ℕ → ℝ) : Prop :=
+  ∃ u : ℝ → ℕ → ℝ,
+    IsFullSolution nu (shellB dyadicWavenumber) dyadicWeight u0 u
+    ∧ ∀ t : ℝ, 0 ≤ t → IsSpatiallySmooth dyadicWavenumber u t
+
+/-- **The regularity criterion**, as a hypothesis parameter: a bounded-enstrophy limit of the
+Galerkin family is globally regular.
+
+**Naming note (decision D2, 2026-08-13):** the owner elected to rename only the main theorem,
+keeping `ProdiSerrinStatement` as a marker of the criterion's intellectual lineage. That
+lineage is a *motivation*, not a claim: in the shell setting this is an ODE continuation
+criterion, materially weaker than the Prodi–Serrin theorem for 3-D Navier–Stokes, and it must
+not be cited as the latter. -/
+def ProdiSerrinStatement (nu : ℝ) (u0 : ℕ → ℝ) : Prop :=
+  ∀ (galerkin : ℕ → ℝ → ℕ → ℝ) (ulim : ℝ → ℕ → ℝ),
+    IsGalerkinLimit nu u0 galerkin ulim → GlobalRegularityStatement nu u0
 
 /-! ## 5. The reduction itself
 
-Pure logical composition — `hPS (hAL hU)` — by design: all mathematical weight is parked in
-`hAL`/`hPS`'s TYPES (§4), matching `docs/REVIEW-2026-08-12.md` L7's prescription exactly. This
-is not a weaker proof standing in for a real one; it is the entire honest content of "the
-reduction chain type-checks", which is all F3 (PLAN.md §4) asks for. `hwk` is not consumed by
-the proof term itself (the composition works regardless) but is essential to the STATEMENT's
-adequacy (Q3) — without it, nothing would force `k` to have anything to do with the dynamics
-governed by `w`. -/
+Still a composition — correctly so; the analytic weight lives in the hypotheses' TYPES, which
+is exactly what verdict B1 said was missing and what §4 now supplies. What has changed is that
+the composed types now say something: `hAL` cannot be satisfied without exhibiting a genuine
+Galerkin limit, and `hPS` cannot be applied without one in hand.
 
-/-- **Conditional Millennium Reduction.** If the truncated system satisfies Hypothesis U at
-`(nu, T, B, w, u0)` for EVERY horizon `T`, and the Aubin–Lions compactness step and the
-Prodi–Serrin promotion step both hold for the same parameters, then the untruncated system has
-a genuine solution matching `u0` that is global in time AND spatially smooth (lies in every
-Sobolev class `H^s`) at every time. Proves no PDE content: `hAL` and `hPS` carry the entire
-analytic weight of Proposition 5.1 (SPEC.md §1.1); this theorem only certifies that the chain
-composes, with the parameters honestly related (`hw`, `hwk`). -/
-theorem millennium_reduction (nu : ℝ) (B : ℕ → (ℕ → ℝ) → ℝ) (w : ℕ → ℝ) (hw : ∀ n, 0 ≤ w n)
-    (k : ℕ → ℝ) (hwk : ∀ n, w n = (k n) ^ 2) (u0 : ℕ → ℝ)
-    (hU : ∀ T : ℝ, HypothesisU nu T B w u0)
-    (hAL : AubinLionsStatement nu B w hw u0)
-    (hPS : ProdiSerrinStatement nu B w hw k hwk u0) :
-    GlobalRegularityStatement nu B w k u0 :=
-  hPS (hAL hU)
+**Renamed (decision D2)** from `millennium_reduction`: that name asserted a 3-D pedigree the
+statement does not have, which is precisely the imprecision audit verdict D1 killed. -/
+
+/-- **Conditional regularity reduction for the truncated viscous Katz–Pavlović shell model.**
+Given a family of Galerkin solutions whose enstrophy is bounded uniformly in the cutoff on every
+horizon, plus the compactness and continuation steps as hypothesis parameters, the untruncated
+shell system has a globally regular solution.
+
+**This proves no analytic content.** `hAL` and `hPS` carry it, and both remain undischarged;
+the file is Tier C until one of them is proven. What is certified is that the chain composes
+with the concrete `shellB` dynamics and with statements that have real content. -/
+theorem dyadicShell_regularity_reduction (nu : ℝ) (u0 : ℕ → ℝ)
+    (galerkin : ℕ → ℝ → ℕ → ℝ)
+    (hgal : ∀ N : ℕ,
+      IsGalerkinSolution N nu (shellB dyadicWavenumber) dyadicWeight u0 (galerkin N))
+    (hU : ∀ T : ℝ, ∃ C : ℝ, 0 < C ∧
+      ∀ N : ℕ, ∀ t : ℝ, 0 ≤ t → t ≤ T → enstrophy N dyadicWeight (galerkin N) t ≤ C)
+    (hAL : AubinLionsStatement nu u0)
+    (hPS : ProdiSerrinStatement nu u0) :
+    GlobalRegularityStatement nu u0 :=
+  let ⟨ulim, hlim⟩ := hAL galerkin hgal hU
+  hPS galerkin ulim hlim
 
 /-! ## 6. Non-vacuity (SPEC §7.5), scoped to what this file can honestly discharge
 
-Proving `HypothesisU`/`AubinLionsStatement`/`ProdiSerrinStatement` themselves ACHIEVABLE would
-require ODE existence/uniqueness theory this toolchain excludes (already deferred in F2 via its
-own `WITNESS DEFERRED` comment on `HypothesisU`). What is proved below, matching exactly the
-scope of F2's `zero_isGalerkinSolution`, is that the TARGET objects of this file's new
-definitions are genuinely satisfiable (inhabited types), not vacuous by construction. -/
+Proving the hypothesis parameters ACHIEVABLE would require ODE existence theory this file
+excludes. What is proved is that the new definitions are genuinely satisfiable — in particular
+that `IsGalerkinLimit`, with all four clauses including the subsequence, is inhabited. -/
 
-/-- `HasGlobalBoundedLimit` is satisfiable: the zero flow, bound `C = 1`. -/
-theorem zero_has_global_bounded_limit (nu : ℝ) (B : ℕ → (ℕ → ℝ) → ℝ) (w : ℕ → ℝ)
-    (hw : ∀ n, 0 ≤ w n) (hB : ∀ n : ℕ, B n (fun _ => (0 : ℝ)) = 0) :
-    HasGlobalBoundedLimit nu B w hw (fun _ => (0 : ℝ)) := by
-  refine ⟨_, zero_isFullSolution nu B w hB, fun T => ⟨1, one_pos, ?_⟩⟩
-  intro M t _ _
-  rw [enstrophy_zero]
-  exact zero_le_one
+/-- `shellB` vanishes at the zero state (verbatim consequence of its defining equations). -/
+theorem shellB_zero (k : ℕ → ℝ) (n : ℕ) : shellB k n (fun _ => (0 : ℝ)) = 0 := by
+  cases n <;> simp [shellB]
 
-/-- `GlobalRegularityStatement` is satisfiable: the zero flow, for any wavenumber `k`. -/
-theorem zero_global_regularity (nu : ℝ) (B : ℕ → (ℕ → ℝ) → ℝ) (w : ℕ → ℝ) (k : ℕ → ℝ)
-    (hB : ∀ n : ℕ, B n (fun _ => (0 : ℝ)) = 0) :
-    GlobalRegularityStatement nu B w k (fun _ => (0 : ℝ)) :=
-  ⟨_, zero_isFullSolution nu B w hB, fun t _ => zero_isSpatiallySmooth k t⟩
+/-- **`IsGalerkinLimit` is inhabited**, with the zero family and the identity subsequence — so
+the four-clause conclusion of `AubinLionsStatement` is not vacuously unsatisfiable. -/
+theorem zero_isGalerkinLimit (nu : ℝ) :
+    IsGalerkinLimit nu (fun _ => (0 : ℝ)) (fun _ _ _ => (0 : ℝ)) (fun _ _ => (0 : ℝ)) := by
+  refine ⟨zero_isFullSolution nu _ _ (shellB_zero dyadicWavenumber), ?_, ?_, ⟨id, strictMono_id, ?_⟩⟩
+  · intro t _
+    simpa [HasFiniteEnstrophy] using (summable_zero (f := fun _ : ℕ => (0:ℝ)))
+  · intro T
+    exact ⟨1, one_pos, fun t _ _ => by simp [enstrophyTsum]⟩
+  · intro n t _
+    simpa using tendsto_const_nhds
+
+/-- `GlobalRegularityStatement` is satisfiable: the zero flow. -/
+theorem zero_global_regularity (nu : ℝ) :
+    GlobalRegularityStatement nu (fun _ => (0 : ℝ)) :=
+  ⟨_, zero_isFullSolution nu _ _ (shellB_zero dyadicWavenumber),
+    fun t _ => zero_isSpatiallySmooth dyadicWavenumber t⟩
 
 /-! ## 7. Axiom-footprint gate (SPEC §5.1 / PLAN.md §2)
 
@@ -305,8 +394,10 @@ rather than left to the type-checker alone. -/
 #print axioms enstrophy_zero
 #print axioms sobolevWeight_nonneg
 #print axioms zero_isSpatiallySmooth
-#print axioms millennium_reduction
-#print axioms zero_has_global_bounded_limit
+#print axioms dyadicShell_regularity_reduction
+#print axioms zero_isGalerkinLimit
+#print axioms hasFiniteEnstrophy_of_bounded
+#print axioms shellB_zero
 #print axioms zero_global_regularity
 
 end MechanicaFluidorum.MillenniumReduction

@@ -139,8 +139,31 @@ already applied (`HasGlobalBoundedLimit` fixes one trajectory across all horizon
 | Untruncated (`N→∞`) solution family is inhabited (zero flow, given `hB`) | `zero_isFullSolution` | 2026-08-12 |
 | Sobolev-level weight `k_n^{2s}` is nonnegative for any `k` (even exponent) | `sobolevWeight_nonneg` | 2026-08-12 |
 | Zero flow is spatially smooth (every Sobolev class `H^s`) at every time | `zero_isSpatiallySmooth` | 2026-08-12 |
-| **The reduction itself**: `∀T,HypothesisU` + `AubinLionsStatement` + `ProdiSerrinStatement` ⇒ `GlobalRegularityStatement` (time- and space-regular) | `millennium_reduction` | 2026-08-12 |
-| `HasGlobalBoundedLimit`/`GlobalRegularityStatement` are satisfiable, not vacuous (zero-flow witnesses) | `zero_has_global_bounded_limit`, `zero_global_regularity` | 2026-08-12 |
+| **The reduction itself** (renamed per D2, 2026-08-13): Galerkin family + uniform bound + `AubinLionsStatement` + `ProdiSerrinStatement` ⇒ `GlobalRegularityStatement` | `dyadicShell_regularity_reduction` | 2026-08-13 |
+| `GlobalRegularityStatement` is satisfiable, not vacuous (zero-flow witness) | `zero_global_regularity` | 2026-08-12 |
+
+### Task 4 repair applied 2026-08-13 (audit B1/B4; decisions D1–D3; `docs/designs/TASK4_ELL2_REPAIR.md`)
+
+**Still Tier C** — the repair makes the undischarged debt *legible*, it does not pay it.
+
+| Claim | Formal name | Since |
+|---|---|---|
+| ℓ² finite-enstrophy predicate + series form for untruncated states (D1, localised) | `HasFiniteEnstrophy`, `enstrophyTsum` | 2026-08-13 |
+| **The bridge**: bounded finite partial sums (nonneg weight) ⇒ `Summable` ∧ `tsum ≤ C` — makes the ℓ² upgrade a *conservative extension* | `hasFiniteEnstrophy_of_bounded` | 2026-08-13 |
+| **What compactness actually delivers**, four load-bearing clauses incl. modewise convergence along a **subsequence** (D3) | `IsGalerkinLimit` (def) | 2026-08-13 |
+| `IsGalerkinLimit` is inhabited (zero family, identity subsequence) — the four-clause conclusion is not vacuously unsatisfiable | `zero_isGalerkinLimit` | 2026-08-13 |
+| `shellB` vanishes at the zero state (re-declared copy; see sync note) | `shellB_zero` | 2026-08-13 |
+
+**Specialised to `shellB`/`dyadicWeight` throughout, closing audit verdict B4.** Negative
+controls run and confirmed to fail: dropping the weight-nonnegativity hypothesis breaks the
+bridge; weakening clause 3 from `∀T ∃C` to `∀T ∀t ∃C` (destroying uniformity in `t` on a
+horizon — the A1 failure mode one level down) breaks the inhabitation witness.
+
+**Known cost, recorded:** `shellB`, `dyadicWavenumber`, `dyadicWeight` are **verbatim
+re-declarations** of `DyadicShell_Statements.lean`'s canonical definitions, forced by Gate 2
+compiling each file standalone. They must be kept in sync by hand. **Not kernel-checkable**;
+likewise whether the four clauses of `IsGalerkinLimit` say the right thing is a
+statement-adequacy question reserved to human audit (memo §5, NC1).
 
 7 theorems, all footprints clean, independently recompiled. **CONDITIONAL SKELETON — proves no
 PDE content.** `AubinLionsStatement` and `ProdiSerrinStatement` are named `Prop`-valued

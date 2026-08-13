@@ -10,7 +10,6 @@
       "WebFetch(domain:claymath.org)",
       "WebFetch(domain:www.ams.org)",
       "WebFetch(domain:leanprover-community.github.io)",
-
       "Bash(ls *)",
       "Bash(cat *)",
       "Bash(head *)",
@@ -37,25 +36,21 @@
       "Bash(env)",
       "Bash(ps *)",
       "Bash(true)",
-
       "Bash(python3 *)",
       "Bash(./scripts/verify.sh)",
       "Bash(scripts/verify.sh)",
       "Bash(bash -n *)",
-
       "Bash(lean *)",
       "Bash(lake env *)",
       "Bash(lake build *)",
       "Bash(lake exe cache get*)",
       "Bash(lake update*)",
       "Bash(elan *)",
-
       "Bash(pdflatex *)",
       "Bash(xelatex *)",
       "Bash(lualatex *)",
       "Bash(pdfinfo *)",
       "Bash(pdftoppm *)",
-
       "Bash(git status*)",
       "Bash(git log*)",
       "Bash(git diff*)",
@@ -70,7 +65,6 @@
       "Bash(git commit *)",
       "Bash(git push origin master)",
       "Bash(git push origin HEAD*)",
-
       "Bash(gh pr view*)",
       "Bash(gh pr list*)",
       "Bash(gh issue view*)",
@@ -119,6 +113,7 @@
       "Bash(wget * | bash*)",
       "Bash(mkfs*)",
       "Bash(:(){*)"
-    ]
+    ],
+    "defaultMode": "dontAsk"
   }
 }
