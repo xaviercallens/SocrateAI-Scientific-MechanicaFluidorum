@@ -23,7 +23,7 @@ Three-tier gating, mechanically enforced by `scripts/verify.sh`:
 |---|---|---|
 | **C — Conjecture** | proposals, analogies, physical narratives, unverified reductions | none (but must be tagged) |
 | **B — Checkable** | identities validated in exact rational arithmetic; certified witnesses; no floats | `tests/` harness exits 0 |
-| **A — Established** | Lean 4 kernel-compiled, zero `sorry`, axiom footprint exactly `[propext, Classical.choice, Quot.sound]` | kernel + `#print axioms` grep |
+| **A — Established** | Lean 4 kernel-compiled, zero `sorry`, axiom footprint containing **no axiom outside** `{propext, Classical.choice, Quot.sound}` (a strict subset is cleaner, and passes — see §5.1) | kernel + `#print axioms` membership test |
 
 **The honesty clause.** Every public claim carries its tier. A claim absent from `LEDGER.md`
 has no tier and may not be cited. Tier A status attaches to the *formal statement actually
@@ -131,7 +131,7 @@ decidable.
 | Track | Idea | First falsifiable milestone | Kill criterion |
 |---|---|---|---|
 | T1 Bourgain–Demeter (arithmetic depletion) | ℓ²-decoupling starves high-frequency triadic resonances | Exact count of resonant triads k₁+k₂=k₃ under the Sym² spectral constraint vs. unconstrained, on shells up to \|k\| = 2⁸ (Tier B computation) | constrained count grows at the same order → no depletion → kill |
-| T2 Villani–Mouhot (phase mixing) | Gevrey–Newton scheme suppresses "enstrophy echoes" **[regularity class UNCONFIRMED — see §2.3.1]** | Precise *definition* of an enstrophy echo in the truncated system + its exact evolution in the dyadic model | echoes not suppressed even in the dyadic model → kill |
+| T2 Villani–Mouhot (phase mixing) | Gevrey–Newton scheme suppresses "enstrophy echoes" **[Gevrey confirmed available, but only *some* classes — §2.3.1]** | Precise *definition* of an enstrophy echo in the truncated system + its exact evolution in the dyadic model | echoes not suppressed even in the dyadic model → kill |
 | T3 Golse–Saint-Raymond (entropy limits) | relative-entropy functional controls dissipation uniformly | A relative-entropy inequality at PDE level (DiPerna–Lions style) for the *truncated* system, α' fixed | inequality already fails at fixed α' → kill (note: α'→0 is **not** a Knudsen limit; no kinetic layer exists — see review M4) |
 | T4 Duminil-Copin (percolation of high enstrophy) | supercritical-enstrophy regions form subcritical percolation clusters | Recover the **CKN dimension bound** in the lattice formulation | lattice formulation cannot recover even CKN → kill |
 
@@ -145,19 +145,32 @@ in an analytic-regularity class**, with Gevrey-class settings appearing as a rel
 limiting extension rather than as the central theorem. The T2 row above, and §5's T2 endpoint,
 both describe the track as resting on **Gevrey** regularity.
 
-**Status: UNRESOLVED — do not "fix" either way without checking the paper itself.** The
-indication above came from a fetched *abstract plus a tool-generated summary*, parts of which
-were explicitly flagged as paraphrase rather than direct quotation. Asserting "Gevrey is
-wrong" on that basis would repeat precisely the error LL-6 exists to prevent, one level up.
+**RESOLVED same day — and the resolution is that the T2 row was NOT wrong.** Re-fetching the
+arXiv abstract page directly (rather than relying on the earlier tool-generated summary, parts
+of which were flagged as paraphrase) gives both readings, from two different revisions:
 
-**What would close this item:** read the statement of the main theorem(s) in the published
-Acta paper (or arXiv full text, not the abstract) and record which regularity class is
-actually required, with a quotation. **Why it matters, and why it is not cosmetic:** the
-required regularity class governs whether any analogue could plausibly transfer to a fluid
-setting at all, so it bears directly on T2's feasibility — not merely on how T2 is described.
+- the paper's own abstract states it establishes *"exponential Landau damping in **analytic**
+  regularity"*, and elsewhere *"the (a priori unexpected) critical nature of the Coulomb
+  potential and analytic regularity, which can be seen only at the nonlinear level"*;
+- the current abstract page's version note states that the main result *"now covers Coulomb and
+  Newton potentials, and (2) **some classes of Gevrey data**"*.
 
-Filed by the report-authoring pass; no track status is changed by this note, and T2 remains
-BLOCKED-ON-DEFINITION on OP-3 independently of how this resolves.
+So the base result is analytic; the final version additionally covers Gevrey classes. **The
+existing "Gevrey" description in the T2 row is therefore defensible and is left standing.**
+
+**One substantive caveat now on record, which is the part that actually bears on T2:** the
+coverage is *"**some** classes of Gevrey data"*, not all — so any T2 argument that leans on
+Gevrey regularity must identify *which* class, and must not assume the full Gevrey scale is
+available. That is a real constraint on the track's feasibility, not a matter of wording.
+
+**Process note (the reason this entry exists in this form).** The first pass had enough
+material to "fix" `SPEC.md` by replacing Gevrey with analytic. Doing so would have introduced
+an error into the normative spec on the strength of a paraphrase — precisely the LL-6 failure
+mode, one level up. Flagging rather than correcting was the right call, and re-fetching cost
+one tool call. Recorded so the pattern is reusable: **when a correction is based on a summary
+rather than a primary quote, flag it and re-fetch; do not edit the rulebook.**
+
+No track status changes: T2 remains BLOCKED-ON-DEFINITION on OP-3 regardless.
 
 ### 2.4 Physical narrative — **[Tier C, quarantined]**
 
@@ -216,8 +229,22 @@ Stage 0 includes standing up the standalone cold build.
 `scripts/verify.sh` runs, in order:
 
 1. **Gate 1 (Tier B):** `tests/tier_b_exact_checks.py` must exit 0.
-2. **Gate 2 (Tier A):** kernel-compile `lean_src/CallensDualScale.lean`; fail on any error or
-   `sorry`; every `#print axioms` line must be exactly `[propext, Classical.choice, Quot.sound]`.
+2. **Gate 2 (Tier A):** kernel-compile every file in `lean_src/`; fail on any error or
+   `sorry`; every `#print axioms` line must name **no axiom outside**
+   `{propext, Classical.choice, Quot.sound}`.
+
+   **Clarified 2026-08-13 (wording amended to match intent; see `LL.md` LL-8).** This rule
+   previously read "must be exactly `[propext, Classical.choice, Quot.sound]`", and
+   `scripts/verify.sh` implemented that literally as a string match. A theorem proved by purely
+   computational means can report a **strict subset** — e.g. `[propext]` — which is *cleaner*
+   than the permitted set, yet was rejected as non-clean
+   (`TriadConservation.swap3_involutive` is the concrete instance). That false positive is not
+   cosmetic: the cheapest way to satisfy a literal-equality gate is to **add** an unnecessary
+   axiom dependency, i.e. to make the proof worse in exactly the dimension the gate exists to
+   measure. The gate is therefore a **membership test**, which is strictly stronger than the
+   old check in the direction that matters — `sorryAx`, custom axioms, and any other foreign
+   axiom are still caught (re-verified against a six-case table, including cases that must
+   fail, before the change was accepted).
 3. **(Stage-0 addition)** cold-build job; single-active-file lint (§7.4); LEDGER consistency
    check (every Tier A/B entry maps to a passing artifact).
 
@@ -251,7 +278,7 @@ Energy inequalities, Aubin-Lions embedding, Prodi-Serrin criterion application. 
 **Stage 3 — Enstrophy Bounds (The Four Tracks).**
 Scale-by-scale proof of Hypothesis U via four deep mathematical disciplines:
 1. **T1 (Bourgain-Demeter):** ℓ² decoupling to show triadic resonant depletion under Sym² lock.
-2. **T2 (Villani-Mouhot):** Gevrey-regularity Newton iteration proving enstrophy echo exponential decay. **[regularity class UNCONFIRMED — see §2.3.1]**
+2. **T2 (Villani-Mouhot):** Gevrey-regularity Newton iteration proving enstrophy echo exponential decay. **[only *some* Gevrey classes are covered by the source result — §2.3.1]**
 3. **T3 (Golse-Saint-Raymond):** Relative-entropy functional showing dissipation uniformly bounds enstrophy as α' → 0.
 4. **T4 (Duminil-Copin):** Percolation scaling limits proving zero-dimensional singular set.
 

@@ -57,4 +57,4 @@ for f in CallensDualScale DyadicShells HypothesisU_Statements EnstrophyProductio
   echo "$OUT" | grep -c "depends on axioms" | xargs -I{} echo "   {} theorems, all footprints clean"
 done
 [ "$FAILED" -eq 0 ] || exit 1
-echo "TIER A GATE: PASS (clean 3-axiom footprints, zero sorry)"
+echo "TIER A GATE: PASS (no axiom outside {propext, Classical.choice, Quot.sound}, zero sorry)"

@@ -50,10 +50,13 @@
   * The 2-torsion hypothesis `h2` below is genuinely needed and is not a technicality: see
     `triad_sum_zero`'s docstring.
 
-  Gate: `#print axioms` for every theorem below must report exactly
-  [propext, Classical.choice, Quot.sound].
+  Gate: `#print axioms` for every theorem below must name no axiom outside
+  {propext, Classical.choice, Quot.sound} (SPEC §5.1, membership test — a strict subset such as
+  [propext] is cleaner and passes; `swap3_involutive` below is exactly such a case, and was in
+  fact what exposed the old literal-equality gate as a false positive: see LL.md LL-8).
 -/
 import Mathlib.Algebra.BigOperators.Group.Finset.Basic
+import Mathlib.Algebra.BigOperators.Group.Finset.Sigma
 import Mathlib.Algebra.BigOperators.Ring.Finset
 import Mathlib.Data.Finset.Basic
 import Mathlib.Data.Fintype.Basic
@@ -226,6 +229,38 @@ theorem triad_sum_zero
     intro pq _
     exact swap3_involutive pq
 
+/-! ## 3b. Transversality (the harness's "Fact 1")
+
+`tests/tier_b_nse_triad_convolution.py` certifies two facts. `triad_sum_zero` above is Fact 2
+(energy conservation). Fact 1 is TRANSVERSALITY: `k . N(u)_k = 0` for every `k`, which holds
+UNCONDITIONALLY — it needs no divergence-freeness, no reality condition, and no property of the
+summand at all. The reason is purely that the Leray projector lands in `k`'s orthogonal
+complement, so it is proved here as a property of the projector, at the level of generality the
+fact actually has: any vector in the kernel of `dot (k)` stays there under summation.
+
+This complements, and does not overlap, `triad_sum_zero`: the harness's negative controls
+confirm the two facts are independent (dropping the projector breaks Fact 1 but leaves Fact 2
+intact; breaking divergence-freeness breaks Fact 2 but leaves Fact 1 intact). -/
+
+/-- The Leray projector's defining property, stated as the only thing Fact 1 uses: `P(k)[v]` is
+orthogonal to `k`. Rather than construct `P(k) = I - (k ⊗ k)/|k|²` (which needs division, hence
+a `|k| ≠ 0` side condition and a field — machinery this file deliberately avoids, see the
+header's scope note), the property is taken as the hypothesis `hP`, which is exactly what the
+concrete projector supplies. -/
+theorem transversality_of_sum
+    {ι : Type*} (S : Finset ι) (kk : Fin n → K) (F : ι → Fin n → K)
+    (hP : ∀ a ∈ S, dot kk (F a) = 0) :
+    dot kk (fun i => ∑ a ∈ S, F a i) = 0 := by
+  unfold dot
+  have hswap : ∑ i, kk i * (∑ a ∈ S, F a i) = ∑ a ∈ S, ∑ i, kk i * F a i := by
+    rw [Finset.sum_comm]
+    exact Finset.sum_congr rfl fun i _ => by rw [Finset.mul_sum]
+  rw [hswap]
+  refine Finset.sum_eq_zero fun a ha => ?_
+  have := hP a ha
+  unfold dot at this
+  exact this
+
 /-! ## 4. Non-vacuity (SPEC §7.5)
 
 `triad_pairing` is an implication; a reader must be able to check the hypotheses are
@@ -270,5 +305,6 @@ goal, i.e. `sorryAx` in the footprint. -/
 #print axioms triad_pairing
 #print axioms swap3_involutive
 #print axioms triad_sum_zero
+#print axioms transversality_of_sum
 
 end MechanicaFluidorum.TriadConservation

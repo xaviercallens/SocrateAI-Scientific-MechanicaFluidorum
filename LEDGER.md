@@ -1,8 +1,8 @@
 # Epistemic Ledger (normative — a claim not listed here has no tier)
 
-Last verified: 2026-08-12 (`scripts/verify.sh` → both gates PASS).
+Last verified: 2026-08-13 (`scripts/verify.sh` → both gates PASS, exit 0; 66 Lean theorems).
 
-## Tier A — kernel-verified (zero sorry, footprint [propext, Classical.choice, Quot.sound])
+## Tier A — kernel-verified (zero sorry; no axiom outside {propext, Classical.choice, Quot.sound} — membership test, see SPEC §5.1 / LL-8)
 
 | Claim | Formal name | Artifact | Since |
 |---|---|---|---|
@@ -142,8 +142,16 @@ Q1/Q2 audit — Q3/Q4/Q5 fixed three found gaps, they do not certify no others r
 | **Termwise triad cancellation**: for `k_p+k_q+k_r=0` and `dot k_p u_p = 0`, the orderings `(p,q,r)` and `(p,r,q)` cancel exactly | `triad_pairing` | 2026-08-13 |
 | The swap `(p,q) ↦ (p,−(p+q))` is an involution | `swap3_involutive` | 2026-08-13 |
 | **Detailed energy conservation (summed)**: `Σ (k_q·u_p)(u_q·u_r) = 0` over any `swap3`-closed finite set | `triad_sum_zero` | 2026-08-13 |
+| **Transversality** (the harness's Fact 1, unconditional): a sum of vectors each orthogonal to `k` is orthogonal to `k` | `transversality_of_sum` | 2026-08-13 |
 
-6 theorems, all footprints within the permitted axiom set, independently recompiled. **Promotes
+7 theorems, all footprints within the permitted axiom set, independently recompiled.
+`transversality_of_sum` covers the harness's *other* certified fact; the two are genuinely
+independent, as the harness's own negative controls show (dropping the Leray projector breaks
+transversality but leaves energy conservation intact; breaking divergence-freeness does the
+reverse). It is stated as a property of the projector's *defining* orthogonality (supplied as
+hypothesis `hP`) rather than constructing `P(k) = I − (k⊗k)/|k|²`, which would need division,
+a `|k| ≠ 0` side condition and a field — machinery this file deliberately avoids for the same
+D1-scope reason as above. **Promotes
 to Tier A the identity that `tests/tier_b_nse_triad_convolution.py` (OP-6/D3) verified only
 computationally (`M=1,2,3`) and explicitly declined to claim as proven.**
 

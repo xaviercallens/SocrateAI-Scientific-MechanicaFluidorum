@@ -61,7 +61,7 @@
 \small\texttt{SocrateAI-Scientific-MechanicaFluidorum}}
 
 \date{13 August 2026\\[0.3em]
-\small Repository state: commit \texttt{36c4bae} \quad$\vert$\quad Both verification gates PASS}
+\small Repository state: commit \texttt{3b7c08a}+ \quad$\vert$\quad Both verification gates PASS}
 
 \begin{document}
 \maketitle
@@ -74,11 +74,11 @@ organised around \emph{Hypothesis U} --- a uniform-in-cutoff enstrophy bound for
 frequency-truncated system. The programme's distinguishing feature is not a claimed proof but
 a \emph{method}: every assertion carries an explicit epistemic tier, mechanically enforced by
 a two-gate verification pipeline (exact rational arithmetic; Lean~4 kernel compilation with a
-pinned axiom footprint). We report 59 kernel-verified theorems across six Lean files, seven
+pinned axiom footprint). We report 66 kernel-verified theorems across seven Lean files, seven
 exact-arithmetic certification harnesses, and --- equally importantly --- a documented record
-of what has \emph{failed}: two abandoned numerical designs, three caught errata (one in a
+of what has \emph{failed}: two abandoned numerical designs, four caught errata (one in a
 formula sourced from the literature, one in the programme's own design memo, one a broken
-commit), and four analytical tracks that remain correctly blocked on undefined objects. We
+commit, and one a false positive in the verification gate itself), and four analytical tracks that remain correctly blocked on undefined objects. We
 state precisely what is established, what is merely checkable, and what remains conjecture.
 \textbf{No claim is made that Hypothesis U is true, nor that the Navier--Stokes problem is
 resolved.} The Millennium Prize problem remains open, and this programme's central hypothesis
@@ -144,7 +144,7 @@ statement-adequacy audit (\S\ref{sec:audit}).
 \midrule
 \tC{} & Conjecture, analogy, physical narrative, unverified reduction & None, but must be tagged. Confined to \texttt{exploration/} or \texttt{docs/narrative/}. Floating-point code lives here and \emph{only} here. \\
 \tB{} & Checkable: identities validated in exact rational arithmetic & Harness exits 0. \texttt{fractions.Fraction} or \texttt{int} only --- floats are banned. \textbf{Every harness ships a negative control demonstrated to actually fail.} \\
-\tA{} & Established: Lean~4 kernel-compiled & Zero \texttt{sorry}; axiom footprint \emph{exactly} \texttt{[propext, Classical.choice, Quot.sound]}. \\
+\tA{} & Established: Lean~4 kernel-compiled & Zero \texttt{sorry}; axiom footprint naming \emph{no axiom outside} \texttt{\{propext, Classical.choice, Quot.sound\}}. A strict subset is cleaner and passes --- see \S\ref{sec:failures}, where the earlier literal-equality reading is recorded as a defect. \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -765,6 +765,48 @@ conservation is here verified \emph{computationally} at three truncations, \text
 symbolically}; a Tier A proof remains future work.
 \end{keybox}
 
+\subsection{From computational check to kernel proof (\tA{})}
+
+The harness above certifies two facts \emph{computationally}, at three truncations, and its own
+docstring declines to claim either as proven. Both are now Tier A, in
+\texttt{lean\_src/TriadConservation.lean}:
+
+\begin{theorem}[Termwise triad cancellation; \texttt{triad\_pairing}]
+If $k_p+k_q+k_r=0$ componentwise and the field is divergence-free at $p$
+($k_p\cdot u_p=0$), then the two orderings of the triad summand cancel \emph{exactly}:
+\[
+(k_q\cdot u_p)(u_q\cdot u_r)\;+\;(k_r\cdot u_p)(u_r\cdot u_q)\;=\;0 .
+\]
+\end{theorem}
+
+\begin{keybox}{Why the first attempt failed, and what actually worked}
+The harness records that a direct \emph{three-way} relabelling (cycling $p\to q\to r$) did not
+close. It does not need to. The cancellation is \textbf{two-way}, and stronger than a summation
+argument: it is \textbf{termwise}. Pairing $(p,q,r)$ with $(p,r,q)$ --- swapping only the last
+two indices, leaving $p$ fixed --- and using symmetry of the pairing followed by additivity,
+\[
+\bigl[(k_q\cdot u_p)+(k_r\cdot u_p)\bigr](u_q\cdot u_r)
+=\bigl((k_q+k_r)\cdot u_p\bigr)(u_q\cdot u_r)
+=\bigl(-k_p\cdot u_p\bigr)(u_q\cdot u_r)=0 .
+\]
+This was re-derived by hand and confirmed on 6486 triples in exact arithmetic \emph{before} any
+Lean was written. Summing it over any finite index set closed under the swap gives detailed
+energy conservation (\texttt{triad\_sum\_zero}); transversality
+(\texttt{transversality\_of\_sum}) is separate and unconditional, following from the projector
+landing in $k^\perp$.
+\end{keybox}
+
+\begin{warnbox}{Scope: this does not close OP-6}
+The file is stated over an \emph{arbitrary commutative ring}, with an arbitrary additive index
+group and additive wavevector map. It is deliberately \textbf{not} stated over
+$\Lambda\subset\Z^3$ with complex velocities, because that concrete apparatus \emph{is} the open
+decision D1. \textbf{The bridge from this lemma to the concrete Fourier--Galerkin setting is not
+built}; nothing here instantiates $B$; nothing here is a statement about Navier--Stokes
+solutions. One hypothesis is load-bearing rather than technical: the swap has fixed points
+(where $q=r$, forcing $p=-2q$) at which the pairing yields only $2f=0$, so the ring must have no
+2-torsion. For the intended instantiations ($\R$, $\C$) this holds.
+\end{warnbox}
+
 \paragraph{Open decisions.} Instantiating $B$ is not a substitution but a restructuring: the
 state representation must move from $\N\to\R$ shell scalars to $\Z^3\to\C^3$ Fourier vectors
 carrying divergence-free and reality constraints. Whether to undertake that full reindexing or
@@ -797,6 +839,8 @@ LL-4 & Two successive designs by the same author failed their feasibility premis
 LL-6 & A literature claim was nearly cited from memory; the fetched abstract showed the real result was narrower (well-posedness of \emph{positive} solutions in a particular scaling range, not unconditional regularity) \cite{barbato-morandin-romito}. & Verify literature precisely before citing, even for a well-known author or result. \\
 \addlinespace
 LL-7 & A top-tier-authored design memo's own worked example quoted the wrong summation range. & The certifying agent must trace and correct rather than silently absorb; ``derive before dispatch'' does not remove the need for downstream re-verification. \\
+\addlinespace
+LL-8 & \textbf{The verification gate itself had a false positive.} A lemma proved by purely computational means reports the \emph{strictly cleaner} footprint \texttt{[propext]}; the gate string-matched the exact three-axiom list and rejected it as unsound. & Test a changed gate predicate against a table including cases that \emph{must} fail, before trusting a real run; and confirm the script's \textbf{exit code}, not its trailing output. The rule's wording in \texttt{SPEC.md} was amended to match its intent (membership, not equality). \\
 \bottomrule
 \end{longtable}
 \end{center}
@@ -817,8 +861,9 @@ LL-7 & A top-tier-authored design memo's own worked example quoted the wrong sum
 \texttt{EnstrophyProduction.lean} & Exact enstrophy-production identity & 11 \\
 \texttt{EnstrophyProductionBound.lean} & Local bound $S_N^2\le2\Omega_N^3$ & 15 \\
 \texttt{MillenniumReduction.lean} & Conditional reduction skeleton (\textsc{draft}) & 7 \\
+\texttt{TriadConservation.lean} & Detailed energy conservation + transversality & 7 \\
 \midrule
-\multicolumn{2}{@{}l}{\textbf{Total, all footprints \texttt{[propext, Classical.choice, Quot.sound]}}} & \textbf{59} \\
+\multicolumn{2}{@{}l}{\textbf{Total, no axiom outside \texttt{\{propext, Classical.choice, Quot.sound\}}}} & \textbf{66} \\
 \bottomrule
 \end{tabular}
 \end{center}
