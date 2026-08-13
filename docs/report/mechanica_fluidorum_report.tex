@@ -61,7 +61,7 @@
 \small\texttt{SocrateAI-Scientific-MechanicaFluidorum}}
 
 \date{13 August 2026\\[0.3em]
-\small Repository state: commit \texttt{3b7c08a}+ \quad$\vert$\quad Both verification gates PASS}
+\small Repository state: commit \texttt{57d4e92} \quad$\vert$\quad All verification gates PASS (exit 0)}
 
 \begin{document}
 \maketitle
@@ -76,9 +76,10 @@ a \emph{method}: every assertion carries an explicit epistemic tier, mechanicall
 a two-gate verification pipeline (exact rational arithmetic; Lean~4 kernel compilation with a
 pinned axiom footprint). We report 66 kernel-verified theorems across seven Lean files, seven
 exact-arithmetic certification harnesses, and --- equally importantly --- a documented record
-of what has \emph{failed}: two abandoned numerical designs, four caught errata (one in a
+of what has \emph{failed}: two abandoned numerical designs, five caught errata (one in a
 formula sourced from the literature, one in the programme's own design memo, one a broken
-commit, and one a false positive in the verification gate itself), and four analytical tracks that remain correctly blocked on undefined objects. We
+commit, one a false positive in the verification gate itself, and one an unpinned dependency
+that would have verified the programme against the wrong prover library), and four analytical tracks that remain correctly blocked on undefined objects. We
 state precisely what is established, what is merely checkable, and what remains conjecture.
 \textbf{No claim is made that Hypothesis U is true, nor that the Navier--Stokes problem is
 resolved.} The Millennium Prize problem remains open, and this programme's central hypothesis
@@ -191,14 +192,42 @@ attack must address; they are stated here because they constrain everything in
 
 \subsection{Reproducing the verification state}
 
-The only thing that counts as ``it works'' is the two-gate pipeline:
+The only thing that counts as ``it works'' is the verification pipeline:
 \begin{verbatim}
-    ./scripts/verify.sh      # Gate 1: all Tier B harnesses; Gate 2: Lean kernel + footprints
+    ./scripts/verify.sh   # Gate 1  : Tier B exact-arithmetic harnesses
+                          # Gate 1b : LEDGER consistency + single-active-file lint
+                          # Gate 2  : Lean kernel compile + axiom-footprint membership test
 \end{verbatim}
-Gate 2 reuses a pre-built Mathlib checkout (\texttt{lean\_src/} is not a standalone Lake
-project). Every dataset in \texttt{data/} ships a \texttt{.meta} sidecar recording the exact
-generating command, tool versions, and \texttt{sha256sum}, so results can be audited rather
-than merely re-read.
+Every dataset in \texttt{data/} ships a \texttt{.meta} sidecar recording the exact generating
+command, tool versions, and \texttt{sha256sum}, so results can be audited rather than merely
+re-read.
+
+\paragraph{Gate 1b (added 2026-08-13).} \texttt{LEDGER.md} is normative --- a claim not listed
+there may not be cited --- so an \emph{orphan} row, one citing a theorem or file that no longer
+exists, silently degrades the whole inventory. Gate 1b checks that every repo path cited in the
+ledger exists, that every Lean name in a Tier A row is actually declared, and that no banned
+versioned duplicates (\texttt{\_v2}, \texttt{\_final}) have appeared. It carries its own
+negative controls, run on every invocation: a dangling path, a dangling name, and a banned
+filename must each be \emph{rejected}, and a clean case must be \emph{accepted}. It found one
+real defect on its first run (a row citing the non-identifier fragment \texttt{\_half} rather
+than \texttt{step1\_flux\_bound\_half}).
+
+\begin{keybox}{A latent reproducibility defect, found by doing the cold build}
+\texttt{lean\_src/} was made a standalone Lake project on 2026-08-13, so Gate 2 no longer
+depends on an external Mathlib checkout this repository does not control. (That coupling was
+not hypothetical: an unrelated build running in that shared checkout rebuilt its \texttt{.olean}
+files mid-run and failed Gate 2 on a file this repository had not touched.)
+
+Doing the build surfaced something more serious than the inconvenience that motivated it. The
+project's \texttt{lakefile} declared its dependency as \texttt{require mathlib from git} with
+\textbf{no revision pinned}. A cold build from that specification resolves to Mathlib
+\emph{master} --- which in general does not build against the pinned toolchain, and, worse,
+would have silently verified every result against a \emph{different Mathlib} than the one all
+existing \texttt{LEDGER.md} claims were checked with. For a programme whose entire epistemic
+claim rests on machine-checkability, an unpinned verifier is a defect in the foundation, not in
+the build script. Mathlib is now pinned by revision, and the lockfile pinning every transitive
+dependency is tracked rather than ignored.
+\end{keybox}
 
 %==============================================================================
 \section{The Problem, Stated Honestly}
@@ -605,19 +634,36 @@ T4 & Duminil-Copin percolation \cite{duminil-copin} & High-enstrophy regions for
 \end{longtable}
 \end{center}
 
-\begin{warnbox}{Correction surfaced while verifying references for this report}
-The programme's internal specification describes Track T2 as resting on
-\emph{Gevrey-class} regularity. Retrieval of the actual Mouhot--Villani abstract
-\cite{mouhot-villani} for this report shows that the \textbf{core stated result requires
-analytic regularity}, with Gevrey-class settings appearing as a related or limiting
-extension rather than the central theorem. This matters for T2's feasibility, since the
-required regularity class governs whether any analogue could plausibly transfer to a
-fluid setting. \textbf{The discrepancy is recorded here and has not yet been reconciled in
-\texttt{SPEC.md}}; it is exactly the class of error that rule LL-6 exists to catch.
-Similarly, the Golse--Saint-Raymond programme \cite{golse-saintraymond} concerns the
+\begin{keybox}{A near-miss worth recording: the correction that would itself have been an error}
+An earlier draft of this report flagged an apparent defect in the programme's specification.
+The spec describes T2 as resting on \emph{Gevrey-class} regularity; a first retrieval pass
+indicated that Mouhot--Villani's \emph{core} result is set in \emph{analytic} regularity, and
+the obvious move was to ``fix'' the spec by substituting one for the other.
+
+That fix would have been wrong. Re-fetching the abstract directly --- rather than relying on
+the intermediate summary the first pass produced, parts of which were flagged as paraphrase
+--- gives \emph{both}: the paper establishes ``exponential Landau damping in \textbf{analytic}
+regularity'', while the version note records that the main result ``now covers Coulomb and
+Newton potentials, and (2) some classes of \textbf{Gevrey} data''. The base theorem is
+analytic; the final version does cover Gevrey. \textbf{The spec was defensible as written and
+was left standing.}
+
+The methodological point is the reason this is in the report at all: the first pass had enough
+material to justify editing the normative rulebook, and editing it would have \emph{introduced}
+an error on the strength of a paraphrase --- exactly the failure mode rule LL-6 exists to
+prevent, one level up from where it was first learned. \textbf{When a proposed correction rests
+on a summary rather than a primary quotation, flag it and re-fetch; do not edit the rulebook.}
+
+One substantive caveat did survive, and it is the part that bears on feasibility: coverage is
+``\emph{some} classes of Gevrey data'', not all. Any T2 argument leaning on Gevrey regularity
+must identify \emph{which} class and must not assume the full Gevrey scale.
+\end{keybox}
+
+\begin{warnbox}{A disanalogy that has not been resolved away}
+The Golse--Saint-Raymond programme \cite{golse-saintraymond} concerns the
 Boltzmann-to-Navier--Stokes hydrodynamic limit, whereas this programme's $\alpha'\to0$ limit
-is \textbf{not} a Knudsen limit and has no kinetic layer --- a disanalogy already flagged
-internally (review finding M4) and repeated here so the track is not over-read.
+is \textbf{not} a Knudsen limit and has no kinetic layer --- a disanalogy flagged internally
+(review finding M4) and repeated here so T3 is not over-read. This one stands.
 \end{warnbox}
 
 \subsection{Current status: correctly blocked}
@@ -841,6 +887,10 @@ LL-6 & A literature claim was nearly cited from memory; the fetched abstract sho
 LL-7 & A top-tier-authored design memo's own worked example quoted the wrong summation range. & The certifying agent must trace and correct rather than silently absorb; ``derive before dispatch'' does not remove the need for downstream re-verification. \\
 \addlinespace
 LL-8 & \textbf{The verification gate itself had a false positive.} A lemma proved by purely computational means reports the \emph{strictly cleaner} footprint \texttt{[propext]}; the gate string-matched the exact three-axiom list and rejected it as unsound. & Test a changed gate predicate against a table including cases that \emph{must} fail, before trusting a real run; and confirm the script's \textbf{exit code}, not its trailing output. The rule's wording in \texttt{SPEC.md} was amended to match its intent (membership, not equality). \\
+\addlinespace
+--- & \textbf{The Mathlib dependency was never pinned.} The \texttt{lakefile} said \texttt{require mathlib from git} with no revision; a cold build would have resolved to master and verified everything against a different Mathlib than all existing claims were checked with. & Pin the verifier itself by revision, and track the lockfile. An unpinned prover is a defect in the foundation of a machine-checked programme, not a build-script nuisance. \\
+\addlinespace
+--- & \textbf{A proposed correction to the spec would itself have been an error} (the T2 regularity class, \S\ref{sec:tracks}). The evidence for it was a paraphrased summary, not a primary quotation. & When a correction rests on a summary rather than a direct quote, flag and re-fetch --- do not edit the normative rulebook. LL-6 applied to its own application. \\
 \bottomrule
 \end{longtable}
 \end{center}
