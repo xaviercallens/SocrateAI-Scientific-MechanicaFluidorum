@@ -1,6 +1,8 @@
 /-
-  TriadConservation.lean — Tier A: detailed energy conservation of the Fourier-Galerkin
-  quadratic nonlinearity, as an abstract algebraic identity
+  AbstractAlgebraicConservation.lean — Tier A: detailed energy conservation of a
+  Fourier-Galerkin-SHAPED quadratic nonlinearity, as an abstract algebraic identity
+  (renamed from TriadConservation.lean per the external audit of 2026-08-13, verdict C1
+  "OVERSTATES REACH" — see docs/Memo 1.md §2 and LEDGER.md)
   ==========================================================================================
   Promotes to Tier A the identity that `tests/tier_b_nse_triad_convolution.py` (OP-6/D3)
   verifies computationally at M = 1,2,3 and explicitly declines to claim as proven:
@@ -50,6 +52,18 @@
   * The 2-torsion hypothesis `h2` below is genuinely needed and is not a technicality: see
     `triad_sum_zero`'s docstring.
 
+  ---------------------------------------------------------------------------
+  SCOPE FIX (external audit 2026-08-13, verdict C1 — this block is the fix)
+  ---------------------------------------------------------------------------
+  This file is an ABSTRACT ALGEBRAIC identity over an arbitrary commutative ring. It does
+  NOT address geometric aliasing on Z^3, density of states, the continuum Fourier
+  convolution, or any analytic bound on the 3-D nonlinearity. The auditor's verdict is
+  accepted as written: "Proving detailed energy conservation over an arbitrary commutative
+  ring is a nice algebraic exercise, but it entirely bypasses the analytical difficulty of
+  bounding geometric continuous Fourier convolutions on Z^3." Nothing in this file may be
+  cited as a statement about the Navier-Stokes nonlinearity; it is the algebraic SKELETON a
+  future concrete instantiation would have to satisfy, nothing more.
+
   Gate: `#print axioms` for every theorem below must name no axiom outside
   {propext, Classical.choice, Quot.sound} (SPEC §5.1, membership test — a strict subset such as
   [propext] is cleaner and passes; `swap3_involutive` below is exactly such a case, and was in
@@ -64,7 +78,7 @@ import Mathlib.Tactic.Ring
 import Mathlib.Tactic.Abel
 import Mathlib.Tactic.LinearCombination
 
-namespace MechanicaFluidorum.TriadConservation
+namespace MechanicaFluidorum.AbstractAlgebraicConservation
 
 open Finset
 
@@ -307,4 +321,4 @@ goal, i.e. `sorryAx` in the footprint. -/
 #print axioms triad_sum_zero
 #print axioms transversality_of_sum
 
-end MechanicaFluidorum.TriadConservation
+end MechanicaFluidorum.AbstractAlgebraicConservation

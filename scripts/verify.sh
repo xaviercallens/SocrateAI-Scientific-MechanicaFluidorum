@@ -44,11 +44,11 @@ else
   echo "   (lean_src/.lake absent -- falling back to external Mathlib at $LEAN_ENV_DIR;"
   echo "    build the local one with: cd lean_src && lake exe cache get && lake build)"
 fi
-# HypothesisU_Statements.lean is a DRAFT awaiting human statement-adequacy audit
+# DyadicShell_Statements.lean is a DRAFT awaiting human statement-adequacy audit
 # (PLAN.md F2); it is gated for compilation so it cannot rot, but its claims are
 # NOT ledgered until the audit passes.
 FAILED=0
-for f in CallensDualScale DyadicShells HypothesisU_Statements EnstrophyProduction EnstrophyProductionBound MillenniumReduction TriadConservation; do
+for f in CallensDualScale DyadicShells DyadicShell_Statements EnstrophyProduction EnstrophyProductionBound MillenniumReduction AbstractAlgebraicConservation; do
   echo "-- lean_src/$f.lean"
   OUT=$(cd "$LEAN_ENV_DIR" && lake env lean "$ROOT/lean_src/$f.lean" 2>&1)
   if echo "$OUT" | grep -qiE "^.*error|sorry"; then
@@ -59,7 +59,7 @@ for f in CallensDualScale DyadicShells HypothesisU_Statements EnstrophyProductio
   # permitted set (e.g. a purely computational lemma reporting just [propext]) is MORE
   # constrained than required and must PASS -- the previous implementation string-matched
   # the exact three-axiom list and so rejected such theorems as if they were unsound
-  # (a false positive, found 2026-08-13 by TriadConservation.swap3_involutive).
+  # (a false positive, found 2026-08-13 by AbstractAlgebraicConservation.swap3_involutive).
   # sorryAx, or any other axiom outside the permitted set, is still caught: the test is
   # membership, not equality.
   BAD=$(echo "$OUT" | grep "depends on axioms" | tr '\n' ' ' \

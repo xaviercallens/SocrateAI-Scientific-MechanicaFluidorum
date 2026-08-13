@@ -1,6 +1,36 @@
 # Epistemic Ledger (normative — a claim not listed here has no tier)
 
-Last verified: 2026-08-13 (`scripts/verify.sh` → both gates PASS, exit 0; 66 Lean theorems).
+Last verified: 2026-08-13 (`scripts/verify.sh` → all gates PASS, exit 0; 70 Lean theorems
+kernel-compiled, of which 63 carry Tier A claims — `MillenniumReduction.lean`'s 7 are demoted,
+see the audit section below).
+
+## External audit 2026-08-13 — verdicts (human-issued; fully accepted, `docs/Memo 1.md`)
+
+The external expert audit of `docs/AUDIT_PACKET.md` (audit target commit `1befcc1`+) returned
+the following verdicts. Per SPEC §0/§8 these are human verdicts, recorded verbatim in intent;
+a negative verdict is a completed scientific outcome. Dispositions are what this repo did.
+
+| Q | Verdict | Substance | Disposition |
+|---|---|---|---|
+| A1 quantifier order `∃C∀N` | **YES** | Correct order for uniformity | Retained |
+| A2 index vs frequency cutoff | **NO** | "Severe abstraction leak" — 1-D index flattening destroys ℤ³ geometry, density of states, triad constraints | **Dissolved by pivot**: the target is now the dyadic shell model, where the index IS the object |
+| A3 weight `4ⁿ` | **NO** | Locks the theorem to an exponential sequence spectrum, decoupled from 3-D | **Dissolved by pivot**: `4ⁿ = k_n²` is the shell model's true weight |
+| A4 quantify over every solution | **YES** | Finite-dim ODE: Picard–Lindelöf uniqueness; B–V applies to the limit PDE only | Retained |
+| A5 unconstrained `B` | **NO** | "Fatal flaw... authenticating a mathematically empty envelope"; `B` must enforce `⟨B(u,u),u⟩=0` | **Fixed** (Memo Task 2): concrete `shellB` + Tier A `shellB_energy_conservation` |
+| B1 `Prop→Prop` placeholders | **NO** | Kernel verifies only a tautology; violates DoD "bona fide statements" | **Demotion executed**: `MillenniumReduction.lean` → Tier C draft; repair = Memo Task 4 |
+| B2 per-`T` limit | **REVISE** | Must hoist `∃ ulim, ∀ T`; needs Cantor diagonal | **Hoisted** (Memo Task 3): `HasGlobalBoundedLimit`; the diagonalisation now sits in `AubinLionsStatement`'s type |
+| B3 per-time smoothness | **YES** | Physically correct (`t→0` divergence for `L²` data) | Retained |
+| B4 no specialisation | **REVISE** | Generic reduction must be instantiated against the audited concrete object | **OPEN** — PLAN §10, part of the Task 4 repair |
+| B5 bare existence | **YES** | Weak–strong uniqueness makes existence sufficient | Retained |
+| C1 abstraction honesty | **OVERSTATES REACH** | Bypasses geometric aliasing on ℤ³ entirely | **Scope-fixed**: renamed `AbstractAlgebraicConservation.lean`, docstring states the exclusion |
+| D1 tier overstatement | **KILLED** | "We are not restating the unreduced Millennium Problem" — the formalisation describes a 1-D dyadic toy model | **Claim retracted** (see Retired table); programme re-targeted to the dyadic shell model |
+| D2 obstruction ledger | **MERELY LISTED** | A 1-D sequence model lacks the surface area to encounter Tao/CKN | Accepted; obstruction compliance re-scoped to the dyadic target (O1/O5 remain meaningful there) |
+
+**The pivot (owner decision, Memo §3):** the programme's formal target is now **global
+regularity bounds for the truncated viscous Katz–Pavlović dyadic shell model** — a respected,
+active area of mathematical fluid mechanics where a machine-verified regularity (or blow-up)
+result would be a first. The 3-D bridge (ℤ³ reindexing, OP-2/OP-6-D1) is explicit future work,
+not an implicit claim.
 
 ## Tier A — kernel-verified (zero sorry; no axiom outside {propext, Classical.choice, Quot.sound} — membership test, see SPEC §5.1 / LL-8)
 
@@ -94,7 +124,15 @@ trivially ≤ the full sum); see the design note's erratum and `LL.md` LL-7.
 *Scope note (honesty clause): these are lemmas about `max(R, α/R)`, scalar recurrences, and
 abstract classes — not yet about fluids.*
 
-### `lean_src/MillenniumReduction.lean` — conditional Millennium Reduction skeleton (F3)
+### `lean_src/MillenniumReduction.lean` — **DEMOTED TO TIER C (draft)**, audit verdict B1, 2026-08-13
+
+**All rows in this subsection are TIER C as of 2026-08-13** (they remain kernel-compiled and
+gated so they cannot rot, but per verdict B1 the `Prop → Prop` hypothesis parameters make the
+headline theorem a verified tautology, not bona fide PDE mathematics). Repair path: Memo 1
+Task 4 (real sequence-space topology) + B4 specialisation — PLAN.md §10. The B2 hoist is
+already applied (`HasGlobalBoundedLimit` fixes one trajectory across all horizons).
+
+(Original section follows; read every "Tier A" below as historical.)
 
 | Claim | Formal name | Since |
 |---|---|---|
@@ -102,7 +140,7 @@ abstract classes — not yet about fluids.*
 | Sobolev-level weight `k_n^{2s}` is nonnegative for any `k` (even exponent) | `sobolevWeight_nonneg` | 2026-08-12 |
 | Zero flow is spatially smooth (every Sobolev class `H^s`) at every time | `zero_isSpatiallySmooth` | 2026-08-12 |
 | **The reduction itself**: `∀T,HypothesisU` + `AubinLionsStatement` + `ProdiSerrinStatement` ⇒ `GlobalRegularityStatement` (time- and space-regular) | `millennium_reduction` | 2026-08-12 |
-| `HasBoundedFullLimit`/`GlobalRegularityStatement` are satisfiable, not vacuous (zero-flow witnesses) | `zero_has_bounded_full_limit`, `zero_global_regularity` | 2026-08-12 |
+| `HasGlobalBoundedLimit`/`GlobalRegularityStatement` are satisfiable, not vacuous (zero-flow witnesses) | `zero_has_global_bounded_limit`, `zero_global_regularity` | 2026-08-12 |
 
 7 theorems, all footprints clean, independently recompiled. **CONDITIONAL SKELETON — proves no
 PDE content.** `AubinLionsStatement` and `ProdiSerrinStatement` are named `Prop`-valued
@@ -122,7 +160,7 @@ Fourier-coefficient-decay characterization of `C^∞` on a torus) and a genuine 
 parameter `k` with `w n = (k n)²` (`hwk`). **Q4** the theorem took a single fixed `T` yet
 concluded a `T`-independent result, silently absorbing SPEC.md's "for all T" into
 `ProdiSerrinStatement`'s undischarged content; repaired by quantifying `hU` over all `T`
-explicitly. **Q5** `HasBoundedFullLimit` didn't require `w ≥ 0` (unlike F2's own
+explicitly. **Q5** `HasGlobalBoundedLimit` didn't require `w ≥ 0` (unlike F2's own
 `enstrophy_nonneg`), so "bounded partial sums" didn't cleanly mean "enstrophy controlled";
 repaired by threading `hw : ∀ n, 0 ≤ w n` through. Four hand-derived negative controls
 (NC1–NC3 re-verified against the revised structure, NC4 newly added — a statement-adequacy
@@ -131,10 +169,10 @@ independently re-run and PASS after the revision.
 
 **Status: awaiting full human statement-adequacy audit** (PLAN.md's oversight split —
 authorship by the top-tier agent, even through a self-review pass, never itself licenses the
-claim; same DRAFT-pending-audit posture as F2's `HypothesisU_Statements.lean` before its
+claim; same DRAFT-pending-audit posture as F2's `DyadicShell_Statements.lean` before its
 Q1/Q2 audit — Q3/Q4/Q5 fixed three found gaps, they do not certify no others remain).
 
-### `lean_src/TriadConservation.lean` — detailed energy conservation of the Fourier nonlinearity
+### `lean_src/AbstractAlgebraicConservation.lean` — abstract algebraic conservation (scope-fixed per audit C1)
 
 | Claim | Formal name | Since |
 |---|---|---|
@@ -167,7 +205,7 @@ an arbitrary commutative ring with an arbitrary additive index group and additiv
 map. It is **not** stated over `Λ ⊂ ℤ³` with complex velocities: that concrete apparatus is
 exactly OP-6 decision **D1**, which is OPEN. **The bridge from this lemma to the concrete
 Fourier–Galerkin setting is NOT built**, nothing here instantiates `B` in
-`HypothesisU_Statements.lean`, and nothing here is a statement about Navier–Stokes solutions.
+`DyadicShell_Statements.lean`, and nothing here is a statement about Navier–Stokes solutions.
 The Leray projector does not appear — the harness's own derivation shows it drops out of the
 energy pairing identically, and independently confirms this (dropping `P(k)` breaks
 transversality but leaves energy conservation intact). The 2-torsion hypothesis `h2` is
@@ -259,7 +297,26 @@ true NSE), presented for the human owner's verdict, not asserting one:**
   human-issued verdict recorded in `LEDGER.md`, whatever the verdict is") — ready for that
   verdict whenever the human owner wants to render one; still not rendered here.
 
-## Tier A — `lean_src/HypothesisU_Statements.lean` (statement shape; audited 2026-08-12)
+## Tier A — `lean_src/DyadicShell_Statements.lean` (pivoted target; renamed from `HypothesisU_Statements.lean` 2026-08-13)
+
+**Post-audit status:** A1/A4 upheld; A2/A3 dissolved by the pivot (the index cutoff and the
+weight `4ⁿ = k_n²` are the dyadic shell model's OWN objects, no longer proxies for ℤ³); A5
+fixed by the concrete nonlinearity below. The file's headline statement is now
+`DyadicShellHypothesisU` — uniform-in-cutoff enstrophy control of the truncated viscous
+Katz–Pavlović model, with nothing abstract remaining in it.
+
+### New rows (Memo 1 Task 2, 2026-08-13)
+
+| Claim | Formal name | Since |
+|---|---|---|
+| The concrete Katz–Pavlović nonlinearity (`B` no longer abstract) | `shellB` | 2026-08-13 |
+| `shellB` vanishes at the zero state (inhabitation applies to the concrete model) | `shellB_zero` | 2026-08-13 |
+| Telescoping: `Σ_{n≤N} v_n·B_n(v) = −k_N v_N² v_{N+1}` | `sum_mul_shellB` | 2026-08-13 |
+| **Exact energy conservation `Σ u_n B_n(u) = 0`** under truncation — the structural constraint whose absence audit verdict A5 called fatal | `shellB_energy_conservation` | 2026-08-13 |
+| Every Galerkin solution of the concrete model conserves energy at every time | `galerkin_shellB_conservation` | 2026-08-13 |
+| **The pivoted headline statement**: Hypothesis U for the concrete truncated viscous Katz–Pavlović model | `DyadicShellHypothesisU` (def) | 2026-08-13 |
+
+(Original 2026-08-12 section follows.)
 
 Q1 and Q2 (below) were **decided by the human owner 2026-08-12** and implemented same day;
 recompiled independently, 9 theorems, all footprints clean. The *shape* of the statement is
@@ -297,12 +354,13 @@ abstract parameter; no claim about actual Navier–Stokes solutions may be drawn
 | **Local bound derivation** `S_N² ≤ 2Ω_N³` (docs/designs/ENSTROPHY_PRODUCTION_BOUND.md) | **Tier A** — proven (see below); **Tier B** mirror in `tests/tier_b_production_bound.py` | Sqrt-free, three-step (algebra + `Σx²≤(Σx)²` + Cauchy-Schwarz). **Local only** — does not use dissipation, does not address uniformity in N. |
 | Barbato–Morandin–Romito, *"Smooth solutions for the dyadic model,"* arXiv:1007.3401 (2010) | Abstract verified via WebFetch 2026-08-12; full proof NOT reviewed | Proves well-posedness of **positive** solutions of the viscous dyadic model in the NSE-matching scaling range — a real, precisely-scoped result, not unconditional global regularity. Do not cite more broadly than this. |
 | **OP-2…OP-5 draft definitions** (Sym²-spectrum embedding, enstrophy echo, entropy functional, percolation coupling) | Drafted 2026-08-12, **awaiting human audit** (PLAN.md §6 — audit is what unblocks, not authorship) | `docs/designs/TRACK_DEFINITIONS_DRAFT.md`. Surfaces a structural finding: the proposed T3 (`h=Ω, ū=0`) collapses into the direct production-identity attack rather than being independent; T1 and T4 share the OP-2 embedding and so are correlated, not independent, measurements. |
-| **OP-6 scoping — instantiating `B` with the real NSE nonlinearity** | Scoped 2026-08-13, D3 done, D1/D2 still open (PLAN.md §6) | `docs/designs/B_INSTANTIATION_SCOPING.md`. No Fourier/triad convolution formula exists anywhere in this program's sanctioned content prior to this memo (confirmed by search: T0.1/T0.2 count triads with no amplitudes; OP-2's draft self-admits it discards angular structure; the dyadic `NL_n` is never asserted to derive from `(u·∇)u`). **Erratum caught and corrected same day** (see Tier B row below): the web-search-sourced formula was identically zero; the corrected form is now Tier B verified. D1 (full `ℤ³` reindexing vs. reduced proxy) and D2 (sequencing vs. OP-2) remain open, still the human owner's call. Neither this memo nor the Tier B harness touches or unblocks `HypothesisU_Statements.lean`'s abstract `B` parameter. |
+| **OP-6 scoping — instantiating `B` with the real NSE nonlinearity** | Scoped 2026-08-13, D3 done, D1/D2 still open (PLAN.md §6) | `docs/designs/B_INSTANTIATION_SCOPING.md`. No Fourier/triad convolution formula exists anywhere in this program's sanctioned content prior to this memo (confirmed by search: T0.1/T0.2 count triads with no amplitudes; OP-2's draft self-admits it discards angular structure; the dyadic `NL_n` is never asserted to derive from `(u·∇)u`). **Erratum caught and corrected same day** (see Tier B row below): the web-search-sourced formula was identically zero; the corrected form is now Tier B verified. D1 (full `ℤ³` reindexing vs. reduced proxy) and D2 (sequencing vs. OP-2) remain open, still the human owner's call. Neither this memo nor the Tier B harness touches or unblocks `DyadicShell_Statements.lean`'s abstract `B` parameter. |
 
 ## Retired / corrected claims
 
 | v0.1 claim | Disposition |
 |---|---|
+| **"Hypothesis U [as formalised] is a restatement of the open core of the Millennium problem"** (SPEC §1.2, the report, the audit packet) | **KILLED by external audit 2026-08-13 (verdict D1), retraction accepted by the owner (`docs/Memo 1.md` §2)**: with a 1-D index cutoff, weight `4ⁿ`, and unconstrained `B`, the formalisation describes a dyadic shell hierarchy, not the unreduced 3-D problem. The programme is re-targeted to the dyadic shell model, where the same statements are exact rather than leaky. |
 | "Reff theorems proven in Lean with zero custom axioms" | Was false when written (no such proofs existed); made true 2026-08-12. |
 | `genesis_no_singularity` with axiom `alpha_prime` | Violated §7.1 and its own #print-axioms expectation; superseded by axiom-free `Reff_pos`. |
 | Prior-tree `HypothesisU` (arbitrary smooth fields) | Provably false as formalized (scaling); statement to be rebuilt with the equation as constraint (Stage 2). |

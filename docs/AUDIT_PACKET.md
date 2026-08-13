@@ -1,5 +1,11 @@
 # External Audit Packet — MechanicaFluidorum / Hypothesis U
 
+> **AUDIT OUTCOME (2026-08-13) — this packet is now a historical record.** The audit returned;
+> verdicts (including D1: KILLED on the central framing) and their dispositions are recorded in
+> `LEDGER.md` ("External audit 2026-08-13"), the owner's acceptance in `docs/Memo 1.md`, and
+> the executed pivot in `PLAN.md` §10. Do not audit against this packet's commit again —
+> the programme's formal target has changed (dyadic shell model).
+
 **Prepared:** 2026-08-13. **Audit target:** the commit that introduces this file
 (`git log --oneline -- docs/AUDIT_PACKET.md` shows it) — check out exactly that commit; later
 commits are outside this packet's scope.

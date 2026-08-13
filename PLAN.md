@@ -313,3 +313,44 @@ each individually before the next commit. Full incident writeup: `LL.md` LL-1.
 
 *This plan is the operational law of the campaign. Where it conflicts with the roadmap's
 calendar, this plan wins; where it conflicts with `SPEC.md`'s rules, `SPEC.md` wins.*
+
+---
+
+## 10. Post-audit directives (2026-08-13, `docs/Memo 1.md` — owner-issued, normative)
+
+The external audit is fully accepted; verdicts and dispositions are in `LEDGER.md`
+("External audit 2026-08-13"). Execution status of the memo:
+
+| Memo item | Status |
+|---|---|
+| §2 [KILLED] claim — retract "restating the Millennium problem" | **DONE** — `SPEC.md` §1.2 retraction block; Retired-claims row in `LEDGER.md` |
+| §2 [DEMOTED] `MillenniumReduction.lean` → Tier C draft | **DONE** — demotion notice in file header + `LEDGER.md` section banner; still gated so it cannot rot |
+| §2 [SCOPE FIX] rename → `AbstractAlgebraicConservation.lean` + ℤ³-aliasing exclusion in docstring | **DONE** |
+| §3 Task 1 rename → `DyadicShell_Statements.lean` | **DONE** |
+| §3 Task 2 concrete `B` + Tier A energy conservation | **DONE** — `shellB`, `sum_mul_shellB` (telescoping), `shellB_energy_conservation`, `galerkin_shellB_conservation`, headline `DyadicShellHypothesisU`; hand-derived before formalising (LL-5) |
+| §4 Task 3 hoist `∃ ulim, ∀ T` | **DONE (statement level)** — `HasGlobalBoundedLimit`; the Cantor diagonalisation is now part of `AubinLionsStatement`'s undischarged content, where the audit said it belongs. Formalising the diagonal argument itself = part of the Task 4 repair. |
+| §4 Task 4 eradicate `Prop` placeholders (ℓ²/ℓᵖ sequence spaces, topological bounds) | **OPEN — the next `[top]` design task.** Needs: check which `Mathlib.Analysis.Normed`/`lp` modules are built in the pinned Mathlib; a design memo specifying the ℓ² statement of Aubin–Lions/Prodi–Serrin analogues *for the shell model*; then dispatch. Do not start `[any]` half before the memo exists (D5 rule). |
+| audit B4 — specialise the reduction to the concrete dyadic object | **OPEN** — fold into the Task 4 repair (the repaired file should quantify over `shellB`, not an abstract `B`). |
+
+### Items from the owner's review that live in THIS repo (the numerical stream's items are tracked in its own repo)
+
+- **T1 depletion, counting form** `[top]`+`[human]` for the definition; `[any]` for the count:
+  candidate constrained spectrum = modes whose `|k|²` lies in the lock's spectral image
+  (perfect squares / values of the fiber quadratic form). Density `√X/X` ⇒ massive depletion,
+  provable as a Tier A counting theorem; exact constrained-triad counts are executable NOW with
+  the existing `r₃(n)`/triad tooling (`data/r3_counts.csv`, `data/triads_free.csv`). This is
+  also the bridge to the resonant-triad hypergraph object (vertices = modes, hyperedges =
+  `k₁+k₂=k₃`; question: spectral gap of the locked sub-hypergraph).
+- **OP-2-lite (lock in 1-D, no 3-D embedding needed)** `[top]` authoring, `[human]` audit:
+  2–3 candidate implementations of the Sym² lock in shell space (hard constraint `a_{2n} ~ a_n²`
+  / projection / penalty), each with kill criteria, for owner audit — then the W1 exponent
+  re-measurement runs in the numerical stream. Note the scale-nonlocality (n ↔ 2n coupling) is
+  the O1-compliance feature.
+- **Positive-control calibration** (instrument principle, applies to any future trajectory
+  instrument here): the Cheskidov regime (dissipation degree ≥ 1/2, regularity known) must
+  read as bounded. A checker that has never seen a known-positive is as suspect as one that
+  cannot fail.
+- **Publication split (owner decision on record):** the methods paper ("verifier-in-the-loop
+  mathematics on an open problem") is publishable independently of any verdict on U (target
+  arXiv cs.LO + math.AP / ITP/CPP); the numerical note waits for W1 and must be titled as a
+  calibration/control result, not "rigorous validation".

@@ -1,5 +1,21 @@
 /-
-  MillenniumReduction.lean — Tier A: conditional Millennium Reduction skeleton (PLAN.md §4, F3)
+  MillenniumReduction.lean — TIER C (DRAFT), demoted 2026-08-13 by external audit
+  ================================================================================
+  DEMOTION NOTICE (docs/Memo 1.md §2; verdicts in LEDGER.md). The external audit's B1 verdict:
+  `AubinLionsStatement` and `ProdiSerrinStatement` as bare `Prop → Prop` arrows "completely
+  bypass PDE theory. The Lean kernel is merely verifying a logical tautology (A → B → C)."
+  Accepted. This file remains kernel-compiled and gated (so it cannot rot) but its claims are
+  TIER C until repaired per Memo 1 Task 4 (real sequence-space topology, PLAN.md §10).
+
+  Audit round 2 changes already applied (B2 REVISE, Memo 1 Task 3): the existential is HOISTED
+  — `HasGlobalBoundedLimit` fixes ONE limit trajectory `ulim` across ALL horizons `T`, instead
+  of permitting a different limit per horizon. The Cantor diagonalisation that produces such a
+  single trajectory is now exactly where it belongs: inside `AubinLionsStatement`'s TYPE, as
+  part of the undischarged analytic content, rather than silently absent.
+
+  Original header follows.
+  ================================================================================
+  (was) MillenniumReduction.lean — conditional Millennium Reduction skeleton (PLAN.md §4, F3)
   ================================================================================================
   Formalizes `docs/designs/F3_MILLENNIUM_REDUCTION_SKELETON.md`. Encodes the LOGICAL SHAPE of
   Proposition 5.1 (SPEC.md §1.1, `docs/HYPOTHESIS_U_SPECIFICATION.md` §II): "Hypothesis U ⇒
@@ -42,11 +58,11 @@
       traffic in `∀ T, HasBoundedFullLimit …` rather than a single-`T` instance. Matches
       SPEC.md §1.1 ("Hypothesis U holds for … all T") in the theorem's own hypothesis list,
       not buried inside a hypothesis parameter's type.
-  Q5 (was: `HasBoundedFullLimit` bounded finite partial sums of `w n * u(t,n)²` without
+  Q5 (was: `HasGlobalBoundedLimit` bounded finite partial sums of `w n * u(t,n)²` without
       requiring `w ≥ 0`, unlike `HypothesisU_Statements.lean`'s own `enstrophy_nonneg`, which
       requires it explicitly — for signed `w`, "partial sums bounded" does not mean "enstrophy
       controlled"). DECISION: add `hw : ∀ n, 0 ≤ w n` as an explicit parameter of
-      `HasBoundedFullLimit`, threaded through `AubinLionsStatement`/`ProdiSerrinStatement`/
+      `HasGlobalBoundedLimit`, threaded through `AubinLionsStatement`/`ProdiSerrinStatement`/
       `millennium_reduction`.
 
   Scope (declared, matches `HypothesisU_Statements.lean`'s own exclusions): no real Fourier
@@ -153,7 +169,7 @@ theorem sobolevWeight_nonneg (k : ℕ → ℝ) (s n : ℕ) : 0 ≤ sobolevWeight
 
 /-- `u` is spatially smooth at time `t`: for EVERY finite Sobolev order `s`, every finite
 partial sum of `k_n^{2s} u(t,n)²` stays bounded by some (possibly `s`-dependent) `C`. Requiring
-this for every `s`, not just `s = 1` (which is all `HasBoundedFullLimit` below tracks), is what
+this for every `s`, not just `s = 1` (which is all `HasGlobalBoundedLimit` below tracks), is what
 distinguishes genuine spatial smoothness from a bare `H¹` bound — the promotion from one to the
 other is exactly the content SPEC.md §II Step 3 (Prodi–Serrin) is responsible for, parked in
 `ProdiSerrinStatement`'s type, not proved here. -/
@@ -173,7 +189,7 @@ theorem zero_isSpatiallySmooth (k : ℕ → ℝ) (t : ℝ) :
 
 /-! ## 4. The two undischarged analytic steps, as named hypothesis parameters -/
 
-/-- **Compactness-step output.** `HasBoundedFullLimit nu T B w hw u0` says: there is an
+/-- **Compactness-step output.** `HasGlobalBoundedLimit nu B w hw u0` says: there is an
 untruncated solution `ulim` of the same evolution law and data, and a bound `C > 0`, such that
 EVERY finite partial enstrophy sum of `ulim` (cutoff `M`, arbitrary) stays `≤ C` on `[0, T]`.
 This is the finite-partial-sum avatar of "the limit inherits a uniform `H¹`-type bound" — the
@@ -182,11 +198,12 @@ nonnegative `w`, bounded finite partial sums IS equivalent to the (possibly infi
 converging with value `≤ C`. Named separately from `AubinLionsStatement`/`ProdiSerrinStatement`
 so their two types are SYNTACTICALLY identical at the join point — see NC1/NC2 below for why
 that identity is load-bearing. -/
-def HasBoundedFullLimit (nu T : ℝ) (B : ℕ → (ℕ → ℝ) → ℝ) (w : ℕ → ℝ) (hw : ∀ n, 0 ≤ w n)
+def HasGlobalBoundedLimit (nu : ℝ) (B : ℕ → (ℕ → ℝ) → ℝ) (w : ℕ → ℝ) (hw : ∀ n, 0 ≤ w n)
     (u0 : ℕ → ℝ) : Prop :=
-  ∃ (ulim : ℝ → ℕ → ℝ) (C : ℝ), 0 < C ∧
+  ∃ ulim : ℝ → ℕ → ℝ,
     IsFullSolution nu B w u0 ulim ∧
-    ∀ M : ℕ, ∀ t : ℝ, 0 ≤ t → t ≤ T → enstrophy M w ulim t ≤ C
+    ∀ T : ℝ, ∃ C : ℝ, 0 < C ∧
+      ∀ M : ℕ, ∀ t : ℝ, 0 ≤ t → t ≤ T → enstrophy M w ulim t ≤ C
 
 /-- **Aubin–Lions compactness (SPEC.md §II Steps 1–2), as a hypothesis parameter.**
 `docs/REVIEW-2026-08-12.md` L7: the prior tree's `axiom aubin_lions_compactness` is replaced by
@@ -196,7 +213,7 @@ unconditionally. Quantifies over `T` explicitly (Q4): SPEC.md §1.1 requires Hyp
 analytic content the reduction is conditional on. -/
 def AubinLionsStatement (nu : ℝ) (B : ℕ → (ℕ → ℝ) → ℝ) (w : ℕ → ℝ) (hw : ∀ n, 0 ≤ w n)
     (u0 : ℕ → ℝ) : Prop :=
-  (∀ T : ℝ, HypothesisU nu T B w u0) → (∀ T : ℝ, HasBoundedFullLimit nu T B w hw u0)
+  (∀ T : ℝ, HypothesisU nu T B w u0) → HasGlobalBoundedLimit nu B w hw u0
 
 /-- **Global regularity of the untruncated system.** Existence of a genuine solution that is
 BOTH globally-in-time defined (`IsFullSolution`'s `∀ t ≥ 0` clause) AND spatially smooth at
@@ -209,14 +226,14 @@ def GlobalRegularityStatement (nu : ℝ) (B : ℕ → (ℕ → ℝ) → ℝ) (w 
 
 /-- **Prodi–Serrin regularity criterion (SPEC.md §II Step 3), as a hypothesis parameter.**
 Promotes the compactness-step's family of bounded limits (`H¹`-type control at every `T`, via
-`HasBoundedFullLimit`) to global regularity in BOTH time and space (`u ∈ L^∞_t L^6_x` via
+`HasGlobalBoundedLimit`) to global regularity in BOTH time and space (`u ∈ L^∞_t L^6_x` via
 Sobolev embedding, then Prodi–Serrin's parabolic bootstrap to full smoothness). `hwk` ties the
 wavenumber `k` used in the conclusion's `IsSpatiallySmooth` to the weight `w` used in the
-hypothesis's `HasBoundedFullLimit` (`w n = (k n)²`) — without it `k` would be an unrelated,
+hypothesis's `HasGlobalBoundedLimit` (`w n = (k n)²`) — without it `k` would be an unrelated,
 meaningless parameter. NOT proved in this file, for the same reason as `AubinLionsStatement`. -/
 def ProdiSerrinStatement (nu : ℝ) (B : ℕ → (ℕ → ℝ) → ℝ) (w : ℕ → ℝ) (hw : ∀ n, 0 ≤ w n)
     (k : ℕ → ℝ) (hwk : ∀ n, w n = (k n) ^ 2) (u0 : ℕ → ℝ) : Prop :=
-  (∀ T : ℝ, HasBoundedFullLimit nu T B w hw u0) → GlobalRegularityStatement nu B w k u0
+  HasGlobalBoundedLimit nu B w hw u0 → GlobalRegularityStatement nu B w k u0
 
 /-! ## 5. The reduction itself
 
@@ -251,11 +268,11 @@ own `WITNESS DEFERRED` comment on `HypothesisU`). What is proved below, matching
 scope of F2's `zero_isGalerkinSolution`, is that the TARGET objects of this file's new
 definitions are genuinely satisfiable (inhabited types), not vacuous by construction. -/
 
-/-- `HasBoundedFullLimit` is satisfiable: the zero flow, bound `C = 1`. -/
-theorem zero_has_bounded_full_limit (nu T : ℝ) (B : ℕ → (ℕ → ℝ) → ℝ) (w : ℕ → ℝ)
+/-- `HasGlobalBoundedLimit` is satisfiable: the zero flow, bound `C = 1`. -/
+theorem zero_has_global_bounded_limit (nu : ℝ) (B : ℕ → (ℕ → ℝ) → ℝ) (w : ℕ → ℝ)
     (hw : ∀ n, 0 ≤ w n) (hB : ∀ n : ℕ, B n (fun _ => (0 : ℝ)) = 0) :
-    HasBoundedFullLimit nu T B w hw (fun _ => (0 : ℝ)) := by
-  refine ⟨_, 1, one_pos, zero_isFullSolution nu B w hB, ?_⟩
+    HasGlobalBoundedLimit nu B w hw (fun _ => (0 : ℝ)) := by
+  refine ⟨_, zero_isFullSolution nu B w hB, fun T => ⟨1, one_pos, ?_⟩⟩
   intro M t _ _
   rw [enstrophy_zero]
   exact zero_le_one
@@ -273,12 +290,12 @@ Every theorem below must report exactly `[propext, Classical.choice, Quot.sound]
 **Negative controls (hand-derived, actually run against scratch perturbed copies 2026-08-12; see
 `docs/designs/F3_MILLENNIUM_REDUCTION_SKELETON.md` for the full table with confirmed outcomes):**
 NC1 — inlining `AubinLionsStatement`'s conclusion with the `0 ≤ t →` guard dropped (instead of
-using the shared `HasBoundedFullLimit` name) breaks the type-identity `hPS (hAL hU)` relies on.
+using the shared `HasGlobalBoundedLimit` name) breaks the type-identity `hPS (hAL hU)` relies on.
 NC2 — replacing the proof body with `hAL hU` alone (dropping `hPS`) is a type error: expected
 `GlobalRegularityStatement …`, got `∀ T, HasBoundedFullLimit …`. NC3 — deleting `hB` from
 `zero_isFullSolution`'s signature: `unknown identifier hB`, cascading into every non-vacuity
 call site. NC4 (new, Q3) — dropping the `∀ s :` quantifier from `IsSpatiallySmooth` (fixing
-`s := 1`) would make `GlobalRegularityStatement` provable directly from `HasBoundedFullLimit`
+`s := 1`) would make `GlobalRegularityStatement` provable directly from `HasGlobalBoundedLimit`
 alone (no genuine promotion needed), collapsing `ProdiSerrinStatement` into something with far
 less content than Prodi–Serrin's actual bootstrap — this is a statement-adequacy risk, not a
 compile-time-checkable one, which is exactly why the quantifier order was audited by hand
@@ -289,7 +306,7 @@ rather than left to the type-checker alone. -/
 #print axioms sobolevWeight_nonneg
 #print axioms zero_isSpatiallySmooth
 #print axioms millennium_reduction
-#print axioms zero_has_bounded_full_limit
+#print axioms zero_has_global_bounded_limit
 #print axioms zero_global_regularity
 
 end MechanicaFluidorum.MillenniumReduction

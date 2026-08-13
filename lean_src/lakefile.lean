@@ -22,7 +22,7 @@ lean_lib CallensDualScale
 lean_lib DyadicShells
 
 @[default_target]
-lean_lib HypothesisU_Statements
+lean_lib DyadicShell_Statements
 
 @[default_target]
 lean_lib EnstrophyProduction
@@ -34,4 +34,4 @@ lean_lib EnstrophyProductionBound
 lean_lib MillenniumReduction
 
 @[default_target]
-lean_lib TriadConservation
+lean_lib AbstractAlgebraicConservation

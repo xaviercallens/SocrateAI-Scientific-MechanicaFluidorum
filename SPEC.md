@@ -53,10 +53,24 @@ limit is Leray–Hopf → under U the limit is in L^∞ₜH¹ₓ ↪ L^∞ₜL�
 
 ### 1.2 What this framing is and is not
 
-- The truncated system *is* the classical Leray/Fourier–Galerkin mollification. Proposition 5.1
-  is standard. **Hypothesis U is a restatement of the open core of the Millennium problem, not
-  a reduction of its difficulty.** Its value is organizational: one quantitative target, four
-  independent attacks, machine-checked bookkeeping.
+**RETRACTION (2026-08-13, external audit verdict D1 — KILLED; owner acceptance in
+`docs/Memo 1.md`).** This section previously claimed the programme "restates the open core of
+the Millennium problem". The audit found that claim false as applied to the formalisation: a
+1-D index cutoff (not a `ℤ³` frequency cutoff), the weight `4ⁿ` (not the Laplacian symbol
+`|k|²`), and an unconstrained interaction term `B` describe a **dyadic shell hierarchy**, not
+the unreduced 3-D equations. The retraction is accepted in full, and the programme is
+re-targeted accordingly:
+
+- **The formal target is the truncated viscous Katz–Pavlović dyadic shell model** — a
+  respected, active area of mathematical fluid mechanics in its own right (blow-up: Katz–
+  Pavlović 2005, Cheskidov 2008; regularity under strong dissipation: Barbato–Morandin–Romito),
+  where a machine-verified global-regularity or blow-up theorem would be a first.
+- The prose of §1.1 about `𝕋³` and `J_{√α'}` remains the programme's *motivating* problem, and
+  the 3-D bridge (ℤ³ reindexing; OP-2/OP-6) is explicit, open future work — never an implicit
+  claim of the formalisation.
+- Obstruction compliance (§1.3) is re-scoped: O1 (Tao) and O5 (the Euler test) remain
+  meaningful for the dyadic target; O2–O4 are inherited only if and when the 3-D bridge is
+  built (audit verdict D2: a 1-D sequence model lacks the surface area to encounter CKN).
 - The T-dual effective radius Reff(α, R) = max(R, α/R) — with its proven laws (§2.1) — is the
   program's *geometric inspiration* for the cutoff. The *mechanism* in the PDE is the cutoff
   J_{√α'} itself. Deriving the truncated dynamics from a genuine metric deformation is an open

@@ -1,5 +1,17 @@
-/- STATUS: DRAFT v2 - the two open statement-level questions (Q1, Q2) were DECIDED BY THE
-   HUMAN OWNER on 2026-08-12 and are implemented below:
+/- STATUS: v3 — PIVOTED TO THE DYADIC SHELL MODEL per the external audit of 2026-08-13
+   (docs/Memo 1.md; verdicts in LEDGER.md). The audit KILLED the claim that this file
+   restates the 3-D Millennium problem: with a 1-D index cutoff (verdict A2: NO), the
+   exponential weight 4^n (A3: NO), and an unconstrained interaction term B (A5: NO,
+   "authenticating a mathematically empty envelope"), what this file actually describes is a
+   dyadic shell hierarchy. The accepted resolution is to EMBRACE that: the programme's formal
+   target is now the truncated viscous Katz-Pavlovic shell model, for which the index cutoff,
+   the weight k_n^2 = 4^n, and the concrete nonlinearity `shellB` below are not proxies but
+   THE objects themselves. A2/A3 dissolve under the pivot; A5 is resolved by section 1c
+   (`shellB` + its Tier A energy-conservation theorem, per Memo Task 2). The abstract-B
+   scaffolding is RETAINED below only because the refutation theorems (section 3) and the
+   inhabitation witnesses quantify over it — it no longer carries any headline claim.
+
+   Earlier decisions Q1, Q2, DECIDED BY THE HUMAN OWNER on 2026-08-12, remain in force:
      Q1 -> initial data is PROJECTED at each cutoff (`truncate N u0`), mirroring the continuum
            definition u(0) = J_{sqrt(alpha')} u0 and closing the vacuity leak at every N.
      Q2 -> the enstrophy weight is CONCRETE: w n = (k n)^2 = 4^n with dyadic k n = 2^n
@@ -196,6 +208,66 @@ remains outside this file's scope (declared exclusion, above). -/
 def HypothesisU_dyadic (nu T : ℝ) (B : ℕ → (ℕ → ℝ) → ℝ) (u0 : ℕ → ℝ) : Prop :=
   HypothesisU nu T B dyadicWeight u0
 
+/-! ## 1c. The concrete nonlinearity (Memo 1 Task 2, 2026-08-13): `B` is no longer abstract
+
+The external audit's A5 verdict: certifying a bound for an unconstrained `B` is
+"authenticating a mathematically empty envelope" — a generic truncated sequence simply blows
+up. The fix directed by the owner: instantiate `B` as the physical Katz–Pavlović shell
+nonlinearity and prove, at Tier A, that it satisfies exact energy conservation
+`Σ u_n B_n(u) = 0`. That is done here. Note the viscous term of `IsGalerkinSolution`,
+`-nu * dyadicWeight n * u n = -nu * k_n² * u_n`, already matches the shell model exactly, so
+`DyadicShellHypothesisU` below is a statement about precisely the truncated viscous
+Katz–Pavlović system — the same model whose enstrophy-production identity is proven in
+`lean_src/EnstrophyProduction.lean`. -/
+
+/-- The Katz–Pavlović shell nonlinearity: `B_0(v) = −k_0 v_0 v_1` (no influx at the bottom
+shell — `k_{-1}` is never evaluated) and `B_{m+1}(v) = k_m v_m² − k_{m+1} v_{m+1} v_{m+2}`. -/
+noncomputable def shellB (k : ℕ → ℝ) : ℕ → (ℕ → ℝ) → ℝ
+  | 0,     v => -(k 0 * v 0 * v 1)
+  | m + 1, v => k m * v m ^ 2 - k (m + 1) * v (m + 1) * v (m + 2)
+
+/-- `shellB` vanishes at the zero state — the hypothesis `hB` of
+`zero_isGalerkinSolution`, so the inhabitation witness applies to the CONCRETE model. -/
+theorem shellB_zero (k : ℕ → ℝ) (n : ℕ) : shellB k n (fun _ => (0 : ℝ)) = 0 := by
+  cases n <;> simp [shellB]
+
+/-- **Telescoping** (hand-derived before formalisation): with `out_m := k_m v_m² v_{m+1}`,
+each summand is `v_n · B_n(v) = out_{n-1} − out_n` (reading `out_{-1} = 0`), so the energy
+pairing telescopes to `−out_N`. -/
+theorem sum_mul_shellB (k v : ℕ → ℝ) :
+    ∀ N : ℕ, ∑ n ∈ Finset.range (N + 1), v n * shellB k n v
+      = -(k N * v N ^ 2 * v (N + 1))
+  | 0 => by
+      rw [Finset.sum_range_one]
+      show v 0 * -(k 0 * v 0 * v 1) = _
+      ring
+  | N + 1 => by
+      rw [Finset.sum_range_succ, sum_mul_shellB k v N]
+      simp only [shellB]
+      ring
+
+/-- **Exact energy conservation (Memo 1 Task 2, Tier A).** Under the truncation boundary
+condition `v_{N+1} = 0`, the shell nonlinearity conserves energy exactly:
+`Σ_{n≤N} v_n · B_n(v) = 0`. This is the structural constraint whose absence the audit called
+fatal (A5); it is now a kernel-checked property of the concrete `B` this file quantifies over. -/
+theorem shellB_energy_conservation (k v : ℕ → ℝ) (N : ℕ) (hbc : v (N + 1) = 0) :
+    ∑ n ∈ Finset.range (N + 1), v n * shellB k n v = 0 := by
+  rw [sum_mul_shellB, hbc]; ring
+
+/-- **The programme's formal target after the pivot**: uniform-in-cutoff enstrophy control of
+the truncated viscous Katz–Pavlović shell model — `HypothesisU` with `B := shellB k_n`,
+`w := k_n²`, both concrete. Nothing abstract remains in this statement. -/
+def DyadicShellHypothesisU (nu T : ℝ) (u0 : ℕ → ℝ) : Prop :=
+  HypothesisU nu T (shellB dyadicWavenumber) dyadicWeight u0
+
+/-- Every Galerkin solution of the concrete model satisfies exact energy conservation at
+every time: clause (iii) of `IsGalerkinSolution` supplies the boundary condition
+`u t (N+1) = 0`. Connects the algebraic identity to the actual solution family. -/
+theorem galerkin_shellB_conservation (N : ℕ) (nu : ℝ) (u0 : ℕ → ℝ) (u : ℝ → ℕ → ℝ)
+    (h : IsGalerkinSolution N nu (shellB dyadicWavenumber) dyadicWeight u0 u) (t : ℝ) :
+    ∑ n ∈ Finset.range (N + 1), u t n * shellB dyadicWavenumber n (u t) = 0 :=
+  shellB_energy_conservation _ _ _ (h.2.2 t (N + 1) (Nat.lt_succ_self N))
+
 /-! ## 2. Non-vacuity: `IsGalerkinSolution` is inhabited -/
 
 /-- The zero flow solves the truncated system with zero data, provided the interaction term
@@ -316,5 +388,9 @@ carry positive weight. -/
 #print axioms enstrophy_smul
 #print axioms enstrophy_unbounded_under_scaling
 #print axioms unconstrained_bound_false
+#print axioms shellB_zero
+#print axioms sum_mul_shellB
+#print axioms shellB_energy_conservation
+#print axioms galerkin_shellB_conservation
 
 end MechanicaFluidorum
