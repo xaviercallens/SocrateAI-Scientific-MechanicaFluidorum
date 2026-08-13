@@ -235,6 +235,35 @@ run; (b) confirm the script's **exit code**, never just its trailing output.
 
 ---
 
+## LL-9 — A subagent's `git stash` is a repo-wide operation; treat it like `git add -A`
+
+**What happened (2026-08-13).** A background subagent was dispatched to update the LaTeX report
+while the orchestrator concurrently wrote a design memo and edited `PLAN.md`. To compare
+"before/after" typesetting the subagent ran `git stash` … `git stash pop` on the shared
+working tree. `git stash` is not scoped to the files an agent is working on: it swallowed the
+orchestrator's **tracked** edits (`PLAN.md`) along with the agent's own `.tex` work. Only the
+untracked new files (the memo, the snippet) were unaffected, and only because plain `git stash`
+skips untracked files by default — luck, not design.
+
+**Outcome.** No loss: the agent's `pop` completed before the orchestrator's second check, and
+everything was verified present afterwards file-by-file. But the window between `stash` and
+`pop` is a window in which an unrelated failure (agent killed, crash, conflict) strands another
+worker's committed-nothing-yet edits inside a stash entry they did not create and may not know
+to look for.
+
+**Rule produced.** LL-1's rule was scoped to `git add -A`. Generalise it: **while any
+background worker may be writing to the repo, no agent may run a git command whose blast radius
+is the whole working tree** — `stash`, `checkout .`, `reset`, `clean`. Dispatch prompts for
+concurrent agents should say so explicitly. If an agent needs a before/after comparison, it
+should copy the file aside (`cp x /tmp/x.bak`) rather than move the entire tree through a
+stash.
+
+**Second-order note.** The orchestrator caught this only because it inspected the subagent's
+live transcript rather than waiting for the final report. The final report would have said
+"done, compiles clean" — truthfully — and never mentioned the stash.
+
+---
+
 *Add new lessons above this line, most recent first is not required — group by theme as the
 log grows. A lesson earns an entry here when it changed a rule somewhere else in the repo
 (`PLAN.md`, `CLAUDE.md`, or a memory file) — if it didn't change a rule, it probably belongs

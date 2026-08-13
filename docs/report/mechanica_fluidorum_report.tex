@@ -52,16 +52,18 @@
 \renewcommand{\headrulewidth}{0.4pt}
 
 \title{\textbf{MechanicaFluidorum}\\[0.3em]
-\large A Verifier-in-the-Loop Program on 3D Navier--Stokes Regularity\\[0.4em]
-\normalsize Dual-Scale Geometry, the Symmetric-Square Lock, and Hypothesis U\\[0.6em]
-\normalsize\textit{Scientific Progress Report --- Intermediate Results}}
+\large A Verifier-in-the-Loop Program Motivated by 3D Navier--Stokes Regularity\\[0.4em]
+\normalsize Dual-Scale Geometry, the Symmetric-Square Lock, and\\
+\normalsize the Truncated Viscous Katz--Pavlovi\'c Dyadic Shell Model\\[0.6em]
+\normalsize\textit{Scientific Progress Report --- Intermediate Results,\\
+Revised After the External Audit of 13 August 2026}}
 
 \author{Xavier Callens\\
 \small SocrateAI Scientific Programme\\
 \small\texttt{SocrateAI-Scientific-MechanicaFluidorum}}
 
 \date{13 August 2026\\[0.3em]
-\small Repository state: commit \texttt{57d4e92} \quad$\vert$\quad All verification gates PASS (exit 0)}
+\small Repository state: commit \texttt{1739dc3} \quad$\vert$\quad All verification gates PASS (exit 0)}
 
 \begin{document}
 \maketitle
@@ -74,16 +76,23 @@ organised around \emph{Hypothesis U} --- a uniform-in-cutoff enstrophy bound for
 frequency-truncated system. The programme's distinguishing feature is not a claimed proof but
 a \emph{method}: every assertion carries an explicit epistemic tier, mechanically enforced by
 a two-gate verification pipeline (exact rational arithmetic; Lean~4 kernel compilation with a
-pinned axiom footprint). We report 66 kernel-verified theorems across seven Lean files, six
-exact-arithmetic certification harnesses, and --- equally importantly --- a documented record
-of what has \emph{failed}: two abandoned numerical designs, five caught errata (one in a
-formula sourced from the literature, one in the programme's own design memo, one a broken
-commit, one a false positive in the verification gate itself, and one an unpinned dependency
-that would have verified the programme against the wrong prover library), and four analytical tracks that remain correctly blocked on undefined objects. We
-state precisely what is established, what is merely checkable, and what remains conjecture.
-\textbf{No claim is made that Hypothesis U is true, nor that the Navier--Stokes problem is
-resolved.} The Millennium Prize problem remains open, and this programme's central hypothesis
-is a restatement of its open core, not a reduction of its difficulty.
+pinned axiom footprint). We report 70 theorems kernel-compiled across seven Lean files --- of
+which 63 carry Tier~A claims, the remaining 7 having been \emph{demoted} to Tier~C by the
+audit below --- six exact-arithmetic certification harnesses, and, equally importantly, a
+documented record of what has \emph{failed}: two abandoned numerical designs, five caught
+errata (one in a formula sourced from the literature, one in the programme's own design memo,
+one a broken commit, one a false positive in the verification gate itself, and one an
+unpinned dependency that would have verified the programme against the wrong prover library),
+four analytical tracks that remain correctly blocked on undefined objects, and --- the largest
+single failure in the programme's history --- \textbf{an external expert audit that killed this
+report's own central framing claim} (\S\ref{sec:problem}).
+\textbf{The retraction is stated in full and accepted without qualification}: the
+formalisation, with a one-dimensional index cutoff, does not restate the unreduced
+three-dimensional problem; it describes a dyadic shell hierarchy. The programme has been
+re-targeted accordingly, and its formal object is now the truncated viscous Katz--Pavlovi\'c
+dyadic shell model. \textbf{No claim is made that Hypothesis U is true, in any form, nor that
+the Navier--Stokes problem is resolved.} The Millennium Prize problem remains open and is not
+addressed by anything proven here.
 \end{abstract}
 
 \tableofcontents
@@ -186,7 +195,10 @@ O5 & The Euler test & Point to the step that fails at $\nu=0$. A strategy that w
 \end{tabular}
 \caption{The obstruction ledger (\texttt{SPEC.md} \S1.3). These are the barriers any credible
 attack must address; they are stated here because they constrain everything in
-\S\ref{sec:tracks}.}
+\S\ref{sec:tracks}. \textbf{Re-scoped 2026-08-13} by audit verdict D2, which found that
+merely \emph{listing} these barriers against a one-dimensional sequence model overstates
+contact with them: O1 (Tao) and O5 (the Euler test) remain meaningful for the dyadic target;
+O2--O4 are inherited only if and when the 3-D bridge is built.}
 \label{tab:obstructions}
 \end{table}
 
@@ -281,16 +293,56 @@ in $L^\infty_tH^1_x\hookrightarrow L^\infty_tL^6_x$ $\Rightarrow$ the Serrin cla
 $2/s+3/q=1/2\le1$ $\Rightarrow$ smooth \cite{prodi-serrin-modern}.
 \end{proposition}
 
-\begin{warnbox}{The central honesty statement --- please read before any other claim in this report}
-The truncated system \eqref{eq:truncated} \emph{is} the classical Leray/Fourier--Galerkin
-mollification. That mollified systems are globally smooth, and that a uniform-in-cutoff
-enstrophy bound implies regularity of the limit, is \textbf{classical and standard}.
-\textbf{Hypothesis U is a restatement of the open core of the Millennium problem, not a
-reduction of its difficulty.} Nothing has been made easier. Its value is purely
-organisational: one clean quantitative target, four independent attacks, and machine-checked
-bookkeeping. An earlier version of this programme's specification overstated this point, and
-the correction is recorded in \texttt{docs/REVIEW-2026-08-12.md} (finding M1).
+\begin{warnbox}{Retraction --- please read before any other claim in this report}
+\textbf{An earlier version of this report carried, in this box, the claim that
+``Hypothesis~U is a restatement of the open core of the Millennium problem, not a reduction of
+its difficulty''. That claim was submitted to external expert audit on 13~August 2026 and was
+\textsc{killed} (verdict D1). It is retracted here in full.}
+
+The retraction is not that the claim was too strong about \emph{difficulty} --- it is that the
+claim was false about \emph{what had been formalised}. The audit found that the programme's
+Lean statements are indexed by a one-dimensional shell index $n\in\N$ rather than a
+frequency $k\in\Z^3$ (verdict A2: the index flattening destroys the lattice geometry, the
+density of states, and the triad constraint $k_1+k_2=k_3$); that the enstrophy weight was the
+exponential sequence $4^n$ rather than the Laplacian symbol $|k|^2$ (A3); and that the
+mode-interaction term $B$ was an \emph{unconstrained} parameter, so that certifying a bound
+for it was, in the auditor's words, ``authenticating a mathematically empty envelope'' (A5).
+Taken together, what the formalisation describes is a \textbf{dyadic shell hierarchy}, not the
+unreduced 3-D equations. The prose of \eqref{eq:nse}--\eqref{eq:hypU} above was never wrong;
+the claim that the \emph{formal artifacts} restated it was.
+
+\textbf{The new target.} The owner accepted the verdict in full (\texttt{docs/Memo 1.md}) and
+re-targeted the programme rather than defending the framing. The formal target is now
+\textbf{global regularity bounds for the truncated viscous Katz--Pavlovi\'c dyadic shell
+model} --- not a proxy for the 3-D problem, but an object of study in its own right, and a
+respected active area of mathematical fluid mechanics (blow-up: Katz--Pavlovi\'c
+\cite{katz-pavlovic}, Cheskidov \cite{cheskidov}; regularity under strong dissipation:
+Barbato--Morandin--Romito \cite{barbato-morandin-romito}). A machine-verified
+regularity-or-blow-up theorem for that model would, to the authors' knowledge, be a first. The
+3-D bridge --- the $\Z^3$ reindexing, OP-2 and OP-6 (\S\ref{sec:opsix}) --- is explicit, open
+future work, and is never again to be an implicit claim of the formalisation.
+
+\textbf{Why this is recorded as a success of the method and not merely as a setback.} This
+programme's Definition of Done (\S\ref{sec:summary}) does not include proving Hypothesis~U. It
+includes obtaining human verdicts \emph{whatever they are}. The tier system exists precisely so
+that a framing claim can be located, isolated, and killed without taking any kernel-verified
+theorem down with it --- and that is what happened: every Lean file still compiles, and the
+retraction cost exactly the seven theorems that deserved to be demoted (\S\ref{sec:audit}).
+The full verdict table (A1--A5, B1--B5, C1, D1--D2) with dispositions is in \texttt{LEDGER.md};
+the retraction text is normative in \texttt{SPEC.md}~\S1.2.
 \end{warnbox}
+
+\begin{keybox}{What survives the retraction, stated precisely}
+Hypothesis~U \eqref{eq:hypU} as an informal statement about the continuum truncated system, and
+Proposition~5.1 as paper-level mathematics, are unaffected --- they were always \tC{} at paper
+level and are so labelled above. What is retracted is the assertion that the \emph{Lean
+formalisation} of \S\ref{sec:audit} is a formalisation of \emph{that} statement. Audit verdicts
+A1 (the quantifier order $\exists C\,\forall N$) and A4 (quantifying over every solution) were
+upheld, so the statement's \emph{logical shape} was sound; it was its \emph{referent} that was
+wrong. Under the pivot, A2 and A3 dissolve rather than being repaired: for the dyadic shell
+model the index \emph{is} the object and the weight $4^n=k_n^2$ \emph{is} the correct weight.
+A5 was repaired by instantiating $B$ (\S\ref{sec:audit}).
+\end{keybox}
 
 %==============================================================================
 \section{Dual-Scale Geometry and T-Duality}
@@ -447,12 +499,15 @@ finding is recorded rather than suppressed.
 \end{keybox}
 
 %==============================================================================
-\section{The Dyadic Laboratory: Established Results}
+\section{The Dyadic Shell Model: Established Results}
 \label{sec:dyadic}
 %==============================================================================
 
-Before touching the continuum PDE, the programme works in a truncated dyadic shell model ---
-a standard toy model of turbulent cascade, introduced by Katz and Pavlovi\'c
+This section was written when the truncated dyadic shell model was the programme's
+\emph{laboratory} --- a place to earn techniques before touching the continuum PDE. After the
+audit of 13~August 2026 it is the programme's \emph{target} (\S\ref{sec:problem}). The results
+below are unchanged by that reclassification; what changed is that they are no longer
+preliminaries to something else. The model is due to Katz and Pavlovi\'c
 \cite{katz-pavlovic}, whose published form (verified by retrieval, as restated in
 \cite{cheskidov}) is
 $\frac{d}{dt}u_n+\nu2^{2\alpha n}u_n-\lambda^nu_{n-1}^2+\lambda^{n+1}u_nu_{n+1}=g_n$.
@@ -468,10 +523,13 @@ with truncation conventions $a_{-1}=0$, $a_{N+1}=0$. Energy is
 $E=\tfrac12\sum a_n^2$ and enstrophy $\Omega=\tfrac12\sum k_n^2a_n^2$.
 
 \begin{keybox}{Scope note (honesty clause)}
-This model is a \emph{laboratory}, not the Navier--Stokes equations. Its nonlinearity is
-\textbf{never} asserted in this repository to be derived from, or to approximate,
-$(u\cdot\nabla)u$. Results below are exact statements about finite sums and their
-consequences; no existence theory for the ODE system is invoked.
+This model is \textbf{not} the Navier--Stokes equations. Its nonlinearity is \textbf{never}
+asserted in this repository to be derived from, or to approximate, $(u\cdot\nabla)u$; the
+audit of 13~August 2026 (\S\ref{sec:problem}) exists precisely because an earlier framing let
+that boundary blur. Results below are exact statements about finite sums and their
+consequences; no existence theory for the ODE system is invoked. What the model \emph{is} is a
+well-studied object with a real literature and real open questions --- which is what makes it a
+legitimate target rather than a proxy.
 \end{keybox}
 
 \subsection{Energy flux telescoping and monotonicity (\tA{})}
@@ -531,13 +589,14 @@ state family --- an unforced negative result, recorded.
 \end{warnbox}
 
 %==============================================================================
-\section{Statement-Level Formalisation and the Conditional Reduction}
+\section{Statement-Level Formalisation, the Pivot, and the Demotion}
 \label{sec:audit}
 %==============================================================================
 
-\subsection{Hypothesis U as a formal statement (\tA{}, \textsc{draft})}
+\subsection{The shell-model Hypothesis U as a formal statement (\tA{}, \textsc{draft})}
 
-\texttt{lean\_src/HypothesisU\_Statements.lean} gives a non-vacuous Galerkin-shape
+\texttt{lean\_src/DyadicShell\_Statements.lean} (renamed 2026-08-13 from
+\texttt{HypothesisU\_Statements.lean}, Memo Task 1) gives a non-vacuous Galerkin-shape
 formalisation. Writing $u:\R\to(\N\to\R)$ for mode amplitudes, a solution at cutoff $N$
 satisfies: (i) $u(0)=\mathrm{truncate}\,N\,u_0$; (ii) for every $t$ and every retained mode
 $n\le N$, $\frac{d}{ds}u(s,n)|_{s=t}=B_n(u(t))-\nu w_n u(t,n)$; (iii) $u(t,n)=0$ for $n>N$.
@@ -565,14 +624,59 @@ smooth fields, without the equation as a constraint, yields a statement that is
 \textbf{provably false} (\texttt{unconstrained\_bound\_false}), since scaling a field by $c$
 scales enstrophy by $c^2$.
 
-\begin{warnbox}{The decisive open item}
-The mode-interaction term $B$ remains an \textbf{abstract parameter}. No claim about actual
-Navier--Stokes solutions may be drawn from this file. Instantiating $B$ with the true 3D
-nonlinearity is where the entire mathematical content resides, and it is deferred
-(\S\ref{sec:opsix}).
+\subsection{Closing verdict A5: the nonlinearity is now concrete (\tA{})}
+
+Until 13~August 2026 the mode-interaction term $B$ in \eqref{eq:formalU} was an
+\textbf{abstract parameter}, and the previous version of this report named that the decisive
+open item. The audit put it far more sharply (verdict A5): certifying a bound for an
+unconstrained $B$ is a ``fatal flaw \ldots\ authenticating a mathematically empty envelope''
+--- an arbitrary truncated sequence system simply blows up, so the envelope contains nothing.
+Under the pivot this was repaired directly, by instantiating $B$ as the Katz--Pavlovi\'c shell
+nonlinearity itself (Memo Task 2):
+\begin{equation}
+\texttt{shellB}:\quad
+B_0(v)=-\bigl(k_0v_0v_1\bigr),\qquad
+B_{m+1}(v)=k_mv_m^2-k_{m+1}v_{m+1}v_{m+2}.
+\label{eq:shellB}
+\end{equation}
+The bottom shell has no influx, so $k_{-1}$ is never evaluated; for $n\ge1$ this is exactly
+$\mathrm{NL}_n$ of \eqref{eq:shell}. The structural property whose absence the audit called
+fatal is now a kernel-checked theorem, obtained from an exact telescoping identity:
+
+\begin{theorem}[Shell energy pairing; \texttt{sum\_mul\_shellB}, \texttt{shellB\_energy\_conservation}]
+For all $k,v:\N\to\R$ and all $N$, writing $\mathrm{out}_m:=k_mv_m^2v_{m+1}$, each summand
+satisfies $v_nB_n(v)=\mathrm{out}_{n-1}-\mathrm{out}_n$ (reading $\mathrm{out}_{-1}=0$), so
+that
+\[
+\sum_{n\le N} v_n\,B_n(v)\;=\;-\,k_Nv_N^2v_{N+1},
+\qquad\text{and hence}\qquad
+v_{N+1}=0\ \Longrightarrow\ \sum_{n\le N} v_n\,B_n(v)=0 .
+\]
+\end{theorem}
+
+The truncation hypothesis $v_{N+1}=0$ is clause~(iii) of \texttt{IsGalerkinSolution}, so this
+transfers to solutions with no extra assumption: \texttt{galerkin\_shellB\_conservation}
+states that every Galerkin solution of the concrete model conserves energy exactly, at every
+time. The viscous term of \texttt{IsGalerkinSolution} is $-\nu w_nu_n=-\nu k_n^2u_n$, which is
+already the shell model's dissipation verbatim; together with \eqref{eq:shellB} this makes
+\[
+\texttt{DyadicShellHypothesisU}\;:\equiv\;\texttt{HypothesisU}\ \nu\ T\
+\bigl(\texttt{shellB}\ k\bigr)\ \bigl(n\mapsto k_n^2\bigr)\ u_0
+\]
+the programme's headline statement, in which \textbf{nothing abstract remains}. It is a
+statement about precisely the truncated viscous Katz--Pavlovi\'c system --- the same model
+whose exact enstrophy-production identity is proven in \S\ref{sec:dyadic}.
+
+\begin{warnbox}{What this does and does not fix}
+It fixes A5, and only A5. \texttt{DyadicShellHypothesisU} is a \emph{statement}; it is not
+proven, and nothing here is evidence that it is true. The abstract-$B$ scaffolding is retained
+in the file solely because the refutation theorems and the inhabitation witnesses quantify over
+it; it carries no headline claim. And instantiating $B$ with the \emph{true 3-D} nonlinearity
+remains untouched and open --- that is OP-6 (\S\ref{sec:opsix}), now correctly labelled as the
+3-D bridge rather than as this file's missing piece.
 \end{warnbox}
 
-\subsection{The conditional Millennium reduction (\tA{}, \textsc{draft})}
+\subsection{The conditional Millennium reduction (\tC{}, \textsc{demoted}, \textsc{draft})}
 
 \texttt{lean\_src/MillenniumReduction.lean} encodes the logical shape of Proposition~5.1 with
 the two undischarged analytic steps as \emph{named hypothesis parameters}, never axioms:
@@ -583,9 +687,9 @@ the two undischarged analytic steps as \emph{named hypothesis parameters}, never
 \mathrm{ProdiSerrinStatement}\to
 \mathrm{GlobalRegularityStatement}.
 \]
-The proof is the one-line composition \texttt{hPS (hAL hU)}. This is deliberate: all
-mathematical weight is parked in the hypotheses' \emph{types}, so the Lean kernel tracks the
-outstanding debt in the type signature rather than in the axiom environment --- the pattern
+The proof is the one-line composition \texttt{hPS (hAL hU)}. The intent was that all
+mathematical weight be parked in the hypotheses' \emph{types}, so the Lean kernel would track
+the outstanding debt in the type signature rather than in the axiom environment --- the pattern
 prescribed after a prior version of this work carried a raw \texttt{axiom
 aubin\_lions\_compactness}.
 
@@ -596,13 +700,46 @@ membership in every Fourier-side Sobolev class $H^s$; the theorem had fixed a si
 $T$ while concluding a $T$-independent result, and now quantifies over all $T$; and the weight
 nonnegativity $w\ge0$ is now an explicit hypothesis.
 
-\begin{warnbox}{Audit status --- both files are \textsc{draft}}
-Both files compile clean with correct axiom footprints. \textbf{Neither has passed human
-statement-adequacy audit.} Fixing three found gaps does not certify that no others remain; a
-subsequent independent review raised two further candidate issues (whether the untruncated
-solution may differ per horizon $T$ without a coherence clause, and whether the spatial
-smoothness bound should be uniform in $t$). Under this programme's charter, authorship ---
-including self-review --- never licenses a claim. Only human audit does.
+\begin{warnbox}{Demotion to \tC{} --- audit verdict B1}
+That intent did not survive audit. \texttt{AubinLionsStatement} and
+\texttt{ProdiSerrinStatement} are bare \texttt{Prop} parameters, and the auditor's finding
+(B1) is that bare $\mathrm{Prop}\to\mathrm{Prop}$ arrows ``completely bypass PDE theory. The
+Lean kernel is merely verifying a logical tautology ($A\to B\to C$)'' --- which violates the
+Definition of Done's requirement of bona fide statements. \textbf{The verdict is accepted and
+the demotion is executed: all 7 theorems in this file are \tC{} as of 2026-08-13.} They remain
+kernel-compiled and wired into Gate~2 so that they cannot silently rot, but they may no longer
+be cited as Tier~A.
+
+The distinction being drawn is sharp and worth stating plainly: parking analytic debt in a
+hypothesis's \emph{type} is only honest if that type has content. Here it had none --- a
+$\mathrm{Prop}$ variable constrains nothing --- so the type signature recorded the debt in name
+only. The repair is Memo Task 4: import or define the required sequence spaces ($\ell^2$,
+$\ell^p$), state the Aubin--Lions and Prodi--Serrin analogues \emph{for the shell model} with
+their actual topological content, and (audit item B4) specialise the reduction to the concrete
+object rather than to a generic $B$. That is the next design task and is \textbf{open};
+\texttt{PLAN.md}~\S10 records that no implementation may begin before the design memo exists.
+\end{warnbox}
+
+\paragraph{One audit item was repairable immediately (B2, \textsc{revise}).} A previous
+independent review had raised, and this report previously recorded as an open candidate issue,
+whether the untruncated solution may differ per horizon $T$ without a coherence clause. The
+audit confirmed it: the existential had to be hoisted. It now is --- \texttt{HasGlobalBoundedLimit}
+fixes \emph{one} limit trajectory $u_{\lim}$ across \emph{all} horizons $T$, rather than
+permitting a different limit for each. The Cantor diagonal argument that would actually produce
+such a trajectory is thereby relocated into \texttt{AubinLionsStatement}'s type, where the audit
+said it belongs, instead of being silently absent; formalising the diagonalisation itself is
+part of the Task~4 repair.
+
+\begin{warnbox}{Audit status of the two files after the pivot}
+\texttt{DyadicShell\_Statements.lean} is \tA{} and \textsc{draft}: it compiles clean with
+correct axiom footprints, its quantifier shape was upheld (A1, A4), its nonlinearity is now
+concrete (A5), but it has \textbf{not} passed a full human statement-adequacy audit.
+\texttt{MillenniumReduction.lean} is \tC{} and \textsc{draft} pending the Task~4 repair. The
+general lesson is the one this section now demonstrates twice over: fixing the gaps found in a
+self-review (Q3--Q5) did \emph{not} certify that no others remained, and the ones that remained
+were the structural ones. Authorship --- including adversarial self-review --- never licenses a
+claim. Only human audit does, and when it was finally obtained it removed a claim rather than
+confirming one.
 \end{warnbox}
 
 %==============================================================================
@@ -615,6 +752,15 @@ monolith, partitioning Fourier space into dyadic shells and controlling
 $\sum_j E_j^{(\alpha')}(t)$. Four deep analytical disciplines are proposed as independent
 attacks. Each is an \emph{analogy with a falsification plan}, and each carries a kill
 criterion agreed in advance.
+
+\begin{keybox}{Status of this section after the pivot}
+All four tracks are formulated against the \emph{continuum} problem on $\T^3$ and depend on
+$\Z^3$ lattice structure (T1's triads, T4's percolation field). They therefore sit
+\textbf{downstream of the 3-D bridge} (\S\ref{sec:opsix}), not of the programme's current formal
+target. They are retained here unchanged, and unchanged also in their status: blocked. Their
+blockage was never contingent on the framing that was retracted --- it is contingent on four
+objects that do not exist, listed below.
+\end{keybox}
 
 \begin{center}
 \small
@@ -757,17 +903,24 @@ discrete scheme} --- not of the continuum dyadic model, and certainly not of Nav
 \end{warnbox}
 
 %==============================================================================
-\section{Toward Instantiating the Nonlinearity (OP-6)}
+\section{The 3-D Bridge: Instantiating the True Nonlinearity (OP-6)}
 \label{sec:opsix}
 %==============================================================================
 
-Because $B$ in \eqref{eq:formalU} is abstract, the programme's decisive next step is to
-instantiate it. A repository-wide search established that \textbf{no Fourier-triad convolution
+This section describes work aimed at the \emph{true} 3-D nonlinearity. It should now be read
+as work on the \textbf{bridge} between the programme's formal target (the shell model,
+\S\ref{sec:dyadic}, \S\ref{sec:audit}) and its motivating problem (\S\ref{sec:problem}) ---
+open future work, and not a claim that the bridge exists. Note the distinction from
+\S\ref{sec:audit}: $B$ in \eqref{eq:formalU} is no longer abstract, having been instantiated
+by the shell nonlinearity \eqref{eq:shellB}; what remains open is instantiating it by the
+Fourier--Galerkin nonlinearity on $\Z^3$, which is a different and strictly harder object.
+
+A repository-wide search established that \textbf{no Fourier-triad convolution
 formula exists anywhere in this programme's sanctioned content} --- the triad tooling counts
 lattice points without amplitudes; the OP-2 draft self-admits it discards the angular
 structure of $k$ ``which is precisely where 3-D vortex-stretching geometry lives''; and the
 dyadic $\mathrm{NL}_n$ is never asserted to derive from $(u\cdot\nabla)u$. Instantiating $B$
-is therefore a genuine E-1 blocker.
+by the 3-D nonlinearity is therefore a genuine E-1 blocker.
 
 On $\T^3$, with $u=\sum_k\hat u_ke^{ik\cdot x}$, $k\cdot\hat u_k=0$,
 $\hat u_{-k}=\overline{\hat u_k}$, and Leray projector
@@ -815,7 +968,10 @@ symbolically}; a Tier A proof remains future work.
 
 The harness above certifies two facts \emph{computationally}, at three truncations, and its own
 docstring declines to claim either as proven. Both are now Tier A, in
-\texttt{lean\_src/TriadConservation.lean}:
+\texttt{lean\_src/AbstractAlgebraicConservation.lean} --- renamed 2026-08-13 from
+\texttt{TriadConservation.lean} under audit verdict C1, which found the old name
+\textsc{overstates reach}: the file's abstraction bypasses geometric aliasing on $\Z^3$
+entirely, and the name should say so. The docstring now states that exclusion explicitly:
 
 \begin{theorem}[Termwise triad cancellation; \texttt{triad\_pairing}]
 If $k_p+k_q+k_r=0$ componentwise and the field is divergence-free at $p$
@@ -874,6 +1030,12 @@ in \texttt{LL.md} with evidence, and each produced a standing process rule.
 \textbf{ID} & \textbf{Incident} & \textbf{Resulting rule} \\
 \midrule
 \endhead
+\multicolumn{3}{@{}l}{\textbf{The largest failure to date}}\\
+\addlinespace[2pt]
+--- & \textbf{An external expert audit killed this programme's central framing claim} (2026-08-13, verdict D1). For months the specification, this report, and the audit packet all asserted that the formalisation ``restates the open core of the Millennium problem''. It did not: a 1-D index cutoff, the weight $4^n$, and an unconstrained $B$ describe a dyadic shell hierarchy. Four further verdicts (A2, A3, A5, C1) were \textsc{no}, one (B1) forced the demotion of a whole file from \tA{} to \tC{}, and one (B2) required a structural repair. \textbf{None of this was caught by two machine gates, five governing documents, or an adversarial self-review} --- because none of them can check whether a formal statement refers to the object it names. & \textbf{Only human audit certifies statement adequacy, and it must be sought \emph{early} and from \emph{outside}.} A self-review that finds and fixes real gaps (Q3--Q5) creates a false sense of completeness: the gaps it can see are not the structural ones. Corollary now in force: a file that is \textsc{draft} pending audit may not have its informal gloss repeated in prose as though the audit had passed. \\
+\addlinespace
+\multicolumn{3}{@{}l}{\textbf{Earlier incidents}}\\
+\addlinespace[2pt]
 LL-1 & A broad \texttt{git add -A} swept an agent's mid-edit Lean file into a commit; the committed version carried \texttt{sorryAx} in five theorems. Happened \emph{twice} in one session. & Stage by explicit path only while any background process may be writing; re-run the gate on the exact file immediately before staging. \\
 \addlinespace
 LL-2 & A submitted proposal self-reported ``proven, no \texttt{sorry}''; it did not compile (four Lean idiom errors) and its footprint contained \texttt{sorryAx}. & Never trust a self-report. Re-run the compiler on the exact artifact. Archive proposals verbatim with their compiled kernel output. \\
@@ -901,41 +1063,58 @@ LL-8 & \textbf{The verification gate itself had a false positive.} A lemma prove
 %==============================================================================
 
 \begin{center}
-\begin{tabular}{@{}llr@{}}
+\begin{tabular}{@{}llcr@{}}
 \toprule
-\textbf{Artifact} & \textbf{Content} & \textbf{Theorems} \\
+\textbf{Artifact} & \textbf{Content} & \textbf{Tier} & \textbf{Theorems} \\
 \midrule
-\texttt{CallensDualScale.lean} & T-dual $\Reff$ laws, Sym$^2$ lock, sharpness & 14 \\
-\texttt{DyadicShells.lean} & Energy-flux telescoping, monotonicity & 3 \\
-\texttt{HypothesisU\_Statements.lean} & Hypothesis U statement shape (\textsc{draft}) & 9 \\
-\texttt{EnstrophyProduction.lean} & Exact enstrophy-production identity & 11 \\
-\texttt{EnstrophyProductionBound.lean} & Local bound $S_N^2\le2\Omega_N^3$ & 15 \\
-\texttt{MillenniumReduction.lean} & Conditional reduction skeleton (\textsc{draft}) & 7 \\
-\texttt{TriadConservation.lean} & Detailed energy conservation + transversality & 7 \\
+\texttt{CallensDualScale.lean} & T-dual $\Reff$ laws, Sym$^2$ lock, sharpness & \tA{} & 14 \\
+\texttt{DyadicShells.lean} & Energy-flux telescoping, monotonicity & \tA{} & 3 \\
+\texttt{DyadicShell\_Statements.lean} & Shell-model Hypothesis U; concrete \texttt{shellB} & \tA{} & 13 \\
+ & \quad and its energy conservation (\textsc{draft}) & & \\
+\texttt{EnstrophyProduction.lean} & Exact enstrophy-production identity & \tA{} & 11 \\
+\texttt{EnstrophyProductionBound.lean} & Local bound $S_N^2\le2\Omega_N^3$ & \tA{} & 15 \\
+\texttt{AbstractAlgebraicConservation.lean} & Abstract triad conservation + transversality & \tA{} & 7 \\
 \midrule
-\multicolumn{2}{@{}l}{\textbf{Total, no axiom outside \texttt{\{propext, Classical.choice, Quot.sound\}}}} & \textbf{66} \\
+\multicolumn{2}{@{}l}{\textbf{Tier A subtotal}} & & \textbf{63} \\
+\midrule
+\texttt{MillenniumReduction.lean} & Conditional reduction skeleton & \tC{} & 7 \\
+ & \quad (\textsc{demoted} 2026-08-13, verdict B1) & & \\
+\midrule
+\multicolumn{2}{@{}l}{\textbf{Total kernel-compiled, no axiom outside \texttt{\{propext, Classical.choice, Quot.sound\}}}} & & \textbf{70} \\
 \bottomrule
 \end{tabular}
 \end{center}
 
-Six Tier B harnesses are wired into Gate 1, each with a negative control demonstrated to
-fail. Both gates pass at commit \texttt{36c4bae}.
+All 70 theorems compile with clean axiom footprints; the demoted 7 remain wired into Gate~2 so
+that they cannot silently rot, but they carry \tC{} claims and may not be cited as established.
+The two new rows relative to the previous report are
+\texttt{DyadicShell\_Statements.lean}'s concrete nonlinearity block (\texttt{shellB},
+\texttt{shellB\_zero}, \texttt{sum\_mul\_shellB}, \texttt{shellB\_energy\_conservation},
+\texttt{galerkin\_shellB\_conservation}, and the headline definition
+\texttt{DyadicShellHypothesisU}). Six Tier B harnesses are wired into Gate~1, each with a
+negative control demonstrated to fail. Both gates pass at commit \texttt{1739dc3}, re-run
+independently for this report.
 
 \subsection{What is genuinely established}
 
-Exact algebraic identities and inequalities for a dyadic shell model; the T-dual effective
-radius laws with sharpness; a non-vacuous statement-level formalisation of Hypothesis U
-including a machine-checked refutation of a prior, provably false formulation; a conditional
-reduction skeleton with the analytic debt tracked in types; and exact-arithmetic verification
-of two structural properties of the Fourier--Galerkin nonlinearity.
+Exact algebraic identities and inequalities for the truncated dyadic shell model --- energy-flux
+telescoping and monotonicity, the exact enstrophy-production identity, the local production
+bound, and now the exact energy conservation of the concrete Katz--Pavlovi\'c nonlinearity; the
+T-dual effective radius laws with sharpness; a non-vacuous statement-level formalisation of
+Hypothesis~U \emph{for the shell model}, with nothing abstract remaining in the headline
+statement, and including a machine-checked refutation of a prior, provably false formulation;
+and exact-arithmetic verification of two structural properties of the Fourier--Galerkin
+nonlinearity, one of which is now also proven abstractly.
 
 \subsection{What is emphatically not established}
 
-Hypothesis U itself; any statement about actual Navier--Stokes solutions; any claim that the
-Symmetric-Square Lock is relevant to the NSE cascade; the four tracks (all blocked on
-undefined objects); any uniformity verdict; and the statement-adequacy of the two
-\textsc{draft} Lean files. The instantiation of $B$ --- where, by the programme's own
-assessment, ``the entire mathematical content resides'' --- has not been done.
+Hypothesis U in any form --- neither for Navier--Stokes nor for the shell model; any statement
+about actual Navier--Stokes solutions; any claim that the formalisation reduces, restates, or
+bears on the Millennium problem (retracted, \S\ref{sec:problem}); any claim that the
+Symmetric-Square Lock is relevant to the NSE cascade; the four tracks (all blocked on undefined
+objects); any uniformity verdict; the conditional Millennium reduction, whose file is now \tC{};
+and the statement-adequacy of either \textsc{draft} file. The instantiation of $B$ by the
+\emph{true 3-D} nonlinearity --- the 3-D bridge --- has not been done and is open.
 
 \begin{keybox}{Definition of done, and what is absent from it}
 The campaign is complete when the formal skeleton is merged and human-audited, the dyadic
@@ -944,7 +1123,11 @@ verdict is}, the open problems are either audited or recorded as open with dated
 and every ledger row maps to a passing artifact. Note what is \emph{absent}: proving
 Hypothesis U. If this programme produces a negative dyadic verdict or kills tracks, it
 \textbf{still counts as done and successful as science}. That is what falsifiable structure
-means.
+means --- and the audit of 13~August 2026 is the first time that clause has had to be honoured
+against the programme's own headline framing rather than against one of its subordinate
+conjectures. It was honoured: the claim was retracted the day it was received, the affected
+file was demoted, and the programme was re-targeted onto an object its formal artifacts
+actually describe.
 \end{keybox}
 
 %==============================================================================
