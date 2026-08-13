@@ -33,15 +33,30 @@ existing repo content.
 
 On `𝕋³ = (ℝ/2πℤ)³`, write `u(x,t) = Σ_{k∈ℤ³} û_k(t) e^{ik·x}`, divergence-free ⟺ `k·û_k = 0`,
 real-valued ⟺ `û_{-k} = conj(û_k)`. With the Leray projector `P(k) := I − (k⊗k)/|k|²`, the
-Fourier-Galerkin-truncated Euler/NS nonlinearity is the standard form (cross-checked via web
-search against current literature restating this identical form, e.g. the Galerkin-truncated
-system as stated in arXiv:2604.12188 — **NOT independently verified against a fixed textbook
-page the way this program's citation discipline (LL.md, "verify literature before citing")
-normally requires; treat the formula below as "matches independent recollection and one
-literature cross-check," not as fully verified**):
+Fourier-Galerkin-truncated Euler/NS nonlinearity:
 
 ```
-∂ₜ û_k = −ν|k|² û_k − i Σ_{p+q=k, p,q∈Λ} P(k)[q (û_p · û_q)]
+∂ₜ û_k = −ν|k|² û_k − i Σ_{p+q=k, p,q∈Λ} P(k)[ (q · û_p) û_q ]
+```
+
+**ERRATUM (2026-08-13, caught by the Tier B harness below, not by inspection — recorded
+honestly per this program's own "an agent's self-report is not evidence, re-verify"
+discipline):** the formula first written here, sourced from a single web-search cross-check
+against arXiv:2604.12188 (`q (û_p · û_q)` — the wavevector `q` times the scalar
+velocity-velocity dot product), was **wrong**. `tests/tier_b_nse_triad_convolution.py` proved
+in exact arithmetic that formula is identically zero for every `k`, on every field and
+truncation tested: `P(k)` annihilates anything parallel to `k`, and because every pair `(p,q)`
+with `p+q=k` appears alongside its swap `(q,p)` in the same sum, the two terms are exact
+negatives (`P(k)[q·s] + P(k)[p·s] = P(k)[(p+q)·s] = P(k)[k·s] = 0`), so the whole sum
+telescopes to zero — clearly not the real (nonzero) NSE nonlinearity. This was very likely a
+search-summarizer transcription artifact, not an error in the underlying arXiv source, but
+that was never independently confirmed either way — exactly the risk the "not yet verified"
+caveat (previously here) existed to flag. The corrected formula above, `(q · û_p) û_q` (`q`
+DOTTED with the velocity `û_p`, a scalar, times the velocity vector `û_q`), matches the
+standard Fourier transform of the convective derivative `(u·∇)u`, is nonzero, and is now
+checked in exact arithmetic (Fact 1 unconditionally; Fact 2 — energy conservation — verified
+computationally at `M=1,2,3`, not yet proven symbolically in general — see the harness file's
+own docstring for the honest scope of what's proven vs. computationally confirmed).
 ```
 
 **Why this is a much bigger step than "instantiate one function," and why option-drafting
@@ -77,29 +92,28 @@ or simplify the other, or they may turn out to need genuinely different embeddin
 different purposes (OP-2 is about Sym²-lock resonance filtering; `B` is about the literal PDE
 nonlinearity). Worth deciding whether to unify or keep separate.
 
-**D3 — Right-sized first deliverable.** Rather than attempting the full reindexing in one
-step, the smallest well-scoped, independently-checkable next task I can identify (recommended,
-not decided) is: **a standalone Tier B exact-arithmetic harness for the Fourier-triad
-convolution formula itself**, extending T0.1/T0.2's existing lattice/triad-enumeration code
-(`symbolic/`, `data/triads_free.csv`) to small finite truncations with exact-rational (or
-Gaussian-rational, for the complex Leray projection) amplitudes, checked against the standard
-**detailed energy conservation** identity of the Leray-projected quadratic nonlinearity
-(`Σ_k conj(û_k) · N(û)_k = 0`, i.e. the nonlinear term alone conserves energy — the textbook
-fact underlying the NSE energy identity `SPEC.md` already cites) as its negative-control-style
-sanity check (a version with the Leray projection dropped, or a sign error, should demonstrably
-FAIL the identity). This doesn't require touching `HypothesisU_Statements.lean` at all, is
-independently falsifiable, and would give the human owner a concrete, small artifact to audit
-before committing to D1's larger choice.
+**D3 — Right-sized first deliverable. DONE 2026-08-13.** `tests/tier_b_nse_triad_convolution.py`
+(wired into `scripts/verify.sh` Gate 1) — a standalone Tier B exact-arithmetic harness
+certifying transversality (`k·N(û)_k=0`, unconditional) and detailed energy conservation
+(`Σ_k conj(û_k)·N(û)_k=0`, given divergence-free + conjugate-symmetric input) of the corrected
+formula above, at `M=1,2,3`, with two negative controls (drop Leray projection; break
+divergence-free on one mode) confirmed to fail exactly as the hand derivation predicts —
+**and it caught the erratum above**, which is exactly the kind of concrete, auditable artifact
+this deliverable was meant to produce before committing to D1's larger choice.
 
 ## What this memo does NOT do
 
-No Lean file is touched. No `B` instantiation is implemented, drafted as Lean code, or added to
-any ledger row. No claim is made that the formula above is final or fully verified — it is
-explicitly flagged as needing independent verification against a fixed citable source before
-any further step. This is scoping only, matching what was requested.
+No change to `lean_src/HypothesisU_Statements.lean`. `B` is not instantiated there and no
+ledger row claims it is. D3's Tier B harness (above) is a standalone artifact about the
+Fourier-triad convolution formula's own structural properties — it does not touch, and does
+not by itself unblock, `HypothesisU_Statements.lean`'s abstract `B` parameter; that remains
+gated on D1/D2. The formula is now backed by an exact-arithmetic check (stronger than the
+original "not yet verified" caveat), but Fact 2's general triad identity is still only
+computationally confirmed (M=1,2,3), not proven symbolically — see the harness file's own
+docstring.
 
 ## Smallest question that unblocks further work
 
-Which of D1's two paths (full `ℤ³` reindexing vs. a smaller shell-preserving proxy), and
-should D3's recommended first deliverable (Tier B triad-convolution + energy-conservation
-harness) be dispatched now regardless of the D1 answer, since it's useful under either path?
+D3 is done. What remains open is **D1** (full `ℤ³` reindexing vs. a smaller shell-preserving
+proxy) and **D2** (sequencing vs. OP-2) — both still genuinely the human owner's call, neither
+resolved by D3's harness.
