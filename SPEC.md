@@ -245,8 +245,20 @@ Stage 0 includes standing up the standalone cold build.
    old check in the direction that matters — `sorryAx`, custom axioms, and any other foreign
    axiom are still caught (re-verified against a six-case table, including cases that must
    fail, before the change was accepted).
-3. **(Stage-0 addition)** cold-build job; single-active-file lint (§7.4); LEDGER consistency
-   check (every Tier A/B entry maps to a passing artifact).
+3. **(Stage-0 addition — DONE 2026-08-13)** cold-build job; single-active-file lint (§7.4);
+   LEDGER consistency check (every Tier A/B entry maps to a passing artifact).
+   - **Cold build:** `lean_src/` is now a standalone Lake project with Mathlib pinned by
+     revision (`lean_src/lakefile.lean`, plus the tracked `lean_src/lake-manifest.json` which
+     pins every transitive dependency). Gate 2 prefers this local build and falls back to
+     `LEAN_ENV_DIR` when it is absent, so a fresh clone still verifies without an ~8 GB build.
+   - **Lint + LEDGER check:** implemented as Gate 1b, `scripts/ledger_check.py`. Ships its own
+     negative controls (a dangling path, a dangling Lean name, and a banned versioned filename
+     must each be rejected, plus a clean positive control that must be accepted) which run on
+     every invocation — per §2's "a checker that cannot fail is not a checker".
+     The name check resolves **class fields** as well as `theorem`/`def`/`instance`, which is
+     load-bearing: `resonance_law` is cited by a Tier A row and is a class field, so a naive
+     checker reports it as an orphan. It found and fixed one real defect on first run (a row
+     citing the non-identifier fragment `` `_half` `` instead of `step1_flux_bound_half`).
 
 ## 6. Staged Roadmap
 

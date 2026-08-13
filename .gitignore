@@ -3,6 +3,16 @@
 *.ilean
 *.ir
 .lake/
-lake-manifest.json
 __pycache__/
 *.pyc
+
+# Lean build artifacts (cold standalone build; Mathlib cache is multi-GB).
+# NOTE: lean_src/lake-manifest.json is deliberately NOT ignored -- it pins the exact
+# revision of Mathlib and every transitive dependency, which is what makes the Tier A
+# results reproducible. Ignoring it would let `lake update` silently drift the toolchain
+# that every LEDGER.md claim was verified against.
+lean_src/.lake/
+lean_src/lake-manifest.json.bak
+
+# Claude Code transient runtime state (PID/session lock; not project content)
+.claude/scheduled_tasks.lock

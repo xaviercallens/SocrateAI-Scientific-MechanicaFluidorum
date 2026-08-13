@@ -46,16 +46,31 @@ Compile a single Lean file directly (bypasses Gate 1, useful while iterating):
 cd ~/xdev/SocrateAI-Scientific-RajMathRecovery/dualscale/lean && \
   lake env lean /home/xavkal/xdev/SocrateAI-Scientific-MechanicaFluidorum/lean_src/<File>.lean
 ```
-This repo's `lean_src/` is **not** a standalone Lake project — there is no local Mathlib
-build here. Gate 2 and all manual compiles reuse the already-built Mathlib checkout at
-`~/xdev/SocrateAI-Scientific-RajMathRecovery/dualscale/lean` (override with `LEAN_ENV_DIR`).
-Only a subset of Mathlib is built there — check before importing a new module:
+`lean_src/` **is** a standalone Lake project as of 2026-08-13 (see the cold-build note below).
+Gate 2 prefers its local build; when `lean_src/.lake` is absent it falls back to the
+already-built Mathlib checkout at `~/xdev/SocrateAI-Scientific-RajMathRecovery/dualscale/lean`
+(override either with `LEAN_ENV_DIR`). Note that only a **subset** of Mathlib is built in that
+*fallback* checkout — if you are relying on the fallback, check before importing a new module:
 ```bash
 ls ~/xdev/SocrateAI-Scientific-RajMathRecovery/dualscale/lean/.lake/packages/mathlib/.lake/build/lib/lean/Mathlib/<Path>.olean
 ```
 The umbrella `import Mathlib.Tactic` is **not** built; import narrow modules
-(`Mathlib.Tactic.Ring`, `Mathlib.Tactic.Linarith`, etc.). A standalone cold build (`cd
-lean_src && lake exe cache get && lake build`) is a still-open Stage-0 chore, not yet done.
+(`Mathlib.Tactic.Ring`, `Mathlib.Tactic.Linarith`, etc.).
+
+**The standalone cold build is DONE (2026-08-13)** — `lean_src/` is now a real Lake project
+with Mathlib pinned (`lean_src/lakefile.lean` + the tracked `lean_src/lake-manifest.json`) to
+the same revision the external checkout uses. `scripts/verify.sh` Gate 2 now **prefers**
+`lean_src/.lake` when present and falls back to `LEAN_ENV_DIR` otherwise, so a fresh clone
+still verifies without first paying for the ~8 GB build. Rebuild it with:
+```bash
+cd lean_src && lake exe cache get && lake build
+```
+Why this matters and is not just tidiness: Gate 2 previously always used the external
+checkout, which this repo does not control — an unrelated `lake build` there rebuilt its
+`.olean` files mid-run and Gate 2 failed on a file this repo had not touched. The local build
+removes that coupling. `lean_src/.lake/` is gitignored (7.9 GB); the **manifest is not**, and
+must stay tracked — it is what pins the toolchain every `LEDGER.md` claim was verified
+against.
 
 Print a theorem's axiom footprint (the actual Tier A gate, more reliable than reading source):
 ```lean

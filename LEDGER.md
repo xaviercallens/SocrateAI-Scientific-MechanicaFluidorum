@@ -72,7 +72,7 @@ in five theorems. Caught and corrected same day — see the commit that follows 
 
 | Claim | Formal name | Since |
 |---|---|---|
-| Pure algebra (doubling only): `Σ_{n<N}k_n²a_{n+1}² ≤ Ω_N` | `step1_flux_bound` (+ tighter `_half`) | 2026-08-12 |
+| Pure algebra (doubling only): `Σ_{n<N}k_n²a_{n+1}² ≤ Ω_N` | `step1_flux_bound`, and the tighter `step1_flux_bound_half` | 2026-08-12 |
 | Sum-of-squares bound: `Σ_{n<N}k_n⁴a_n⁴ ≤ 4Ω_N²` | `step2_quartic_bound` | 2026-08-12 |
 | Squared Cauchy–Schwarz combination | `step3_cauchy_schwarz` | 2026-08-12 |
 | **`S_N² ≤ 2Ω_N³`** — the local production bound itself | `enstrophy_production_bound` | 2026-08-12 |
