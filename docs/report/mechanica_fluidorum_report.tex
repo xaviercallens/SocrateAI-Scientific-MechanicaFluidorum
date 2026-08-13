@@ -74,7 +74,7 @@ organised around \emph{Hypothesis U} --- a uniform-in-cutoff enstrophy bound for
 frequency-truncated system. The programme's distinguishing feature is not a claimed proof but
 a \emph{method}: every assertion carries an explicit epistemic tier, mechanically enforced by
 a two-gate verification pipeline (exact rational arithmetic; Lean~4 kernel compilation with a
-pinned axiom footprint). We report 66 kernel-verified theorems across seven Lean files, seven
+pinned axiom footprint). We report 66 kernel-verified theorems across seven Lean files, six
 exact-arithmetic certification harnesses, and --- equally importantly --- a documented record
 of what has \emph{failed}: two abandoned numerical designs, five caught errata (one in a
 formula sourced from the literature, one in the programme's own design memo, one a broken
@@ -918,7 +918,7 @@ LL-8 & \textbf{The verification gate itself had a false positive.} A lemma prove
 \end{tabular}
 \end{center}
 
-Seven Tier B harnesses are wired into Gate 1, each with a negative control demonstrated to
+Six Tier B harnesses are wired into Gate 1, each with a negative control demonstrated to
 fail. Both gates pass at commit \texttt{36c4bae}.
 
 \subsection{What is genuinely established}
