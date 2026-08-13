@@ -134,6 +134,39 @@ authorship by the top-tier agent, even through a self-review pass, never itself 
 claim; same DRAFT-pending-audit posture as F2's `HypothesisU_Statements.lean` before its
 Q1/Q2 audit — Q3/Q4/Q5 fixed three found gaps, they do not certify no others remain).
 
+### `lean_src/TriadConservation.lean` — detailed energy conservation of the Fourier nonlinearity
+
+| Claim | Formal name | Since |
+|---|---|---|
+| Bilinear pairing is symmetric / additive / negation-compatible | `dot_comm`, `dot_add_left`, `dot_neg_left` | 2026-08-13 |
+| **Termwise triad cancellation**: for `k_p+k_q+k_r=0` and `dot k_p u_p = 0`, the orderings `(p,q,r)` and `(p,r,q)` cancel exactly | `triad_pairing` | 2026-08-13 |
+| The swap `(p,q) ↦ (p,−(p+q))` is an involution | `swap3_involutive` | 2026-08-13 |
+| **Detailed energy conservation (summed)**: `Σ (k_q·u_p)(u_q·u_r) = 0` over any `swap3`-closed finite set | `triad_sum_zero` | 2026-08-13 |
+
+6 theorems, all footprints within the permitted axiom set, independently recompiled. **Promotes
+to Tier A the identity that `tests/tier_b_nse_triad_convolution.py` (OP-6/D3) verified only
+computationally (`M=1,2,3`) and explicitly declined to claim as proven.**
+
+**How it closed, recorded because the earlier attempt failed:** the Tier B harness's docstring
+records that a direct *three-way* relabeling argument (cycling `p→q→r`) did not close. It does
+not need to — the cancellation is **two-way and termwise**: pairing `(p,q,r)` with `(p,r,q)`
+gives `[(k_q·u_p)+(k_r·u_p)](u_q·u_r) = (−k_p·u_p)(u_q·u_r) = 0` using only symmetry of the
+pairing and divergence-freeness at `p`. Re-derived by hand, then confirmed on **6486 triples in
+exact arithmetic before any Lean was written** (LL-5 practice), then proven.
+
+**Scope (honesty clause) — this is deliberately abstract and does NOT close OP-6.** Stated over
+an arbitrary commutative ring with an arbitrary additive index group and additive wavevector
+map. It is **not** stated over `Λ ⊂ ℤ³` with complex velocities: that concrete apparatus is
+exactly OP-6 decision **D1**, which is OPEN. **The bridge from this lemma to the concrete
+Fourier–Galerkin setting is NOT built**, nothing here instantiates `B` in
+`HypothesisU_Statements.lean`, and nothing here is a statement about Navier–Stokes solutions.
+The Leray projector does not appear — the harness's own derivation shows it drops out of the
+energy pairing identically, and independently confirms this (dropping `P(k)` breaks
+transversality but leaves energy conservation intact). The 2-torsion hypothesis `h2` is
+load-bearing, not a technicality: `swap3` has fixed points (`q=r`, forcing `p=−2q`) where the
+pairing yields only `2f=0`. Three negative controls (drop `hdiv`; drop `hk`; drop `h2`) each
+confirmed to fail with `sorryAx` or a type error.
+
 ## Tier B — exact-arithmetic verified (ℚ, zero floats)
 
 | Claim | Check | Artifact |

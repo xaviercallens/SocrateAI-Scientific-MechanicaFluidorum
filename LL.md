@@ -197,6 +197,44 @@ downstream re-verification." It doesn't.
 
 ---
 
+## LL-8 — The gate itself can be wrong, and a gate that rejects *better* proofs is dangerous
+
+**What happened (2026-08-13).** `TriadConservation.lean`'s `swap3_involutive` is proved by pure
+computation and reports the axiom footprint `[propext]` — a **strict subset** of the permitted
+set `{propext, Classical.choice, Quot.sound}`, i.e. *cleaner* than required. `scripts/verify.sh`
+failed it. The Tier A check was implemented as a string match against the exact three-axiom
+list (`grep -v "propext, *Classical.choice, *Quot.sound]"`), so any footprint that wasn't
+character-for-character that list was flagged as non-clean — including strictly better ones.
+
+**Why this is more than a cosmetic bug.** A gate with this false positive quietly teaches the
+wrong lesson: the cheapest way to make it pass is to *add* an unnecessary dependency (e.g.
+invoke `Classical.choice` where constructive reasoning sufficed) so the footprint matches the
+expected string. That is precisely backwards — the gate would be training proofs to get worse
+in exactly the dimension it exists to measure. SPEC §5.1's wording ("footprint exactly
+[propext, Classical.choice, Quot.sound]") admits the literal reading the script implemented;
+the intended meaning is *no axiom outside that set*.
+
+**Fix.** The check is now a **membership test**: split the reported footprint, and flag any
+axiom not in the permitted set. Re-verified against six cases before rerunning the real gate —
+full clean footprint passes; `[propext]` alone passes; `sorryAx` mixed in fails; `sorryAx`
+alone fails; a custom axiom (`alpha_prime_pos`) fails; and a multi-line mix of clean and dirty
+correctly flags only the dirty one. **The permissive direction of this change is why it needed
+adversarial testing rather than a spot check**: loosening a verification gate is exactly where
+a plausible-looking edit can silently stop catching what it was built to catch.
+
+**Second-order lesson, from the same edit.** The first version of the fix used
+`[ -n "$offending" ] && echo ...` inside a pipeline. Under the script's own `set -euo pipefail`
+that returns non-zero in the *normal* (clean) case, which aborted `verify.sh` mid-Gate-2 with
+exit 1 — a green-looking Gate 1 followed by silence. Caught only by checking the **exit code**
+rather than reading the tail of the log, which showed nothing alarming. Reinforces LL-1: read
+the status the machine reports, not the output that looks reassuring.
+
+**Rule produced.** When editing `scripts/verify.sh`'s gate logic, (a) test the new predicate
+against a table of cases that includes at least one that *must* fail, before trusting a real
+run; (b) confirm the script's **exit code**, never just its trailing output.
+
+---
+
 *Add new lessons above this line, most recent first is not required — group by theme as the
 log grows. A lesson earns an entry here when it changed a rule somewhere else in the repo
 (`PLAN.md`, `CLAUDE.md`, or a memory file) — if it didn't change a rule, it probably belongs

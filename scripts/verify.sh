@@ -26,13 +26,31 @@ LEAN_ENV_DIR="${LEAN_ENV_DIR:-$HOME/xdev/SocrateAI-Scientific-RajMathRecovery/du
 # (PLAN.md F2); it is gated for compilation so it cannot rot, but its claims are
 # NOT ledgered until the audit passes.
 FAILED=0
-for f in CallensDualScale DyadicShells HypothesisU_Statements EnstrophyProduction EnstrophyProductionBound MillenniumReduction; do
+for f in CallensDualScale DyadicShells HypothesisU_Statements EnstrophyProduction EnstrophyProductionBound MillenniumReduction TriadConservation; do
   echo "-- lean_src/$f.lean"
   OUT=$(cd "$LEAN_ENV_DIR" && lake env lean "$ROOT/lean_src/$f.lean" 2>&1)
   if echo "$OUT" | grep -qiE "^.*error|sorry"; then
     echo "$OUT"; echo "TIER A GATE: FAIL ($f: errors or sorry)"; FAILED=1; continue
   fi
-  BAD=$(echo "$OUT" | grep "depends on axioms" | tr '\n' ' ' | grep -o "'[^']*' depends on axioms: \[[^]]*\]" | grep -v "propext, *Classical.choice, *Quot.sound\]" || true)
+  # Footprint check: every axiom named must lie in the permitted set
+  # {propext, Classical.choice, Quot.sound}.  A footprint that is a strict SUBSET of the
+  # permitted set (e.g. a purely computational lemma reporting just [propext]) is MORE
+  # constrained than required and must PASS -- the previous implementation string-matched
+  # the exact three-axiom list and so rejected such theorems as if they were unsound
+  # (a false positive, found 2026-08-13 by TriadConservation.swap3_involutive).
+  # sorryAx, or any other axiom outside the permitted set, is still caught: the test is
+  # membership, not equality.
+  BAD=$(echo "$OUT" | grep "depends on axioms" | tr '\n' ' ' \
+        | grep -o "'[^']*' depends on axioms: \[[^]]*\]" \
+        | while IFS= read -r line; do
+            axioms=$(echo "$line" | sed "s/.*depends on axioms: \[//; s/\]$//")
+            offending=$(echo "$axioms" | tr ',' '\n' | sed 's/^ *//; s/ *$//' \
+                        | grep -v -x -e 'propext' -e 'Classical.choice' -e 'Quot.sound' \
+                        | grep -v -x '' || true)
+            if [ -n "$offending" ]; then
+              echo "$line  <-- offending: $(echo "$offending" | tr '\n' ' ')"
+            fi
+          done)
   if [ -n "$BAD" ]; then
     echo "TIER A GATE: FAIL ($f: non-clean axiom footprint):"; echo "$BAD"; FAILED=1; continue
   fi

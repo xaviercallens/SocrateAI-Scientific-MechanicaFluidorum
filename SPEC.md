@@ -131,9 +131,33 @@ decidable.
 | Track | Idea | First falsifiable milestone | Kill criterion |
 |---|---|---|---|
 | T1 Bourgain–Demeter (arithmetic depletion) | ℓ²-decoupling starves high-frequency triadic resonances | Exact count of resonant triads k₁+k₂=k₃ under the Sym² spectral constraint vs. unconstrained, on shells up to \|k\| = 2⁸ (Tier B computation) | constrained count grows at the same order → no depletion → kill |
-| T2 Villani–Mouhot (phase mixing) | Gevrey–Newton scheme suppresses "enstrophy echoes" | Precise *definition* of an enstrophy echo in the truncated system + its exact evolution in the dyadic model | echoes not suppressed even in the dyadic model → kill |
+| T2 Villani–Mouhot (phase mixing) | Gevrey–Newton scheme suppresses "enstrophy echoes" **[regularity class UNCONFIRMED — see §2.3.1]** | Precise *definition* of an enstrophy echo in the truncated system + its exact evolution in the dyadic model | echoes not suppressed even in the dyadic model → kill |
 | T3 Golse–Saint-Raymond (entropy limits) | relative-entropy functional controls dissipation uniformly | A relative-entropy inequality at PDE level (DiPerna–Lions style) for the *truncated* system, α' fixed | inequality already fails at fixed α' → kill (note: α'→0 is **not** a Knudsen limit; no kinetic layer exists — see review M4) |
 | T4 Duminil-Copin (percolation of high enstrophy) | supercritical-enstrophy regions form subcritical percolation clusters | Recover the **CKN dimension bound** in the lattice formulation | lattice formulation cannot recover even CKN → kill |
+
+### 2.3.1 Open citation-verification item on T2 (raised 2026-08-13)
+
+While verifying references for `docs/report/mechanica_fluidorum_report.tex` under rule LL-6
+("verify literature precisely before citing"), retrieval of the **Mouhot–Villani** abstract
+(*On Landau damping*, arXiv:0904.2760, **Acta Mathematica 207(1) (2011), 29–201** — journal
+reference confirmed by direct fetch) indicated that the paper's **core stated result is set
+in an analytic-regularity class**, with Gevrey-class settings appearing as a related or
+limiting extension rather than as the central theorem. The T2 row above, and §5's T2 endpoint,
+both describe the track as resting on **Gevrey** regularity.
+
+**Status: UNRESOLVED — do not "fix" either way without checking the paper itself.** The
+indication above came from a fetched *abstract plus a tool-generated summary*, parts of which
+were explicitly flagged as paraphrase rather than direct quotation. Asserting "Gevrey is
+wrong" on that basis would repeat precisely the error LL-6 exists to prevent, one level up.
+
+**What would close this item:** read the statement of the main theorem(s) in the published
+Acta paper (or arXiv full text, not the abstract) and record which regularity class is
+actually required, with a quotation. **Why it matters, and why it is not cosmetic:** the
+required regularity class governs whether any analogue could plausibly transfer to a fluid
+setting at all, so it bears directly on T2's feasibility — not merely on how T2 is described.
+
+Filed by the report-authoring pass; no track status is changed by this note, and T2 remains
+BLOCKED-ON-DEFINITION on OP-3 independently of how this resolves.
 
 ### 2.4 Physical narrative — **[Tier C, quarantined]**
 
@@ -227,7 +251,7 @@ Energy inequalities, Aubin-Lions embedding, Prodi-Serrin criterion application. 
 **Stage 3 — Enstrophy Bounds (The Four Tracks).**
 Scale-by-scale proof of Hypothesis U via four deep mathematical disciplines:
 1. **T1 (Bourgain-Demeter):** ℓ² decoupling to show triadic resonant depletion under Sym² lock.
-2. **T2 (Villani-Mouhot):** Gevrey-regularity Newton iteration proving enstrophy echo exponential decay.
+2. **T2 (Villani-Mouhot):** Gevrey-regularity Newton iteration proving enstrophy echo exponential decay. **[regularity class UNCONFIRMED — see §2.3.1]**
 3. **T3 (Golse-Saint-Raymond):** Relative-entropy functional showing dissipation uniformly bounds enstrophy as α' → 0.
 4. **T4 (Duminil-Copin):** Percolation scaling limits proving zero-dimensional singular set.
 
