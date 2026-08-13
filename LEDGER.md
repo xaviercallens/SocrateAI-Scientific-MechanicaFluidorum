@@ -186,6 +186,37 @@ divergence exists in the true (continuum-time) dyadic model; it only shows the s
 divergences observed at the original `dt` do not survive step-size refinement of this discrete
 scheme.
 
+**Synthesis across D4 + dual-precision + dt-refinement (2026-08-12) — the fullest picture this
+program has assembled on the central "does `sup_t Ω_N(t)` grow with `N`?" question, still Tier
+C throughout (floats; a specific discrete IMEX-Euler scheme, not the continuum dyadic model or
+true NSE), presented for the human owner's verdict, not asserting one:**
+
+- **D4** (`data/dyadic_omega_sup.csv`, explicit float RK4): 58% of configs infeasible
+  (stiffness), but every completed `(ν, profile)` pair's `sup_Ω` at `N=8` vs `N=12` agrees to
+  within ~0.1% (e.g. `ν=0.001,P1`: `70.8796` vs `70.8859`) — flat, not growing.
+- **Dual-precision + dt-refinement** (`data/dyadic_imex_dual_precision.csv` +
+  `data/dyadic_imex_dt_refinement.csv`, full `N∈{8,12,16,20,24}` grid, all 45 configs now
+  resolved to `status=OK` at fine-enough `dt`): 44 of 45 configs are EXACTLY flat in `N`
+  (bit-identical `sup_Ω` across every `N` tested, e.g. `ν=0.01,P2`: `467.4` at every `N`).
+- **The one apparent exception, investigated and explained:** `ν=0.1, profile=P2` showed
+  `sup_Ω` growing *linearly* in `N` (`4.5, 6.5, 8.5, 10.5, 12.5` at `N=8,12,16,20,24` — exactly
+  `0.5·(N+1)`). Traced by hand (reproducible: `python3` snippet computing `omega_f` step-by-step
+  for `N=24,ν=0.1,P2,dt=0.25`, printed at `t=0,0.25,0.5,…`): this is **not** dynamical growth.
+  `0.5·(N+1)` is exactly profile P2's ANALYTIC INITIAL enstrophy (`a_n=2^{-n}` for `n=0..N`,
+  `k_n=2^n` ⟹ `Σ k_n² a_n² = Σ 1 = N+1`) — P2 is defined to fill every retained mode, so a
+  larger cutoff `N` starts with strictly more initial enstrophy BY CONSTRUCTION, independent of
+  any dynamics. The trajectory itself confirms this: `Ω(t)` collapses from `12.5` at `t=0` to
+  `1.79` by `t=0.25` and continues to decay (`t=2.5`: `0.27`; `t=4.75`: `0.035`) — the reported
+  `sup_Ω=12.5` is simply the (never-exceeded) initial value, i.e. `ν=0.1` is large enough here
+  that the trajectory is strictly dissipative from `t=0` on (consistent with
+  `DyadicShells.lean`'s `energyRate_nonpos` in spirit). **The "growth" is an initial-data
+  artifact of profile P2's own definition, not evidence against uniformity of the dynamics.**
+- **Net:** once the P2 case is understood, EVERY tested configuration across both numerical
+  campaigns is flat (`N`-independent) in `sup_Ω`, at fine-enough `dt`. This is the complete
+  Tier C evidence base for the campaign DoD's D4–D5 line ("uniformity question has a
+  human-issued verdict recorded in `LEDGER.md`, whatever the verdict is") — ready for that
+  verdict whenever the human owner wants to render one; still not rendered here.
+
 ## Tier A — `lean_src/HypothesisU_Statements.lean` (statement shape; audited 2026-08-12)
 
 Q1 and Q2 (below) were **decided by the human owner 2026-08-12** and implemented same day;
