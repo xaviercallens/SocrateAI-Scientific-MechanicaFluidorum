@@ -215,6 +215,7 @@ for fixed data and ν, is `sup_t Ω_N(t)` bounded *uniformly in N*?
 | OP-3 | **"Enstrophy echo"** as a formula in the truncated system (T2) | Landau-damping echoes are defined in Vlasov phase space; no NSE analogue exists in the literature. |
 | OP-4 | The **entropy functional h and reference state ū** (T3) | Choosing h *is* the mathematical content of the track. |
 | OP-5 | The **coupling of the percolation field to Sym²** (T4) | Without it, T4 measures generic percolation, which cannot beat CKN. |
+| OP-6 | **Instantiating `B`** in `HypothesisU_Statements.lean` with the real NSE nonlinearity | Requires restructuring `u`'s state representation itself (`ℕ→ℝ` shell scalars → `ℤ³→ℂ³` Fourier vectors with divergence-free + reality constraints) — not a drop-in substitution. Scoping memo: `docs/designs/B_INSTANTIATION_SCOPING.md` (2026-08-13), decision points D1–D3, none decided; recommended smallest next step (D3) is a standalone Tier B triad-convolution + energy-conservation harness, independent of the larger D1 reindexing choice. |
 
 **Executable now (definition-independent tooling and baselines):**
 
