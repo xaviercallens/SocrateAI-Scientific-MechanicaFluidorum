@@ -359,6 +359,18 @@ positively. Rationale and the cached-build trap: `LL.md` LL-10.
   fit protocol, the mandatory O5 Euler trap and positive control. **AWAITING HUMAN AUDIT**;
   recommendation is to audit and run Candidate C first (its `γ=0` end is a control sharing all
   code with the measurement). Authored by the orchestrator, not delegated, per LL-5.
+- **D6 — cutoff-BITING measurement, DESIGNED 2026-08-14** (`docs/designs/D6_CUTOFF_BITING_MEASUREMENT.md`),
+  awaiting owner approval before dispatch. Supersedes the measurement *intent* of D4/D5/dual-precision,
+  all of which ran a grid with **zero detection power**: at `ν=1e-3` the enstrophy is ~95% carried by
+  shell `n=8` alone, and the grid's smallest cutoff was `N=8` — one shell above the decisive one, so
+  `N=8→24` appended shells contributing `~1e-8` relative. New grids straddle the dissipation shell
+  (`N ≤ 12`, cheaper than the old runs), report the cutoff production flux `F_N` and the shell-population
+  profile alongside `sup Ω`, and carry a **ν=0 negative control** (blow-up is a theorem there — the
+  instrument must report unbounded growth) as well as the Cheskidov positive control.
+- **Grid-adequacy gate ADDED** — `tests/tier_b_grid_adequacy.py`, Tier B, exact integer criterion
+  (`2^(4N)·p³ ≥ q³` for `ν=p/q`), wired into Gate 1. Its negative control is the historical grid
+  itself: **0 of 15 configurations had a biting cutoff.** No future grid can repeat this failure
+  silently.
 - **Uniformity verdict DRAFTED 2026-08-14** — `docs/VERDICT_DRAFT_uniformity.md`, candidate text
   plus four reservations arguing *against* signing; two of them (populated high shells;
   Cheskidov positive control) are cheap and recommended before signature.

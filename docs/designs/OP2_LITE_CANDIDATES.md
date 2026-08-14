@@ -64,6 +64,12 @@ what the measurement can possibly show:
   `a_{2n}` departs from `c·a_n²`. That is precisely where finite-time blow-up would live in a
   shell model, and precisely what a rigid algebraic constraint would suppress.
 
+**OWNER DECISION 2026-08-14: measure BOTH.** `β(γ)` serves as the *expected negative control* —
+if the K41 analysis above is right it must come out flat, so a non-flat `β(γ)` would indicate the
+implementation is perturbing something other than the lock. `D(t)` carries the actual signal.
+Agreement between the two validates the instrument; disagreement invalidates the run rather than
+producing a finding.
+
 **Consequence for the protocol.** The primary observable should not be the mean exponent
 `β(γ)` alone. It should include a measure of the *deviation* the lock actually acts on, e.g.
 `D(t) = max_n |a_{2n} − c·a_n²|` and its excursions, recorded at `γ = 0` (control) and under
@@ -149,7 +155,11 @@ Stated now so the fit cannot be tuned after seeing the data:
   this are reported as excluded, **with their count**, never silently dropped.
 - **Thresholds, pre-registered:** `β = −2/3` ⇒ no effect (the measured control value).
   Any `β > −2/3` beyond fit uncertainty ⇒ real signal. `β ≈ 0` ⇒ compatible with the dyadic
-  Hypothesis U.
+  Hypothesis U. **Amended 2026-08-14:** per §1b, `β` flat is now the *predicted* outcome and is
+  not by itself a kill; the kill criterion is `β` flat **AND** `D(t)` excursions unsuppressed.
+- **Grid adequacy is a precondition** (added 2026-08-14): any grid used here must pass
+  `tests/tier_b_grid_adequacy.py`. The uniformity campaign's grid had **zero** detection power
+  and this must not recur — see `docs/designs/D6_CUTOFF_BITING_MEASUREMENT.md`.
 - **O5 (Euler test), mandatory:** re-run at `ν = 0`. **If the lock alone yields `β = 0` at
   `ν = 0`, treat the result as presumptively wrong** — it would "prove" regularity for the
   inviscid dyadic model, where finite-time blow-up is a published theorem (Katz–Pavlović 2005).
