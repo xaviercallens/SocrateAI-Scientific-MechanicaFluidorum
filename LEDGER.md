@@ -243,6 +243,32 @@ Q1/Q2 audit — Q3/Q4/Q5 fixed three found gaps, they do not certify no others r
 | **Transversality** (the harness's Fact 1, unconditional): a sum of vectors each orthogonal to `k` is orthogonal to `k` | `transversality_of_sum` | 2026-08-13 |
 
 7 theorems, all footprints within the permitted axiom set, independently recompiled.
+
+### `lean_src/TriadTorus.lean` — the resonant-triad 2-section on a torus, solved exactly (2026-08-14)
+
+The programme's first Tier A result about the genuine ℤ³-type resonance structure. `G` any
+finite additive abelian group (intended instance `(ℤ_m)³`), `Λ = G \ {0}`, ordered triads
+`a + b = c` in the `(a,c)` representation of `symbolic/triad_hypergraph.py`; the 2-section
+weight counts (triad, slot-pair) **incidences**, which absorbs the `(u,u,2u)` degeneracy so the
+formula is uniform with no genericity hypothesis. Derivation memo (written first, LL-5):
+`docs/designs/TRIAD_TORUS_THEOREM.md`.
+
+| Claim | Formal name | Since |
+|---|---|---|
+| Slot-pair counts: type {1,3} and {2,3} contribute exactly 2 each; type {1,2} contributes `2·[u+v≠0]` | `w13_eq`, `w23_eq`, `w12_eq` | 2026-08-14 |
+| **Torus 2-section solved**: `A(u,v) = 6 − 2·[u+v=0]`, i.e. `A = 6(J−I) − 2P` | `A_eq` | 2026-08-14 |
+| Degree: `Σ_{v≠u} A(u,v) = 6·|Λ| − 8` (no 2-torsion) | `row_sum` | 2026-08-14 |
+| Spectral sum identities: zero-sum even vectors have eigenvalue −8, odd vectors −4 ⟹ normalised spectrum `{1, −4/(6n−8), −8/(6n−8)}`, torus gap → 1 | `eigen_even`, `eigen_odd` | 2026-08-14 |
+
+7 theorems, all footprints within the permitted axiom set (verify.sh Gate 2 re-elaboration).
+Negative controls NC1–NC3 (drop `u≠v`; drop no-2-torsion; perturb −8 to −6) each fail to
+compile on scratch copies, run 2026-08-14. Non-vacuity witnesses at `(ℤ_3)³` inside the file,
+including the antipodal case `A((1,0,0),(2,0,0)) = 4`.
+
+**Consequence for the measured ball gap:** since the torus gap tends to 1, the stable ≈ 5/6
+gap on the ball truncation (M=2..5) is a pure boundary invariant of the sphere cutoff — now an
+explicitly separated, still-open conjecture (continuum kernel `2·1_B(x+y) + 4·1_B(x−y)`),
+**not** part of this Tier A entry.
 `transversality_of_sum` covers the harness's *other* certified fact; the two are genuinely
 independent, as the harness's own negative controls show (dropping the Leray projector breaks
 transversality but leaves energy conservation intact; breaking divergence-freeness does the
