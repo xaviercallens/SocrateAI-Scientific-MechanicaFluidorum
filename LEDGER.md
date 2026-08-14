@@ -32,6 +32,27 @@ active area of mathematical fluid mechanics where a machine-verified regularity 
 result would be a first. The 3-D bridge (ℤ³ reindexing, OP-2/OP-6-D1) is explicit future work,
 not an implicit claim.
 
+> ## ⚠ E-3 FINDING 2026-08-14 — the programme's parameters sit in an already-solved regime
+>
+> Verified from the primary source (Cheskidov, arXiv:math/0601074, eq. (1.1) and abstract, both
+> quoted verbatim in `docs/escalations/2026-08-14-E3-target-is-a-solved-case.md`):
+> blow-up is proven for dissipation degree **α < 1/3**, global regularity for **α ≥ 1/2**.
+>
+> This programme's model has dissipation `ν k_n² = ν 2^{2n}`, i.e. **α = 1** — comfortably inside
+> the proven-regular regime. **The dyadic uniformity question, for the parameters actually used,
+> is settled in the affirmative by a published theorem.** Two numerical campaigns were confirming
+> it.
+>
+> Consequences: (a) no numerical verdict here can be a discovery — at best instrument
+> calibration; (b) **OP-2-lite as designed cannot produce a signal**, since the *unlocked* system
+> is already regular and the lock has nothing to prevent; (c) a Lean regularity proof at `α = 1`
+> remains valuable as a **formalisation first**, but would formalise *known* mathematics and must
+> be described that way. The Tier A algebraic identities are unaffected — they are exact
+> identities, independent of regime.
+>
+> The live band is `1/3 ≤ α < 1/2`, with `α = 1/3` matching 4-D NSE nonlinear estimates.
+> Changing `α` is a statement-level decision (E-4) and is the owner's.
+
 ## Tier A — kernel-verified (zero sorry; no axiom outside {propext, Classical.choice, Quot.sound} — membership test, see SPEC §5.1 / LL-8)
 
 | Claim | Formal name | Artifact | Since |

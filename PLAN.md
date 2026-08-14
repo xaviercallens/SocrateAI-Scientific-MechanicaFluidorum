@@ -359,6 +359,11 @@ positively. Rationale and the cached-build trap: `LL.md` LL-10.
   fit protocol, the mandatory O5 Euler trap and positive control. **AWAITING HUMAN AUDIT**;
   recommendation is to audit and run Candidate C first (its `γ=0` end is a control sharing all
   code with the measurement). Authored by the orchestrator, not delegated, per LL-5.
+- **E-3 FILED 2026-08-14 — `α = 1` is a solved case** (`docs/escalations/2026-08-14-E3-target-is-a-solved-case.md`).
+  Cheskidov proves global regularity for `α ≥ 1/2`; our dissipation `ν k_n²` gives `α = 1`.
+  **This blocks the scientific rationale for both D6 and OP-2-lite as currently scoped** — an
+  instrument pointed where no signal can exist. D6 remains valid as *calibration*; OP-2-lite needs
+  a regime where the unlocked system fails (`α < 1/3`). Regime choice is E-4, owner-only.
 - **D6 — cutoff-BITING measurement, DESIGNED 2026-08-14** (`docs/designs/D6_CUTOFF_BITING_MEASUREMENT.md`),
   awaiting owner approval before dispatch. Supersedes the measurement *intent* of D4/D5/dual-precision,
   all of which ran a grid with **zero detection power**: at `ν=1e-3` the enstrophy is ~95% carried by
