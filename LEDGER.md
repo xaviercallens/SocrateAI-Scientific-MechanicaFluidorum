@@ -163,6 +163,22 @@ already applied (`HasGlobalBoundedLimit` fixes one trajectory across all horizon
 | **The reduction itself** (renamed per D2, 2026-08-13): Galerkin family + uniform bound + `AubinLionsStatement` + `ProdiSerrinStatement` ⇒ `GlobalRegularityStatement` | `dyadicShell_regularity_reduction` | 2026-08-13 |
 | `GlobalRegularityStatement` is satisfiable, not vacuous (zero-flow witness) | `zero_global_regularity` | 2026-08-12 |
 
+### α as a quantified parameter (E-3 response, 2026-08-14) — `DyadicShell_Statements.lean`
+
+| Claim | Formal name | Since |
+|---|---|---|
+| Dissipation coefficient at degree `a`: `kₙ^{2a}`, positive for all `a` | `dissipationWeight`, `dissipationWeight_pos` | 2026-08-14 |
+| **The conflation made explicit and proved**: at `a=1` the dissipation coefficient EQUALS the enstrophy weight | `dissipationWeight_one` | 2026-08-14 |
+| Hypothesis U at dissipation degree `a`, with dissipation (`kₙ^{2a}`) and enstrophy (`kₙ²`) weights **separated** | `DyadicShellHypothesisU_alpha` (def) | 2026-08-14 |
+| The α-parametrised statement specialises at `a=1` to the existing target — nothing orphaned | `dyadicShellHypothesisU_alpha_one` | 2026-08-14 |
+
+**A latent conflation that generalising α exposed.** `HypothesisU` uses a single weight `w` in
+*both* roles: the dissipation coefficient inside `IsGalerkinSolution` (`−ν·w n·u`) and the weight
+defining the bounded quantity (`enstrophy N w`). At `α = 1` both are `kₙ²`, so the conflation was
+invisible. They are different objects — enstrophy is *by definition* the `kₙ²`-weighted sum
+whatever the dissipation is. The α-parametrised statement keeps them apart;
+`dissipationWeight_one` is the proof that the old form is exactly the `α=1` special case.
+
 ### Task 4 repair applied 2026-08-13 (audit B1/B4; decisions D1–D3; `docs/designs/TASK4_ELL2_REPAIR.md`)
 
 **Still Tier C** — the repair makes the undischarged debt *legible*, it does not pay it.
@@ -274,6 +290,8 @@ confirmed to fail with `sorryAx` or a type error.
 | Exact 3-D periodic percolation instrument: union-find, wrap detection, 27 checks; negative control (drop x-periodicity) fails | T0.3 | `symbolic/percolation_exact.py`, `tests/test_percolation.py` |
 | **Dyadic enstrophy-production identity** (mirrors `EnstrophyProduction.lean` above): `Σk_n²a_nNL_n = 3Σ_{n<N}k_n³a_n²a_{n+1}` for `k_n=2^n`, 240 exact cases; negative control (`k_n=n+1`, non-doubling) fails; bonus confirms general formula (ratio `r`, coeff `r²−1`) at `r=3` | P1 | `tests/tier_b_enstrophy_production.py` |
 | Rational IMEX-Euler discretization of the truncated dyadic shell model, negative control (perturbed influx term) fails as required — **instrument verified; the intended cutoff-uniformity measurement was NOT obtained; DEMOTED to Tier C, see decision below** | D5 | `symbolic/dyadic_imex.py`, `data/dyadic_omega_sup_imex.csv` (sha256 `8844dd2e…3580128`) |
+| **Experiment-grid adequacy** (exact integers, no floats/logs): a cutoff is at/above the dissipation scale iff `2^(4N)·p³ ≥ q³` for `ν=p/q`. Negative control is the programme's OWN historical grid — **0 of 15 configurations had a biting cutoff**; positive control is a cutoff-biting grid | Gate 1b-adj | `tests/tier_b_grid_adequacy.py` |
+| **Dissipation-regime adequacy** (exact rationals): classifies `α` into PROVEN_BLOWUP (`<1/3`) / OPEN (`[1/3,1/2)`) / PROVEN_REGULAR (`≥1/2`) per Cheskidov. Negative control is the programme's OWN `α=1`, correctly refused as a discovery regime (E-3); positive control `α=2/5` accepted. Boundary anchors at 1/4, 1/3, 2/5, 1/2, 1 | E-3 | `tests/tier_b_regime_adequacy.py` |
 | **Fourier-Galerkin NSE nonlinearity, two structural identities** (transversality `k·N(û)_k=0`, unconditional; detailed energy conservation `Σ_k conj(û_k)·N(û)_k=0`, given divergence-free + conjugate-symmetric input), exact Gaussian-rational arithmetic, `M∈{1,2,3}` (`|Λ|`=26,124,342); two negative controls (drop Leray projection; break divergence-free on one mode) each confirmed to fail exactly one fact and leave the other intact, matching the hand derivation. **Caught and corrected a genuine formula erratum in the process** (the web-search-sourced formula in `docs/designs/B_INSTANTIATION_SCOPING.md` was identically zero; corrected same day) — recorded honestly in both the harness's own docstring and the design memo. Fact 2's general triad identity is verified computationally here, not yet proven symbolically. | OP-6/D3 | `tests/tier_b_nse_triad_convolution.py` |
 
 **Human-owner decision on `docs/escalations/2026-08-12-D5-digit-blowup.md`, recorded 2026-08-12

@@ -27,6 +27,7 @@ import Mathlib.Algebra.Order.Field.Basic
 import Mathlib.Tactic.Ring
 import Mathlib.Tactic.Linarith
 import Mathlib.Tactic.NormNum
+import Mathlib.Analysis.SpecialFunctions.Pow.Real
 
 /-!
 # Hypothesis U — statement-level formalization (Galerkin shape)
@@ -260,6 +261,54 @@ the truncated viscous Katz–Pavlović shell model — `HypothesisU` with `B := 
 def DyadicShellHypothesisU (nu T : ℝ) (u0 : ℕ → ℝ) : Prop :=
   HypothesisU nu T (shellB dyadicWavenumber) dyadicWeight u0
 
+/-! ## 1d. The dissipation degree α as a quantified parameter (E-3, 2026-08-14)
+
+`docs/escalations/2026-08-14-E3-target-is-a-solved-case.md`: matching Cheskidov's equation (1.1)
+`d/dt uₙ + ν λ^{2αn} uₙ − λⁿ u²ₙ₋₁ + λ^{n+1} uₙuₙ₊₁ = gₙ` shows this programme's dissipation
+`ν kₙ² = ν 2^{2n}` corresponds to **α = 1**, inside the regime `α ≥ 1/2` where global regularity
+is a published theorem. The live band is `1/3 ≤ α < 1/2`. So `α` must be a *quantified parameter*,
+never a baked-in constant — the same rule `SPEC.md` §7.1 already imposes on `α'` and the cutoff.
+
+**A conflation this exposes, invisible at α = 1.** `HypothesisU` above uses a single weight `w`
+in BOTH roles: as the dissipation coefficient inside `IsGalerkinSolution` (`−ν·w n·u`) and as the
+weight defining the quantity bounded (`enstrophy N w`). At `α = 1` both are `kₙ²` and the
+conflation is invisible. **They are different objects:** enstrophy is *by definition* the
+`kₙ²`-weighted square sum, whatever the dissipation is, while the dissipation coefficient is
+`kₙ^{2α}`. The α-parametrised statement below keeps them separate. -/
+
+/-- Dissipation coefficient at dissipation degree `a`: `kₙ^{2a}` (real exponent, so any
+`a > 0` is expressible — the live band `1/3 ≤ a < 1/2` is not integral). -/
+noncomputable def dissipationWeight (a : ℝ) (n : ℕ) : ℝ := (dyadicWavenumber n) ^ (2 * a)
+
+theorem dissipationWeight_pos (a : ℝ) (n : ℕ) : 0 < dissipationWeight a n := by
+  unfold dissipationWeight dyadicWavenumber
+  exact Real.rpow_pos_of_pos (by positivity) _
+
+/-- **The conflation, made explicit and proved.** At `a = 1` the dissipation coefficient equals
+the enstrophy weight, which is exactly why the single-weight formulation went unnoticed. -/
+theorem dissipationWeight_one : dissipationWeight 1 = dyadicWeight := by
+  funext n
+  unfold dissipationWeight dyadicWeight
+  rw [show (2:ℝ) * 1 = ((2:ℕ):ℝ) by norm_num, Real.rpow_natCast]
+
+/-- **Hypothesis U at dissipation degree `a`**, with the two roles separated: the dynamics
+dissipate at `kₙ^{2a}`, while the bounded quantity is the enstrophy `Σ kₙ² aₙ²`. This is the
+statement whose truth is a theorem for `a ≥ 1/2` (Cheskidov), false for `a < 1/3`, and OPEN in
+between. -/
+def DyadicShellHypothesisU_alpha (a nu T : ℝ) (u0 : ℕ → ℝ) : Prop :=
+  ∃ C : ℝ, 0 < C ∧
+    ∀ N : ℕ, ∀ u : ℝ → ℕ → ℝ,
+      IsGalerkinSolution N nu (shellB dyadicWavenumber) (dissipationWeight a) u0 u →
+        ∀ t : ℝ, 0 ≤ t → t ≤ T → enstrophy N dyadicWeight u t ≤ C
+
+/-- The α-parametrised statement specialises at `a = 1` to the programme's existing target,
+so nothing already proven is orphaned by the generalisation. -/
+theorem dyadicShellHypothesisU_alpha_one (nu T : ℝ) (u0 : ℕ → ℝ) :
+    DyadicShellHypothesisU_alpha 1 nu T u0 ↔ DyadicShellHypothesisU nu T u0 := by
+  unfold DyadicShellHypothesisU_alpha DyadicShellHypothesisU HypothesisU
+  rw [dissipationWeight_one]
+
+
 /-- Every Galerkin solution of the concrete model satisfies exact energy conservation at
 every time: clause (iii) of `IsGalerkinSolution` supplies the boundary condition
 `u t (N+1) = 0`. Connects the algebraic identity to the actual solution family. -/
@@ -392,5 +441,8 @@ carry positive weight. -/
 #print axioms sum_mul_shellB
 #print axioms shellB_energy_conservation
 #print axioms galerkin_shellB_conservation
+#print axioms dissipationWeight_pos
+#print axioms dissipationWeight_one
+#print axioms dyadicShellHypothesisU_alpha_one
 
 end MechanicaFluidorum
