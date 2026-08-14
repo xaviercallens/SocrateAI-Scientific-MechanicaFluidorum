@@ -264,6 +264,39 @@ live transcript rather than waiting for the final report. The final report would
 
 ---
 
+## LL-10 — A workaround that becomes a convention outlives the constraint that caused it
+
+**What happened (2026-08-13/14).** Because `lean_src/` was originally not a Lake project, Gate 2
+compiled each file standalone and cross-file `import` failed. The workaround — each file
+re-declares its neighbours' definitions verbatim — was correct at the time, documented in every
+file's header, and hardened into a convention. It was then cited as a *reason* in later design
+work: the Task-4 memo planned around it, and the first Task-4 implementation duplicated
+`shellB`, `dyadicWavenumber` and `dyadicWeight` into a second file with a hand-sync note.
+
+The constraint had already been removed. The Stage-0 cold build made `lean_src/` a real Lake
+project days earlier; nobody re-tested the import assumption because it had become background
+knowledge rather than a checked fact. A single probe (`import DyadicShell_Statements`, then
+`#check`) settled it in under a minute.
+
+**What the workaround was costing.** Duplicated definitions are the worst class of silent
+defect this repo can carry: a fix applied to one copy and not the other leaves **both** files
+compiling cleanly, **both** gates green, and the mathematics divergent — and no gate can see it,
+because each file is individually correct. It is precisely the failure mode the tier system
+exists to prevent, reintroduced through the back door of a build-system limitation.
+
+**Rule produced.** When a documented constraint is load-bearing in a *design decision* (not just
+in code), re-verify that the constraint still holds before designing around it. Cheap probes
+beat inherited assumptions. Concretely for this repo: the "standalone compile, so re-declare"
+note is now void, and `scripts/verify.sh` builds the dependency graph then re-elaborates each
+file with the project's build directory on `LEAN_PATH`.
+
+**Implementation detail worth keeping, because getting it wrong is invisible.** The gate must
+re-elaborate with `lean`, not rely on `lake build` alone: a *cached* build target emits no
+`#print axioms` output, so the footprint check would silently pass over files it never actually
+checked. Verified by injecting a `sorry` into a gated file and confirming the gate exits 1.
+
+---
+
 *Add new lessons above this line, most recent first is not required — group by theme as the
 log grows. A lesson earns an entry here when it changed a rule somewhere else in the repo
 (`PLAN.md`, `CLAUDE.md`, or a memory file) — if it didn't change a rule, it probably belongs

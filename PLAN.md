@@ -332,6 +332,14 @@ The external audit is fully accepted; verdicts and dispositions are in `LEDGER.m
 | §4 Task 4 eradicate `Prop` placeholders (ℓ²/ℓᵖ sequence spaces, topological bounds) | **IMPLEMENTED 2026-08-13** — owner decided D1 (add+bridge, localised), D2 (rename main theorem only), D3 (clause (iv) now). `AubinLionsStatement`/`ProdiSerrinStatement` now carry real content specialised to `shellB` (closes **B4**); `millennium_reduction` → `dyadicShell_regularity_reduction`; ℓ² objects + bridge added; 2 negative controls confirmed failing. File stays **Tier C**: the repair makes the debt legible, it does not pay it. Remaining: human statement-adequacy audit of the four `IsGalerkinLimit` clauses (memo §5 NC1 — not kernel-checkable). Prior design row: **DESIGN DONE 2026-08-13 — `docs/designs/TASK4_ELL2_REPAIR.md`; BLOCKED on owner decisions D1–D3 in that memo before `[any]` dispatch.** Mathlib availability verified by probe (full cache present: `lpSpace`, `l2Space`, `Summable`/`tsum` all built) — the old "summability not available in this toolchain" exclusion is void. The bridge lemma (bounded finite partial sums of nonneg terms ⟺ `Summable` + `tsum ≤ C`) is **already written and compiled**, footprint clean, so the upgrade is a conservative extension rather than a risky rewrite. |
 | audit B4 — specialise the reduction to the concrete dyadic object | **OPEN** — fold into the Task 4 repair (the repaired file should quantify over `shellB`, not an abstract `B`). |
 
+### Cross-file imports (root fix, 2026-08-14)
+
+The "each file re-declares its neighbours' definitions verbatim" convention is **void**.
+`scripts/verify.sh` now runs `lake build` then re-elaborates each file with the project's own
+`.lake/build/lib/lean` on `LEAN_PATH`. There is exactly one definition of each object in the
+repo. Gate re-validated *negatively* (an injected `sorry` makes it exit 1) as well as
+positively. Rationale and the cached-build trap: `LL.md` LL-10.
+
 ### Items from the owner's review that live in THIS repo (the numerical stream's items are tracked in its own repo)
 
 - **T1 depletion, counting form** `[top]`+`[human]` for the definition; `[any]` for the count:
@@ -346,6 +354,14 @@ The external audit is fully accepted; verdicts and dispositions are in `LEDGER.m
   / projection / penalty), each with kill criteria, for owner audit — then the W1 exponent
   re-measurement runs in the numerical stream. Note the scale-nonlocality (n ↔ 2n coupling) is
   the O1-compliance feature.
+- **OP-2-lite candidates AUTHORED 2026-08-14** — `docs/designs/OP2_LITE_CANDIDATES.md`, three
+  candidates (hard constraint / projection / soft penalty) with kill criteria, a pre-registered
+  fit protocol, the mandatory O5 Euler trap and positive control. **AWAITING HUMAN AUDIT**;
+  recommendation is to audit and run Candidate C first (its `γ=0` end is a control sharing all
+  code with the measurement). Authored by the orchestrator, not delegated, per LL-5.
+- **Uniformity verdict DRAFTED 2026-08-14** — `docs/VERDICT_DRAFT_uniformity.md`, candidate text
+  plus four reservations arguing *against* signing; two of them (populated high shells;
+  Cheskidov positive control) are cheap and recommended before signature.
 - **Positive-control calibration** (instrument principle, applies to any future trajectory
   instrument here): the Cheskidov regime (dissipation degree ≥ 1/2, regularity known) must
   read as bounded. A checker that has never seen a known-positive is as suspect as one that

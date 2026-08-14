@@ -1,0 +1,153 @@
+# OP-2-lite — candidate implementations of the Sym² lock in shell space
+
+**Status: Tier C authoring, AWAITING HUMAN AUDIT.** Under `PLAN.md` §6, authorship never
+unblocks a track — only audit does. Nothing here may be implemented, cited, or measured until a
+row below is marked AUDITED in `LEDGER.md`. This document is that audit's *input*.
+**Author:** orchestrator (`[top]`, not delegated — `LL.md` LL-5: agents asked to *derive* rather
+than *execute* do worse, and this is derivation).
+**Date:** 2026-08-14. **Responds to:** the owner's review item 2.
+
+---
+
+## 1. Why a 1-D version of the lock is possible at all
+
+Track T1 has been blocked on OP-2 — an embedding of the Sym² lock into 3-D Fourier dynamics on
+`𝕋³` — which does not exist in this programme or, as far as we know, in the literature. The
+owner's observation removes the need to wait for it:
+
+> In the dyadic model `k_n = 2ⁿ`, so the spectral map `λ ↦ λ²` acts on **indices** as `n ↦ 2n`.
+
+This is exact, not analogical. The Sym² lock (proven, Tier A, `sym2_recurrence`) sends
+characteristic roots `{λ, μ} ↦ {λ², λμ, μ²}`. Under `k_n = 2ⁿ`, squaring a wavenumber doubles
+its index: `k_n² = 4ⁿ = k_{2n}`. So in shell space the lock is a constraint coupling shell `n`
+to shell `2n`.
+
+**Why that is interesting, and the O1 compliance note nearly for free.** Generic cascade models
+— including the shell models this programme studies — couple only *neighbouring* shells
+(`n−1, n, n+1`). A constraint coupling `n` to `2n` is **non-local in scale**. Tao's construction
+(obstruction O1) works by choreographing *local* cascade steps so that energy is handed
+upward in a coordinated way; a rigid non-local constraint is exactly the kind of structure such
+a choreography must fight. That is the honest form of the O1 answer: *the mechanism uses a
+scale-non-local algebraic constraint, which is not available to an averaged system built from
+local transfer alone.*
+
+**What this is NOT.** It is not OP-2. It does not embed anything into `ℤ³`, does not recover
+angular structure, and says nothing about 3-D. It is a lock for the *dyadic target the programme
+now actually has* (post-pivot). If it works, OP-2 remains open; if it fails, OP-2 is not thereby
+refuted.
+
+---
+
+## 2. The three candidates
+
+Notation: shells `n = 0..N`, wavenumbers `k_n = 2ⁿ`, amplitudes `a_n(t)`, the unmodified
+dynamics `da_n/dt = shellB_n(a) − ν k_n² a_n` (`DyadicShell_Statements.shellB`, Tier A energy
+conservation `shellB_energy_conservation`).
+
+### Candidate A — hard constraint (`a_{2n} = c · a_n²`)
+
+Impose `a_{2n}(t) = c · a_n(t)²` for all `n` with `2n ≤ N`, for a fixed constant `c`, as an
+*exact* algebraic constraint on the state manifold; evolve only the free coordinates
+(odd indices and those `n` with `2n > N`), deriving the constrained coordinates' motion by
+differentiating the constraint.
+
+- **Faithful to:** the lock as literally proven — `v_n = u_n²` is exactly the Sym² relation.
+- **Cost:** the constrained system is *not* the shell model any more. Energy conservation
+  (`shellB_energy_conservation`) is destroyed unless the constraint happens to be compatible
+  with it, which it is not in general. **This is the candidate's principal danger**: it changes
+  the dynamics rather than restricting the state, so a measured change in `β` could be caused by
+  the loss of energy conservation rather than by the lock.
+- **Kill criterion:** if the constrained system violates `Σ a_n · (da_n/dt)|_nonlinear = 0` by
+  more than round-off in exact arithmetic, this candidate is measuring the wrong thing —
+  **kill**, do not "repair" by adding a compensating term (that would be inventing dynamics).
+- **Recommended:** implement the energy check *first*, as a Tier B harness, before any
+  trajectory is run.
+
+### Candidate B — projection onto the Sym² manifold
+
+Evolve the unmodified shell model for one step, then project the state onto the manifold
+`M = { a : a_{2n} = c·a_n² }` in the enstrophy norm, and repeat (a Lie–Trotter splitting between
+the dynamics and the constraint).
+
+- **Faithful to:** "the lock restricts which states are reachable", without rewriting the vector
+  field.
+- **Cost:** the projection is a *numerical* operation with no derivation behind it; the result
+  depends on the splitting step size in a way that is not a discretisation error of any
+  continuum system. It is honest only as an *instrument*, never as a model.
+- **Kill criterion:** if the measured exponent depends on the splitting step `Δt_proj` in the
+  limit `Δt_proj → 0` (i.e. does not converge), the construction has no continuum meaning —
+  **kill**.
+- **Note:** this is the only candidate for which the "positive control" discipline is
+  immediately available: with `c = 0` the projection kills all even shells, which should
+  *increase* dissipation and give a clearly bounded result. If it does not, the instrument is
+  broken.
+
+### Candidate C — soft penalty (recommended for the first measurement)
+
+Add a restoring term pulling the state toward the Sym² manifold:
+`da_{2n}/dt ⊃ −γ (a_{2n} − c·a_n²)`, with penalty strength `γ ≥ 0`.
+
+- **Faithful to:** nothing exactly — it is a deformation, and must be labelled as one.
+- **Why it is nonetheless the best first experiment:** it is the only candidate with a
+  **continuous knob**. At `γ = 0` it is *exactly* the unmodified shell model, whose behaviour is
+  already measured; as `γ` grows the constraint tightens. So it yields a *curve* `β(γ)` rather
+  than a single number, and the question "does the lock buy exponent?" becomes "is `dβ/dγ ≠ 0`
+  near `γ = 0`?" — which is far more robust than comparing two separately-implemented systems,
+  because the `γ = 0` end is a built-in control that shares every line of code with the
+  measurement.
+- **Kill criterion:** `β(γ)` flat in `γ` across the whole tested range ⇒ the lock buys nothing
+  in shell space ⇒ **kill OP-2-lite** (and report it; a negative here is informative about the
+  mechanism, not merely about the implementation).
+- **Cost:** `γ` is a free parameter with no principled value; results must be reported as a
+  curve, never at a single hand-picked `γ`.
+
+---
+
+## 3. Pre-registered protocol (per the owner's review item 1 — fixed *before* any run)
+
+Stated now so the fit cannot be tuned after seeing the data:
+
+- **Exponent definition:** `β` from `sup_t Ω ∝ α'^β` (equivalently in `N`, via `α' ≈ 4^{−N}`).
+- **Fit window:** the largest contiguous range of `N` in which *all* configurations completed
+  without tripping the magnitude guard. Fixed before the run; **no post-hoc trimming.**
+- **Inclusion criterion:** a configuration enters the fit only if it reaches the full horizon at
+  two successive `dt` refinements with `sup Ω` agreeing to within 1%. Configurations failing
+  this are reported as excluded, **with their count**, never silently dropped.
+- **Thresholds, pre-registered:** `β = −2/3` ⇒ no effect (the measured control value).
+  Any `β > −2/3` beyond fit uncertainty ⇒ real signal. `β ≈ 0` ⇒ compatible with the dyadic
+  Hypothesis U.
+- **O5 (Euler test), mandatory:** re-run at `ν = 0`. **If the lock alone yields `β = 0` at
+  `ν = 0`, treat the result as presumptively wrong** — it would "prove" regularity for the
+  inviscid dyadic model, where finite-time blow-up is a published theorem (Katz–Pavlović 2005).
+  This is a falsification trap deliberately set for our own mechanism.
+- **Positive control, mandatory before any headline number:** the Cheskidov regime (dissipation
+  degree ≥ 1/2, regularity known) must read as bounded. An instrument never shown to register a
+  known-bounded case cannot be believed when it reports boundedness.
+
+---
+
+## 4. Recommendation to the auditor
+
+**Audit Candidate C first and, if approved, run only C for the first measurement.** Reasons:
+its `γ = 0` end is a control sharing all code with the measurement; it produces a curve rather
+than a point; and it cannot silently destroy energy conservation the way A can.
+
+**Candidate A should be audited but not run until its energy check passes** — it is the most
+faithful to the proven lock and therefore the most interesting if it survives, but it is also
+the one where a positive result would be most likely to be an artifact of broken conservation.
+
+**Candidate B is the weakest scientifically** (no continuum meaning) and is recommended only as
+a cross-check on C, not as a primary measurement.
+
+**A negative result from C is a publishable, programme-relevant finding** and should be treated
+as a successful outcome, per the campaign's Definition of Done.
+
+---
+
+## 5. What this document does not do
+
+No code is written. No definition here is implemented, and none may be until audited. No claim
+is made that any candidate *is* the Sym² lock in the sense of `sym2_recurrence` — A is exact on
+the constraint but changes the dynamics, B is an instrument, C is an explicit deformation. That
+distinction is the single most important thing for the auditor to rule on: **which, if any, of
+these is entitled to be called "the lock" in a reported result.**

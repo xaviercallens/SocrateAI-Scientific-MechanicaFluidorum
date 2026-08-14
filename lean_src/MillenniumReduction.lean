@@ -27,13 +27,18 @@
   SPEC.md says it lives: inside Aubin–Lions compactness and the Prodi–Serrin criterion.
 
   ---------------------------------------------------------------------------
-  BUILD NOTE (same as `EnstrophyProductionBound.lean`).
+  BUILD NOTE — SUPERSEDED 2026-08-13: this file now IMPORTS instead of re-declaring.
   ---------------------------------------------------------------------------
-  `lean_src` is not a Lake project of its own; `scripts/verify.sh` Gate 2 compiles every file
-  standalone via `lake env lean` against an external Mathlib build, so cross-file `import` of
-  another `lean_src/*.lean` module fails (`unknown module prefix`). Accordingly this file does
-  NOT import `HypothesisU_Statements.lean`; it re-declares the minimal subset of its vocabulary
-  it needs, verbatim, under this file's own namespace.
+  Historically `lean_src` was not a Lake project, so Gate 2 compiled each file standalone and
+  cross-file `import` failed (`unknown module prefix`); every file therefore re-declared the
+  vocabulary it needed, VERBATIM, and those copies had to be kept in sync BY HAND.
+
+  That is fixed. `lean_src` is a Lake project (Stage-0 cold build), and `scripts/verify.sh`
+  now runs `lake build` first and then checks each file with `LEAN_PATH` extended to include
+  the project's own `.lake/build/lib/lean`. Cross-file imports resolve, so this file imports
+  `DyadicShell_Statements` and the duplication is GONE — with it the silent-drift hazard where
+  a fix applied to one copy and not the other leaves both files compiling cleanly while the
+  mathematics diverges.
 
   ---------------------------------------------------------------------------
   REVISION 2026-08-12 (audit round 1 — human owner's decisions, recorded here per the F2 Q1/Q2
@@ -76,44 +81,21 @@
   Gate: `#print axioms` for every theorem below must report exactly
   [propext, Classical.choice, Quot.sound].
 -/
-import Mathlib.Analysis.Calculus.Deriv.Basic
-import Mathlib.Algebra.BigOperators.Group.Finset.Basic
-import Mathlib.Data.Finset.Basic
-import Mathlib.Tactic.Ring
-import Mathlib.Tactic.Linarith
-import Mathlib.Tactic.NormNum
-import Mathlib.Tactic.Positivity
+import DyadicShell_Statements
 import Mathlib.Topology.Algebra.InfiniteSum.Order
 import Mathlib.Topology.Algebra.InfiniteSum.NatInt
 import Mathlib.Analysis.PSeries
 
 namespace MechanicaFluidorum.MillenniumReduction
 
-/-! ## 1. Re-declared vocabulary from `HypothesisU_Statements.lean` (F2, audited 2026-08-12) -/
+/-! ## 1. Vocabulary — IMPORTED from `DyadicShell_Statements`, no longer re-declared
 
-/-- Projection of an initial datum onto the modes retained at cutoff `N`. Verbatim copy of
-`HypothesisU_Statements.truncate` (needed only to state `IsGalerkinSolution`). -/
-def truncate (N : ℕ) (u0 : ℕ → ℝ) : ℕ → ℝ := fun n => if n ≤ N then u0 n else 0
+`truncate`, `IsGalerkinSolution`, `enstrophy`, `HypothesisU`, `dyadicWavenumber`,
+`dyadicWeight`, `shellB` and its energy-conservation theorems all come from
+`lean_src/DyadicShell_Statements.lean` via the import above. There is exactly one definition of
+each in the repository. -/
 
-/-- The `N`-truncated Galerkin system. Verbatim copy of
-`HypothesisU_Statements.IsGalerkinSolution`. -/
-def IsGalerkinSolution (N : ℕ) (nu : ℝ) (B : ℕ → (ℕ → ℝ) → ℝ) (w : ℕ → ℝ)
-    (u0 : ℕ → ℝ) (u : ℝ → ℕ → ℝ) : Prop :=
-  u 0 = truncate N u0
-  ∧ (∀ t : ℝ, ∀ n : ℕ, n ≤ N →
-      HasDerivAt (fun s : ℝ => u s n) (B n (u t) - nu * w n * u t n) t)
-  ∧ (∀ t : ℝ, ∀ n : ℕ, N < n → u t n = 0)
-
-/-- Weighted-ℓ² enstrophy of the truncated state. Verbatim copy of
-`HypothesisU_Statements.enstrophy`. -/
-def enstrophy (N : ℕ) (w : ℕ → ℝ) (u : ℝ → ℕ → ℝ) (t : ℝ) : ℝ :=
-  ∑ n ∈ Finset.range (N + 1), w n * (u t n) ^ 2
-
-/-- Hypothesis U (Galerkin form). Verbatim copy of `HypothesisU_Statements.HypothesisU`. -/
-def HypothesisU (nu T : ℝ) (B : ℕ → (ℕ → ℝ) → ℝ) (w : ℕ → ℝ) (u0 : ℕ → ℝ) : Prop :=
-  ∃ C : ℝ, 0 < C ∧
-    ∀ N : ℕ, ∀ u : ℝ → ℕ → ℝ, IsGalerkinSolution N nu B w u0 u →
-      ∀ t : ℝ, 0 ≤ t → t ≤ T → enstrophy N w u t ≤ C
+open MechanicaFluidorum
 
 /-! ## 2. New: the untruncated (`N → ∞`) solution family -/
 
@@ -143,13 +125,6 @@ theorem zero_isFullSolution (nu : ℝ) (B : ℕ → (ℕ → ℝ) → ℝ) (w : 
   have h : B n (fun _ => (0 : ℝ)) - nu * w n * 0 = 0 := by rw [hB n]; ring
   rw [h]
   exact hasDerivAt_const t (0 : ℝ)
-
-/-- Enstrophy of the zero flow is zero at any cutoff, any weights, any time — needed for the
-non-vacuity witnesses below. Verbatim copy of `HypothesisU_Statements.enstrophy_zero`. -/
-theorem enstrophy_zero (N : ℕ) (w : ℕ → ℝ) (t : ℝ) :
-    enstrophy N w (fun _ _ => (0 : ℝ)) t = 0 := by
-  unfold enstrophy
-  exact Finset.sum_eq_zero (fun n _ => by ring)
 
 /-! ## 3. Spatial regularity (Q3): the Fourier-side `H^s`-for-every-`s` characterization of `C^∞`
 
@@ -191,27 +166,15 @@ theorem zero_isSpatiallySmooth (k : ℕ → ℝ) (t : ℝ) :
   rw [Finset.sum_congr rfl this, Finset.sum_const_zero]
   exact zero_le_one
 
-/-! ## 3b. Concrete objects for the dyadic target (Task 4, D1/D2/D3 decided 2026-08-13)
+/-! ## 3b. Concrete objects — imported
 
-Audit verdict **B4** (REVISE) required the reduction to be specialised to the concrete object
-being audited, and **A5** required `B` to carry real structure. Both are addressed by working
-with the Katz–Pavlović nonlinearity directly.
+`dyadicWavenumber`, `dyadicWeight`, `shellB` and `shellB_zero` now come from
+`DyadicShell_Statements`. Audit verdicts **A5** (`B` must carry structure) and **B4** (specialise
+to the concrete object) are met against the *canonical* definitions rather than against copies
+of them. -/
 
-`shellB`, `dyadicWavenumber` and `dyadicWeight` below are **verbatim re-declarations** of the
-canonical definitions in `lean_src/DyadicShell_Statements.lean`, forced by the standalone-compile
-convention (see the BUILD NOTE in this file's header). **They must be kept in sync by hand;
-that duplication is a known and accepted cost of Gate 2 compiling each file in isolation.** -/
-
-noncomputable def dyadicWavenumber (n : ℕ) : ℝ := (2 : ℝ) ^ n
-noncomputable def dyadicWeight (n : ℕ) : ℝ := (dyadicWavenumber n) ^ 2
-
-theorem dyadicWeight_nonneg : ∀ n, 0 ≤ dyadicWeight n := by
-  intro n; unfold dyadicWeight dyadicWavenumber; positivity
-
-/-- Katz–Pavlović shell nonlinearity (verbatim from `DyadicShell_Statements.shellB`). -/
-noncomputable def shellB (k : ℕ → ℝ) : ℕ → (ℕ → ℝ) → ℝ
-  | 0,     v => -(k 0 * v 0 * v 1)
-  | m + 1, v => k m * v m ^ 2 - k (m + 1) * v (m + 1) * v (m + 2)
+theorem dyadicWeight_nonneg : ∀ n, 0 ≤ dyadicWeight n :=
+  fun n => (dyadicWeight_pos n).le
 
 /-! ## 3c. The ℓ² upgrade (decision D1: ADD + BRIDGE, localised)
 
@@ -350,10 +313,6 @@ Proving the hypothesis parameters ACHIEVABLE would require ODE existence theory 
 excludes. What is proved is that the new definitions are genuinely satisfiable — in particular
 that `IsGalerkinLimit`, with all four clauses including the subsequence, is inhabited. -/
 
-/-- `shellB` vanishes at the zero state (verbatim consequence of its defining equations). -/
-theorem shellB_zero (k : ℕ → ℝ) (n : ℕ) : shellB k n (fun _ => (0 : ℝ)) = 0 := by
-  cases n <;> simp [shellB]
-
 /-- **`IsGalerkinLimit` is inhabited**, with the zero family and the identity subsequence — so
 the four-clause conclusion of `AubinLionsStatement` is not vacuously unsatisfiable. -/
 theorem zero_isGalerkinLimit (nu : ℝ) :
@@ -391,13 +350,11 @@ compile-time-checkable one, which is exactly why the quantifier order was audite
 rather than left to the type-checker alone. -/
 
 #print axioms zero_isFullSolution
-#print axioms enstrophy_zero
 #print axioms sobolevWeight_nonneg
 #print axioms zero_isSpatiallySmooth
 #print axioms dyadicShell_regularity_reduction
 #print axioms zero_isGalerkinLimit
 #print axioms hasFiniteEnstrophy_of_bounded
-#print axioms shellB_zero
 #print axioms zero_global_regularity
 
 end MechanicaFluidorum.MillenniumReduction

@@ -25,32 +25,36 @@ python3 "$ROOT/scripts/ledger_check.py" || { echo "LEDGER GATE: FAIL"; exit 1; }
 
 echo
 echo "== Gate 2: Lean 4 kernel (Tier A) =="
-# Prefer the SELF-CONTAINED build in lean_src/ when it exists (Stage-0 cold-build chore,
-# completed 2026-08-13: `cd lean_src && lake exe cache get && lake build`, Mathlib pinned in
-# lean_src/lakefile.lean and lean_src/lake-manifest.json).
+# Gate 2 uses the SELF-CONTAINED Lake project in lean_src/ (Stage-0 cold build, 2026-08-13),
+# with cross-file imports enabled (2026-08-13).
 #
-# Why the preference order matters, with evidence: Gate 2 previously ALWAYS used the external
-# checkout below, which is a separate project this repo does not control. On 2026-08-13 an
-# unrelated `lake build` running in that checkout deleted/rebuilt its .olean files mid-run, and
-# Gate 2 failed with "object file ... does not exist" for a file this repo had not touched --
-# a spurious failure caused entirely by the shared dependency. The local build removes that
-# coupling. The external path is retained as a fallback so a fresh clone still verifies
-# without first paying for a ~8 GB Mathlib build.
+# Two things this buys, both learned the hard way:
+#  1. No dependency on an external Mathlib checkout this repo does not control. That coupling
+#     was not hypothetical: an unrelated `lake build` in the shared checkout rebuilt its .olean
+#     files mid-run and failed Gate 2 on a file this repo had not touched.
+#  2. Cross-file `import` resolves, so lean_src/ files no longer re-declare each other's
+#     definitions verbatim. That duplication was a silent-drift hazard: a fix applied to one
+#     copy and not the other left BOTH files compiling cleanly while the mathematics diverged,
+#     and no gate could see it.
+#
+# Mechanism: `lake build` first (so every dependency olean is current), then re-elaborate each
+# file with `lean` -- NOT `lake build` alone, because lake caches and a cached target emits no
+# `#print axioms` output at all, which would make the footprint check silently vacuous.
+# `lean` always re-elaborates, so the footprints are always actually re-checked.
 if [ -d "$ROOT/lean_src/.lake/packages/mathlib/.lake/build/lib" ]; then
-  LEAN_ENV_DIR="${LEAN_ENV_DIR:-$ROOT/lean_src}"
-  echo "   (using self-contained lean_src/.lake)"
+  echo "   (self-contained lean_src/.lake, cross-file imports enabled)"
+  ( cd "$ROOT/lean_src" && lake build 2>&1 | tail -1 )
+  LEAN_PATH_EXT="$(cd "$ROOT/lean_src" && lake env printenv LEAN_PATH):$ROOT/lean_src/.lake/build/lib/lean"
+  LEAN_CMD_DIR="$ROOT/lean_src"
 else
-  LEAN_ENV_DIR="${LEAN_ENV_DIR:-$HOME/xdev/SocrateAI-Scientific-RajMathRecovery/dualscale/lean}"
-  echo "   (lean_src/.lake absent -- falling back to external Mathlib at $LEAN_ENV_DIR;"
-  echo "    build the local one with: cd lean_src && lake exe cache get && lake build)"
+  echo "   ERROR: lean_src/.lake absent. Cross-file imports require the local build."
+  echo "   Build it with: cd lean_src && lake exe cache get && lake build"
+  exit 1
 fi
-# DyadicShell_Statements.lean is a DRAFT awaiting human statement-adequacy audit
-# (PLAN.md F2); it is gated for compilation so it cannot rot, but its claims are
-# NOT ledgered until the audit passes.
 FAILED=0
 for f in CallensDualScale DyadicShells DyadicShell_Statements EnstrophyProduction EnstrophyProductionBound MillenniumReduction AbstractAlgebraicConservation; do
   echo "-- lean_src/$f.lean"
-  OUT=$(cd "$LEAN_ENV_DIR" && lake env lean "$ROOT/lean_src/$f.lean" 2>&1)
+  OUT=$(cd "$LEAN_CMD_DIR" && LEAN_PATH="$LEAN_PATH_EXT" lean "$f.lean" 2>&1)
   if echo "$OUT" | grep -qiE "^.*error|sorry"; then
     echo "$OUT"; echo "TIER A GATE: FAIL ($f: errors or sorry)"; FAILED=1; continue
   fi

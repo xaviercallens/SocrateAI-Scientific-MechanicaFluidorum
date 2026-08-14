@@ -63,7 +63,7 @@ Revised After the External Audit of 13 August 2026}}
 \small\texttt{SocrateAI-Scientific-MechanicaFluidorum}}
 
 \date{13 August 2026\\[0.3em]
-\small Repository state: commit \texttt{1739dc3} \quad$\vert$\quad All verification gates PASS (exit 0)}
+\small Repository state: commit \texttt{a35cb92}+ \quad$\vert$\quad All verification gates PASS (exit 0)}
 
 \begin{document}
 \maketitle
@@ -76,8 +76,8 @@ organised around \emph{Hypothesis U} --- a uniform-in-cutoff enstrophy bound for
 frequency-truncated system. The programme's distinguishing feature is not a claimed proof but
 a \emph{method}: every assertion carries an explicit epistemic tier, mechanically enforced by
 a two-gate verification pipeline (exact rational arithmetic; Lean~4 kernel compilation with a
-pinned axiom footprint). We report 70 theorems kernel-compiled across seven Lean files --- of
-which 63 carry Tier~A claims, the remaining 7 having been \emph{demoted} to Tier~C by the
+pinned axiom footprint). We report 72 theorems kernel-compiled across seven Lean files --- of
+which 65 carry Tier~A claims, the remaining 7 having been \emph{demoted} to Tier~C by the
 audit below --- six exact-arithmetic certification harnesses, and, equally importantly, a
 documented record of what has \emph{failed}: two abandoned numerical designs, five caught
 errata (one in a formula sourced from the literature, one in the programme's own design memo,
@@ -1016,6 +1016,57 @@ seek a smaller shell-preserving proxy, and whether to sequence it before or afte
 are open questions reserved to the human owner.
 
 %==============================================================================
+\subsection{Repairing the reduction: giving the hypotheses content (\tC{})}
+
+Audit verdict~B1 found the reduction's two hypothesis parameters to be bare
+$\mathrm{Prop}\to\mathrm{Prop}$ arrows: ``the Lean kernel is merely verifying a logical
+tautology''. The repair, carried out on 14~August 2026, is \emph{not} to prove those steps ---
+parking undischarged analysis in a named hypothesis parameter rather than an axiom is the
+pattern this programme deliberately adopted, so that the kernel tracks the debt in the type. The
+repair is to make the types say something.
+
+\begin{keybox}{What a compactness statement has to deliver}
+\texttt{IsGalerkinLimit} now carries four clauses, each load-bearing: the limit solves the
+untruncated system; it has \emph{finite enstrophy} (a genuine $\ell^2$ condition, since there is
+no cutoff to truncate the sum); that enstrophy is bounded on every horizon, with the constant
+quantified \emph{inside} the horizon --- compactness gives no uniformity in $T$, and writing
+$\exists C\,\forall T$ would claim more than the analysis provides; and the limit is genuinely
+the modewise limit of the Galerkin family \textbf{along a subsequence}. The subsequence is not a
+technicality: a compactness argument extracts one, and asserting convergence of the full
+sequence would overstate the mathematics.
+\end{keybox}
+
+The $\ell^2$ upgrade was deliberately \emph{localised}. Hypothesis~U quantifies over
+\emph{Galerkin} solutions, whose truncation clause forces $u_n=0$ for $n>N$ --- so the finite
+sum over $n \le N$ already captures every nonzero mode and is \emph{exact} there, not an
+approximation. Only the objects with no cutoff needed the infinite-series treatment. A bridge
+lemma (bounded partial sums of nonnegative terms $\iff$ summable with $\sum' \le C$) makes the
+upgrade a conservative extension: nothing previously proven is invalidated.
+
+\begin{warnbox}{The file remains Tier C, and two things remain unmachine-checkable}
+The repair makes the undischarged debt \emph{legible}; it does not pay it. Both hypothesis
+parameters are still assumed. Moreover, whether the four clauses \emph{say the right thing} is a
+statement-adequacy question reserved to human audit --- it cannot be settled by the kernel, and
+that cost is scheduled rather than discovered later.
+\end{warnbox}
+
+\subsection{Eliminating a duplication hazard at the root}
+
+Until this point every file in \texttt{lean\_src/} re-declared, verbatim, the definitions it
+needed from its neighbours, because the verification gate compiled each file in isolation and
+cross-file imports did not resolve. That convention carried a silent-drift hazard of exactly the
+kind this programme exists to eliminate: \textbf{a correction applied to one copy and not the
+other leaves both files compiling cleanly, both gates green, and the mathematics divergent}, with
+no mechanism able to see it.
+
+With the project now self-contained, the gate builds the dependency graph first and then
+re-elaborates each file with the project's own build directory on the search path. Imports
+resolve; the duplication is gone; there is exactly one definition of each object in the
+repository. One implementation detail is worth recording because getting it wrong would be
+invisible: the gate must re-elaborate with \texttt{lean} rather than rely on \texttt{lake build}
+alone, because a \emph{cached} build target emits no axiom output at all --- which would make the
+footprint check silently vacuous rather than failing loudly.
+
 \section{What Has Failed, and What That Taught}
 \label{sec:failures}
 %==============================================================================
@@ -1080,19 +1131,19 @@ LL-8 & \textbf{The verification gate itself had a false positive.} A lemma prove
 \texttt{MillenniumReduction.lean} & Conditional reduction skeleton & \tC{} & 7 \\
  & \quad (\textsc{demoted} 2026-08-13, verdict B1) & & \\
 \midrule
-\multicolumn{2}{@{}l}{\textbf{Total kernel-compiled, no axiom outside \texttt{\{propext, Classical.choice, Quot.sound\}}}} & & \textbf{70} \\
+\multicolumn{2}{@{}l}{\textbf{Total kernel-compiled, no axiom outside \texttt{\{propext, Classical.choice, Quot.sound\}}}} & & \textbf{72} \\
 \bottomrule
 \end{tabular}
 \end{center}
 
-All 70 theorems compile with clean axiom footprints; the demoted 7 remain wired into Gate~2 so
+All 72 theorems compile with clean axiom footprints; the demoted 7 remain wired into Gate~2 so
 that they cannot silently rot, but they carry \tC{} claims and may not be cited as established.
 The two new rows relative to the previous report are
 \texttt{DyadicShell\_Statements.lean}'s concrete nonlinearity block (\texttt{shellB},
 \texttt{shellB\_zero}, \texttt{sum\_mul\_shellB}, \texttt{shellB\_energy\_conservation},
 \texttt{galerkin\_shellB\_conservation}, and the headline definition
 \texttt{DyadicShellHypothesisU}). Six Tier B harnesses are wired into Gate~1, each with a
-negative control demonstrated to fail. Both gates pass at commit \texttt{1739dc3}, re-run
+negative control demonstrated to fail. All gates pass at commit \texttt{a35cb92}+, re-run
 independently for this report.
 
 \subsection{What is genuinely established}
