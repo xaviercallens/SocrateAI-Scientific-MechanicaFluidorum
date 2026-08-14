@@ -414,6 +414,59 @@ programme's own `α = 1`.
 
 ---
 
+## LL-14 — An instrument must report its own reliability, or it will confirm your hypothesis
+
+**What happened (2026-08-14), immediately after LL-12.** With the Sym² detector's sign fixed and
+both controls passing, it was pointed at the blow-up regime (`α = 1/4`, where blow-up is a
+theorem) to ask whether blow-up is Sym²-structured. The time series looked like a textbook
+result, and it was `dt`-convergent across two step sizes:
+
+| `t` | `Ω` | `S` |
+|---|---|---|
+| 0.2 | 0.56 | `5e-4, 3e-7, 1e-13` |
+| 1.0 | 2.6 | `1.5e-1, 5.9e-2, 5.3e-3` |
+| 1.6 | 167 | `1.6, 0.27, 0.99` |
+
+Read naively: *the quiescent cascade carries Sym² structure, and developing blow-up destroys
+it* — therefore enforcing the lock might prevent blow-up. That is precisely the mechanism this
+programme exists to find.
+
+**It was an artifact.** The signature is read off a 3×3 solve for the recurrence coefficients. A
+profile close to a **pure geometric sequence** satisfies infinitely many order-3 recurrences, so
+the solve is singular and the recovered coefficients are noise. At early times the developing
+cascade has not yet populated the higher shells, so `v₂, v₃` are numerically zero and the
+normalised determinant is `2×10⁻¹⁴`. The detector was dividing noise by noise and returning a
+small number.
+
+Measured conditioning `|det|/scale³` along the same run: `2e-14, 6e-9, 9e-6, 1e-3, 2e-2, 5e-2,
+1e-2, 3e-4`. Only the middle of the run is measurable at all.
+
+**With a conditioning guard**, the early points are correctly reported as **not measurable**
+(0 of 3 windows survive), and what remains is a weak, narrow-range trend — worth measuring
+properly, nothing like the clean story above.
+
+**What made this dangerous.** Two prior defects this session were caught by controls: the grid
+had no detection power, and the detector shipped inverted. Both were caught because the result
+looked *wrong*. This one looked **right** — it confirmed the hypothesis, was monotone, and was
+`dt`-convergent, which is normally strong evidence. Nothing about it invited suspicion. The only
+thing that exposed it was asking a question the result itself did not prompt: *is the fit that
+produced this number well-posed?*
+
+**Rule produced.** Any instrument that inverts, fits, or solves must **report its own
+conditioning alongside its value, and refuse to report a value when the computation is
+ill-posed** — a refusal is a legitimate measurement outcome and must be distinguishable from a
+small number. `COND_MIN` in `exploration/sym2_signature_detector.py` implements this; a window
+below threshold is dropped, and a measurement with no surviving window is reported as
+"not measurable" rather than as a value.
+
+**The general form, which is the reason this is in the log:** controls protect against an
+instrument that is *wrong everywhere*. They do not protect against one that is *undefined
+exactly where you are looking*. Convergence under refinement does not help either — a singular
+fit converges to the same garbage at every step size. **Be most suspicious of the result you
+wanted.**
+
+---
+
 *Add new lessons above this line, most recent first is not required — group by theme as the
 log grows. A lesson earns an entry here when it changed a rule somewhere else in the repo
 (`PLAN.md`, `CLAUDE.md`, or a memory file) — if it didn't change a rule, it probably belongs

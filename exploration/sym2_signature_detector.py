@@ -38,6 +38,23 @@ exactly 2.00 on a sequence that satisfies the lock by construction. That is how 
 found: the positive control refused to read zero. Without a positive control this detector would
 have shipped inverted.
 
+CONDITIONING GUARD -- ADDED AFTER IT NEARLY PRODUCED A SPURIOUS "CONFIRMATION".
+
+The signature is read off a 3x3 linear solve for (c1,c2,c3). A profile that is close to a PURE
+GEOMETRIC sequence satisfies infinitely many order-3 recurrences, so that solve is singular and
+the recovered coefficients are noise. In the developing cascade this is not a corner case: at
+early times the profile falls off so fast that v_2, v_3 are numerically zero and the normalised
+determinant reaches 1e-14.
+
+Without the guard the detector returned S ~ 1e-13 there, and the naive reading -- "the quiescent
+cascade IS Sym^2-structured, and blow-up destroys that structure" -- is exactly the mechanism
+this programme hopes for. It was garbage from a singular fit. The guard exists because the most
+seductive artifact is the one that confirms your hypothesis.
+
+fit_recurrence now REFUSES to return coefficients when |det|/scale^3 < COND_MIN, and
+profile_signature reports only the windows that survive. A measurement with no surviving window
+is reported as such rather than as a small number.
+
 THE OBSERVABLE.  S = |c2^3 + c1^3 c3| / max(|c2^3|, |c1^3 c3|)   in [0, 2].
     S ~ 0    : the profile carries Sym^2 structure
     S ~ O(1) : it does not
@@ -81,10 +98,29 @@ def _det3(M):
             + M[0][2] * (M[1][0] * M[2][1] - M[1][1] * M[2][0]))
 
 
+# Minimum normalised |det| for the 3x3 fit to carry information. Below this the recovered
+# coefficients are noise and S is meaningless -- see CONDITIONING GUARD in the module docstring.
+COND_MIN = 1e-6
+
+
+def conditioning(v, i):
+    """|det| of the fit matrix, normalised by the cube of its largest entry. Scale-free."""
+    if i + 5 >= len(v):
+        return None
+    A = [[v[i + j + 2], v[i + j + 1], v[i + j]] for j in range(3)]
+    sc = max(max(abs(x) for x in row) for row in A)
+    if sc <= 0:
+        return 0.0
+    return abs(_det3(A)) / sc ** 3
+
+
 def fit_recurrence(v, i):
     """Solve v_{n+3} = c1 v_{n+2} + c2 v_{n+1} + c3 v_n from three consecutive n starting at i.
-    Returns (c1,c2,c3) or None if the 3x3 system is degenerate."""
+    Returns (c1,c2,c3), or None if the system is degenerate OR too ill-conditioned to trust."""
     if i + 5 >= len(v):
+        return None
+    cond = conditioning(v, i)
+    if cond is None or cond < COND_MIN:
         return None
     A = [[v[i + j + 2], v[i + j + 1], v[i + j]] for j in range(3)]
     B = [v[i + j + 3] for j in range(3)]
