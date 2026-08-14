@@ -297,6 +297,123 @@ checked. Verified by injecting a `sorry` into a gated file and confirming the ga
 
 ---
 
+## LL-11 — A translated theorem can lose its content and still look faithful
+
+**What happened (2026-08-14).** The Sym² lock is proven for scalar recurrences
+(`sym2_recurrence`, Tier A). To use it on the dyadic shell model it had to be translated into
+shell space. The translation adopted — and written into a design memo, with candidate
+implementations, kill criteria and a pre-registered protocol — was the pointwise constraint
+`a_{2n} = c·a_n²`, justified by the exact observation that `k_n = 2ⁿ` makes `λ ↦ λ²` act on
+indices as `n ↦ 2n`.
+
+That observation is correct. The translation built on it is nearly vacuous. For **any** pure
+power law `a_n = A·rⁿ`:
+
+```
+a_n² = A²r^{2n},   a_{2n} = A r^{2n}   ⟹   a_{2n}/a_n² = 1/A
+```
+
+constant in `n` and **independent of `r`**. So the constraint's solution set is the entire
+one-parameter family of power laws with amplitude `1/c`: it imposes one condition on a
+two-parameter family and fixes the **amplitude**, leaving the **slope** free. Since finite-time
+blow-up in these models is characterised by the slope, the constraint was blind to exactly the
+thing it was supposed to control.
+
+**What it almost cost.** A full experimental campaign — three candidate implementations, a
+penalty parameter sweep, `dt` refinement, controls — measuring a quantity that could not move.
+Every gate in the repository would have passed: nothing was false, nothing was unproven, no
+tier was overstated. The design was simply about the wrong object.
+
+**Why the pointwise form lost the content.** `sym2_recurrence` concerns a **two-root** recurrence
+and its squared sequence, `{λ,μ} ↦ {λ²,λμ,μ²}`. The pointwise translation kept the *squaring*
+and discarded the *two-root structure* — and the slope information lives in the second root, not
+in the squaring. The real content is that the three macroscopic roots are in geometric
+progression, which at coefficient level is the exact signature `c₂³ + c₁³c₃ = 0`. That form
+**is** discriminating: it separates a Sym²-by-construction sequence from a generic one by
+fourteen orders of magnitude.
+
+**Rule produced.** Before implementing a constraint translated from a proven theorem into a new
+setting, **compute its solution set in the new setting and check it is smaller than intended.**
+A translation that admits everything the original excluded has lost the theorem's content, no
+matter how faithfully each symbol was carried across. Cheap test: substitute the simplest family
+the new setting supports (here, a power law) and see whether the constraint restricts it.
+
+---
+
+## LL-12 — Negative controls prove a checker can fail; only positive controls prove it can succeed
+
+**What happened (2026-08-14).** The corrected Sym² detector tests `c₂³ + c₁³c₃ = 0` on the
+recurrence coefficients fitted to a shell profile. It was first implemented as
+`e₂³ = e₁³e₃`, taken from the elementary symmetric functions as recorded in `SPEC.md` and
+`LEDGER.md` (`e₁=a²+b`, `e₂=−b(a²+b)`, `e₃=−b³`).
+
+Those are **not** the recurrence coefficients. For a monic cubic `x³ − e₁x² + e₂x − e₃`, the
+recurrence form `v_{n+3} = c₁v_{n+2} + c₂v_{n+1} + c₃v_n` has `c₂ = −e₂`. Feeding fitted `c`'s
+into the `e`-form flips one sign and turns the residual into `c₂³ − c₁³c₃`, which on a sequence
+satisfying the lock *by construction* evaluates to exactly **2.00** instead of 0.
+
+**What caught it, and what would not have.** The **positive** control — a sequence built from an
+order-2 recurrence, Sym² by construction, required to read `S < 10⁻⁶` — refused to read zero.
+The **negative** control passed happily: generic sequences give `O(1)` under *both* the correct
+and the inverted formula, because both are generically nonzero. So the negative control, which
+this repository has always mandated, was blind to this defect.
+
+**What it would have cost.** An inverted detector reports "no Sym² structure" **everywhere**,
+including where the structure exists. That is a false negative that looks exactly like a clean
+null result — the most expensive kind of wrong answer, because nothing about it invites
+suspicion. It would have been reported as a finding about the cascade.
+
+**Rule produced.** *A checker that cannot fail is not a checker* is **half** the requirement.
+The other half is an input on which the harness must *fire*. Where that lives depends on the
+harness kind, and getting this distinction right mattered:
+
+- **Identity/inequality verifiers** already satisfy it by construction — their main sweep asserts
+  the identity *holds* on many valid inputs ("240 cases, all exact LHS == RHS"), which an
+  inverted implementation would fail. Auditing the repo's six older harnesses against a first,
+  blunter version of this rule showed all six were already sound; the rule, not the harnesses,
+  needed refining.
+- **Classifiers, detectors and judgments** do **not**: their body returns a verdict, and an
+  implementation that rejects *everything* passes the negative control unscathed. For these an
+  explicit positive control is mandatory.
+
+Recorded in `SPEC.md` §7.3 (with the harness-kind table) and in the Tier B row of §0's gate
+table. Implemented in `exploration/sym2_signature_detector.py`,
+`tests/tier_b_grid_adequacy.py` and `tests/tier_b_regime_adequacy.py`, each of which runs both
+controls on every invocation and refuses to report if either fails.
+
+**Second-order note.** The first draft of this rule was too blunt — it would have flagged six
+working harnesses as non-compliant. Checking compliance *immediately after writing the rule*, on
+the repo's real harnesses, is what exposed that. A rule adopted without auditing what it
+condemns is a rule that will be quietly ignored.
+
+**Note.** This is the human owner's own "instrument principle", arrived at independently from
+the other direction: *"vos harnais adorent les contrôles négatifs; il manque le contrôle
+positif."* It is now a rule rather than an observation.
+
+---
+
+## LL-13 — Check whether the answer is already a theorem before measuring it
+
+**What happened (2026-08-14).** Two numerical campaigns measured whether the truncated viscous
+dyadic system stays bounded. Retrieving Cheskidov's equation (1.1) and thresholds from the
+primary source showed the programme's dissipation `ν k_n² = ν 2^{2n}` corresponds to dissipation
+degree **α = 1**, inside the band `α ≥ 1/2` where global regularity is a **published theorem**.
+The campaigns were confirming a theorem.
+
+**Relation to the same day's grid defect.** They are the same failure at two levels. The grid
+defect was *"varied a parameter over a range where it could have no effect"*; this is *"ran in a
+regime where the answer is forced"*. Both are an instrument pointed where no signal can exist.
+
+**Rule produced.** Before designing a measurement, classify the regime: is the answer **open**,
+or is it already established? A proven regime is not forbidden — it is the correct place for a
+control (a proven-regular regime is the only honest positive control for a boundedness
+instrument; a proven-blow-up regime is the only place a proposed regularising mechanism can
+demonstrate anything). What is forbidden is running in one and reporting the result as a
+discovery. Mechanised as `tests/tier_b_regime_adequacy.py`, whose negative control is the
+programme's own `α = 1`.
+
+---
+
 *Add new lessons above this line, most recent first is not required — group by theme as the
 log grows. A lesson earns an entry here when it changed a rule somewhere else in the repo
 (`PLAN.md`, `CLAUDE.md`, or a memory file) — if it didn't change a rule, it probably belongs

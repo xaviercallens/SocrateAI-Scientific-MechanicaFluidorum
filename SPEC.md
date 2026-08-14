@@ -22,7 +22,7 @@ Three-tier gating, mechanically enforced by `scripts/verify.sh`:
 | Tier | Meaning | Gate |
 |---|---|---|
 | **C — Conjecture** | proposals, analogies, physical narratives, unverified reductions | none (but must be tagged) |
-| **B — Checkable** | identities validated in exact rational arithmetic; certified witnesses; no floats | `tests/` harness exits 0 |
+| **B — Checkable** | identities validated in exact rational arithmetic; certified witnesses; no floats | `tests/` harness exits 0, exercising **both** directions — negative control always; explicit positive control for any harness that returns a *verdict* rather than asserting an identity (§7.3) |
 | **A — Established** | Lean 4 kernel-compiled, zero `sorry`, axiom footprint containing **no axiom outside** `{propext, Classical.choice, Quot.sound}` (a strict subset is cleaner, and passes — see §5.1) | kernel + `#print axioms` membership test |
 
 **The honesty clause.** Every public claim carries its tier. A claim absent from `LEDGER.md`
@@ -343,8 +343,25 @@ Promotion B→A requires the kernel; promotion C→B requires the exact-arithmet
 
 **7.3 Counterexample before attack.** Before any formal proof attempt on a new goal: run
 degenerate/boundary probes and an exact-arithmetic falsification sweep; strategies must file
-an Obstruction Compliance Note (§1.3). Negative controls are part of every harness (a checker
-that cannot fail is not a checker).
+an Obstruction Compliance Note (§1.3).
+
+**Both directions must be exercised in every harness** (strengthened 2026-08-14, `LL.md` LL-12).
+A **negative control** — an input on which the harness is *required to fail* — has always been
+mandatory (*a checker that cannot fail is not a checker*). It is **half** the requirement. The
+other half is an input on which the harness is *required to fire*. Where that lives depends on
+what the harness is, and the distinction is not cosmetic:
+
+| Harness kind | Positive direction | Requirement |
+|---|---|---|
+| **Identity / inequality verifier** (`tier_b_enstrophy_production`, `tier_b_production_bound`, `tier_b_dyadic_checks`, …) | the main sweep **is** the positive control: the identity is asserted to *hold* on many valid inputs (e.g. "240 cases, all exact LHS == RHS"). An inverted or mis-wired implementation fails there. | already satisfied by construction; no separate control needed |
+| **Classifier / detector / judgment** (`tier_b_grid_adequacy`, `tier_b_regime_adequacy`, `exploration/sym2_signature_detector`) | the body returns a *verdict*, not an assertion. An implementation that rejects **everything** passes the negative control. | **an explicit positive control is mandatory** — an input the harness must accept or must fire on |
+
+The second row is where the rule bites, and it was written after a Sym² detector shipped with an
+inverted sign that its negative control passed cleanly: generic sequences read `O(1)` under both
+the correct and the inverted formula, because both are generically nonzero. Only the positive
+control — a sequence carrying the structure by construction, required to read ≈ 0 — exposed it.
+Inverted, it would have reported "no structure" everywhere *including where the structure
+exists*: a false negative indistinguishable from a clean null result.
 
 **7.4 Single active file; cold builds.** One active version per module; iterations happen
 in-place under version control (git history is the archive — no `_v2`/`_final` copies; no
