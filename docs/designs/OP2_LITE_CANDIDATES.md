@@ -71,7 +71,43 @@ dynamically; (iii) the constraint is imposed at all `n` simultaneously, whereas 
 above checks a single family. So this does not *prove* the lock is inert — but it removes the
 mechanism by which it was hoped to work.
 
-**Recommendation to the auditor: treat this as a kill unless it can be answered.** The cheapest
+### The objection is answered — by fixing the translation, not the mechanism (2026-08-14)
+
+The pointwise form is a **lossy rendering** of the proven lock. `sym2_recurrence` is about a
+**two-root** recurrence and its squared sequence, `{λ,μ} ↦ {λ²,λμ,μ²}`; the pointwise
+`a₂ₙ = c·aₙ²` keeps the "squaring" and throws away the two-root structure — which is exactly
+where the slope information lives. The lock's real content is that the three macroscopic roots
+are in **geometric progression**, `(λμ)² = λ²·μ²`, i.e. `ρ₂² = ρ₁ρ₃`.
+
+At coefficient level this needs no root extraction. With
+`v_{n+3} = c₁v_{n+2} + c₂v_{n+1} + c₃v_n` and the Lean theorem's `c₁=a²+b`, `c₂=b(a²+b)`,
+`c₃=−b³`, we get `c₂/c₁ = b` and `c₃ = −(c₂/c₁)³`, hence the exact signature
+
+```
+                        c₂³ + c₁³·c₃  =  0
+```
+
+**This form is discriminating**, and the controls prove it rather than assert it:
+`exploration/sym2_signature_detector.py` measures
+`S = |c₂³+c₁³c₃| / max(|c₂³|,|c₁³c₃|)` and separates a Sym²-by-construction sequence
+(`S ∼ 10⁻¹⁴`) from a generic one (`S ∼ 0.3–1.0`) by **fourteen orders of magnitude**.
+
+**A sign trap the positive control caught, recorded because it would have shipped silently.**
+The elementary symmetric functions in `SPEC`/`LEDGER` (`e₂ = −b(a²+b)`) are *not* the recurrence
+coefficients: for `x³ − e₁x² + e₂x − e₃`, `c₂ = −e₂`. Testing `e₂³ = e₁³e₃` while feeding it the
+fitted `c`'s returns exactly `2.00` on a sequence satisfying the lock by construction. Without a
+positive control the detector would have shipped inverted, reporting "no Sym² structure"
+everywhere — including where it exists.
+
+**Measured on the programme's own cascade:** `S` is O(1), in the generic range. **The natural
+dyadic cascade does not spontaneously carry Sym² structure.** That is informative in its own
+right, and it sharpens OP-2-lite: imposing the lock is a genuine *intervention*, not the
+revelation of a latent structure — and `S(t)` is now the validated before/after meter for it.
+
+**Recommendation to the auditor: the §1a-BIS objection kills the POINTWISE candidates (A/B/C as
+written), not the lock.** Re-scope OP-2-lite around the recurrence signature above.
+
+**Original recommendation, superseded:** The cheapest
 possible answer is analytic, not computational: exhibit a blow-up profile the constraint
 excludes, or show the constraint bounds `θ` from below. If neither can be produced, OP-2-lite
 should be killed on paper, at zero compute cost — which is the outcome the pre-registered
