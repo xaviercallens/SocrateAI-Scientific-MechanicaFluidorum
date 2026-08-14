@@ -1,5 +1,42 @@
 # Draft Definitions for OP-2…OP-5 — AWAITING HUMAN AUDIT
 
+> ## ⛔ OP-2's draft embedding FAILS T1's own kill criterion — measured 2026-08-14
+>
+> `SPEC.md` §2.3 states T1's kill criterion in advance: *"constrained count grows at the same
+> order → no depletion → kill"*. The draft's radial rule was computed against it, using the
+> existing T0.1/T0.2 lattice tooling. The rule, made explicit: sorted shell indices `(a≤b≤c)`
+> are Sym²-compatible iff `{a,b,c} = {2i, i+j, 2j}`, i.e. **`a` even, `c` even, `b = (a+c)/2`**.
+>
+> | `M` | triads `k₁+k₂=k₃` | Sym²-permitted | fraction |
+> |---|---|---|---|
+> | 4 | 30 360 | 588 | 0.019 |
+> | 6 | 398 190 | 104 772 | 0.263 |
+> | 8 | 2 079 168 | 1 091 364 | **0.525** |
+>
+> The permitted fraction **rises** with `M`. Depletion would require it to fall toward zero;
+> instead the constrained count grows at the same order as the unconstrained one. **Kill
+> criterion met.**
+>
+> **Why**, which makes the finding structural rather than a number: at `M=8`, **99.0 % of all
+> permitted triads have `a=b=c`** — same-shell triads whose common index happens to be even.
+> The rule is not an arithmetic depletion of resonances; it is a **parity filter on the shell
+> index**. It removes odd-indexed shells and leaves the resonance structure otherwise intact,
+> so its apparent strength oscillates with where the outermost shell falls rather than
+> reflecting any mechanism.
+>
+> **This is the same failure mode as the pointwise shell constraint** (`LL.md` LL-11): a
+> translation that carries the *symbols* of the proven lock into a new setting while leaving
+> the quantity it was supposed to control essentially free. The draft's own honesty clause
+> anticipated the cause — *"the radial reduction throws away the angular structure of `k`,
+> which is precisely where 3-D vortex-stretching geometry lives"* — and this measurement
+> confirms it quantitatively.
+>
+> **Consequence for the audit:** OP-2 should not be audited as a candidate to approve, but as a
+> candidate to **reject on evidence**, with the measurement above as the reason. A viable
+> embedding must act on the *angular/vector* structure of the triads, not on a radial grading.
+> The natural object is the resonant-triad hypergraph itself, which is definition-independent
+> and can be built now.
+
 **Status:** Tier C draft. **Does not unblock T1–T4 by itself** — per PLAN.md §6, only
 human audit unblocks a `BLOCKED-ON-DEFINITION` track. This document is that audit's input,
 not its output. Nothing here may be cited as a claim; nothing here may be executed by an
