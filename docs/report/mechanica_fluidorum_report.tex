@@ -1053,6 +1053,38 @@ seek a smaller shell-preserving proxy, and whether to sequence it before or afte
 are open questions reserved to the human owner.
 
 %==============================================================================
+\begin{warnbox}{A second, sharper limit on the pivot (14 August 2026)}
+The audit established that the formalisation describes a shell model rather than 3-D
+Navier--Stokes. A further fact bounds what the shell model can deliver even in principle.
+
+The dyadic dissipation term is $\nu k_n^{2\alpha}$; the Navier--Stokes viscous term is
+$\nu\Delta u$, whose Fourier symbol is $-\nu|k|^2$. Hence $\alpha=1$ \emph{is} the
+Navier--Stokes dissipation --- the same exponent, not an analogy. Cheskidov proves global
+regularity for $\alpha\ge1/2$. Therefore:
+
+\begin{center}
+\textbf{The dyadic shell model at Navier--Stokes dissipation is provably regular.}
+\end{center}
+
+The model's difficult regime, $\alpha<1/2$, corresponds to dissipation \emph{weaker} than
+Navier--Stokes. A result in the open band $[1/3,1/2)$ is a result about \emph{hypo-dissipative}
+shell models. That is live mathematics --- the band is open, and Cheskidov singles out
+$\alpha=1/3$ as carrying the same nonlinear estimates as 4-D Navier--Stokes --- but it is
+\textbf{not a step toward 3-D Navier--Stokes and must never be reported as one}.
+
+An unplanned consistency check fell out of the same calculation. The K41 balance
+$\nu k^{2\alpha}\sim k\,a_k$ with $a_k\sim k^{-1/3}$ gives a dissipation scale
+$k_d\sim\nu^{-1/(2\alpha-2/3)}$, whose exponent \emph{diverges} as $\alpha\to1/3^+$: below that
+threshold no dissipation scale exists, so the cascade is stopped at no finite shell. That is
+exactly Cheskidov's proven blow-up threshold, reached from an elementary heuristic that knows
+nothing of his proof.
+
+\textbf{Owner decision:} this gap is to be treated as a gap to \emph{close}, not a ceiling to
+accept. The programme will pursue the bridge --- the $\Z^3$ embedding and the instantiation of
+the nonlinearity --- both of which remain blocked on definitions that do not exist, and so
+admit only authored candidates submitted for human audit.
+\end{warnbox}
+
 \subsection{Repairing the reduction: giving the hypotheses content (\tC{})}
 
 Audit verdict~B1 found the reduction's two hypothesis parameters to be bare

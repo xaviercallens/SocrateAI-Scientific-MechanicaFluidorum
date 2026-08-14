@@ -467,6 +467,42 @@ wanted.**
 
 ---
 
+## LL-15 — A pre-registered test can pass and still be undiagnostic; only a control decides
+
+**What happened (2026-08-14).** The OP-2-lite hypothesis — blow-up requires breaking Sym²
+structure, so enforcing the lock might prevent it — was tested with a pre-registered protocol
+written before any run: fixed regimes, fixed profiles, fixed bins defined by enstrophy growth
+rather than time, a conditioning guard on every point, and a stated reading
+(*"supported only if `S_late > S_early` across both proven-blow-up regimes"*).
+
+**The pre-registered test passed**: `S` rose in 2/3 profiles at `α=1/4` and 3/3 at `α=3/10`.
+
+It is still wrong. The sweep also included `α = 1` — the proven-regular regime, included as a
+*control on the measurement* rather than on the detector — and `S` rises there too, from 0.023
+to 0.924, in a regime where blow-up is a theorem to be impossible. A quantity that behaves the
+same way where blow-up occurs and where it provably cannot is not a blow-up signature. The rise
+tracks the cascade filling out: early on only one fit window survives conditioning at all
+(`w=1` against `w=3` late), so the two bins were never measuring the same object.
+
+**What this cost, and what it saved.** It closed OP-2-lite's motivating measurement — at the
+cost of one sweep, before any intervention was implemented, any dynamics were modified, or any
+result was reported.
+
+**Rule produced.** Pre-registration protects against fitting the *analysis* to the data. It does
+**not** make a test diagnostic. Every pre-registered reading must therefore name, in advance,
+**a control condition under which the predicted effect must be ABSENT** — and that control must
+be run alongside, not afterwards. Here the right control was structural and cheap: a regime
+where the phenomenon under test is *provably impossible*. `tests/tier_b_regime_adequacy.py`
+already classifies which regimes those are, which is what made the control obvious once looked
+for.
+
+**Relation to LL-12/LL-14.** Those concerned instruments that were wrong (inverted) or undefined
+(ill-conditioned). This one concerns an instrument that was *correct and well-posed* and a test
+that was *properly pre-registered* — and the inference was still unsound, because nothing in the
+design could have produced a negative. The control is the only part of an experiment that can.
+
+---
+
 *Add new lessons above this line, most recent first is not required — group by theme as the
 log grows. A lesson earns an entry here when it changed a rule somewhere else in the repo
 (`PLAN.md`, `CLAUDE.md`, or a memory file) — if it didn't change a rule, it probably belongs

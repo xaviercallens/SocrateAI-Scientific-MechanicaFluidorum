@@ -61,6 +61,19 @@ the Millennium problem". The audit found that claim false as applied to the form
 the unreduced 3-D equations. The retraction is accepted in full, and the programme is
 re-targeted accordingly:
 
+- **A second, sharper limit on the pivot, established 2026-08-14** (`docs/designs/REGIME_MAP.md`).
+  The dyadic dissipation is `ν·k^{2α}`; the NSE viscous term is `νΔ`, whose Fourier symbol is
+  `−ν|k|²`. So **`α = 1` *is* the Navier–Stokes dissipation** — the same exponent, not an
+  analogy. Cheskidov proves global regularity for `α ≥ 1/2`, hence **the dyadic model at
+  Navier–Stokes dissipation is provably regular**, and the model's difficult regime
+  (`α < 1/2`) corresponds to dissipation *weaker* than NSE. A result in the open band
+  `[1/3, 1/2)` is therefore a result about **hypo-dissipative shell models** — live mathematics,
+  with `α = 1/3` carrying Cheskidov's 4-D NSE analogy — but **not a step toward 3-D
+  Navier–Stokes, and it may never be reported as one.**
+  **Owner decision, 2026-08-14:** this gap is to be treated as a *gap to close*, not a ceiling
+  to accept. The programme will pursue the bridge — the `ℤ³` embedding (OP-2) and the
+  instantiation of `B` (OP-6/D1). Both are `BLOCKED-ON-DEFINITION`; E-1 applies in full, so
+  progress there is `[top]` authoring plus human audit, never improvised implementation.
 - **The formal target is the truncated viscous Katz–Pavlović dyadic shell model** — a
   respected, active area of mathematical fluid mechanics in its own right (blow-up: Katz–
   Pavlović 2005, Cheskidov 2008; regularity under strong dissipation: Barbato–Morandin–Romito),

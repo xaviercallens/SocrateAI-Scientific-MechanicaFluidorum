@@ -1,5 +1,36 @@
 # OP-2-lite — candidate implementations of the Sym² lock in shell space
 
+> ## ⛔ MEASURED RESULT 2026-08-14 — the motivating signal does not exist
+>
+> The hypothesis behind OP-2-lite was that blow-up requires *breaking* Sym² structure, so that
+> enforcing the lock might prevent it. It was tested with the validated detector
+> (`exploration/sym2_signature_sweep.py`: 4 dissipation regimes × 3 profiles × 5 amplitudes,
+> conditioning guard on every point, detector controls re-run before reporting).
+>
+> `S` does rise from early to late in the blow-up regimes — the pre-registered test **passes**,
+> 2/3 profiles at `α=1/4` and 3/3 at `α=3/10`. **But it rises just as much at `α = 1`, where
+> global regularity is a theorem and blow-up is impossible:**
+>
+> | regime (profile P1) | `S_early` | `S_late` |
+> |---|---|---|
+> | `α=0.25` blow-up proven | 0.023 | 0.434 |
+> | `α=0.30` blow-up proven | 0.023 | 0.773 |
+> | `α=0.40` open band | 0.023 | 1.214 |
+> | **`α=1.00` regularity proven (= NSE dissipation)** | **0.023** | **0.924** |
+>
+> A quantity that behaves the same way where blow-up happens and where it provably cannot is
+> not a blow-up signature. The rise tracks the cascade filling out — early on, only one fit
+> window survives conditioning at all (`w=1` vs `w=3` late), so the two bins are not even
+> measuring the same thing. **The motivating measurement is dead.**
+>
+> **Methodological note, and the reason this is recorded rather than quietly dropped.** The
+> pre-registered criterion *passed*. What refuted the hypothesis was a comparison the
+> pre-registration did not name as decisive: the proven-regular regime used as a control.
+> Pre-registration protects against fitting the analysis to the data; it does **not** guarantee
+> the test is diagnostic. A pre-registered test still needs a control that can make it fail.
+>
+> Everything below is retained as the record of a line of work that was closed by measurement.
+
 **Status: Tier C authoring, AWAITING HUMAN AUDIT.** Under `PLAN.md` §6, authorship never
 unblocks a track — only audit does. Nothing here may be implemented, cited, or measured until a
 row below is marked AUDITED in `LEDGER.md`. This document is that audit's *input*.

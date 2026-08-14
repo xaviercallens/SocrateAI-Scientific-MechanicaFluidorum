@@ -359,6 +359,14 @@ positively. Rationale and the cached-build trap: `LL.md` LL-10.
   fit protocol, the mandatory O5 Euler trap and positive control. **AWAITING HUMAN AUDIT**;
   recommendation is to audit and run Candidate C first (its `γ=0` end is a control sharing all
   code with the measurement). Authored by the orchestrator, not delegated, per LL-5.
+- **BRIDGE TO NSE REOPENED (owner decision 2026-08-14).** The regime map established that even
+  a complete success in the dyadic open band would not be a step toward 3-D NSE
+  (`α = 1` is exactly NSE dissipation and is provably regular). The owner elected to pursue the
+  bridge rather than accept the ceiling. That means **OP-2** (Sym²-constrained spectrum on `𝕋³`)
+  and **OP-6/D1** (`ℤ³` reindexing + instantiation of `B`) return to the front of the queue.
+  Both remain `BLOCKED-ON-DEFINITION`: E-1 applies without exception, so the only sanctioned
+  work is `[top]` authoring of candidate definitions **for human audit** — authorship never
+  unblocks a track. No implementation may start from an unaudited definition.
 - **E-3 FILED 2026-08-14 — `α = 1` is a solved case** (`docs/escalations/2026-08-14-E3-target-is-a-solved-case.md`).
   Cheskidov proves global regularity for `α ≥ 1/2`; our dissipation `ν k_n²` gives `α = 1`.
   **This blocks the scientific rationale for both D6 and OP-2-lite as currently scoped** — an
