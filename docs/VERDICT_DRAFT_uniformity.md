@@ -1,5 +1,16 @@
 # DRAFT verdict — cutoff-uniformity of the dyadic enstrophy bound
 
+> ## ⚠ RECOMMENDATION CHANGED 2026-08-14 — DO NOT SIGN AS DRAFTED
+>
+> Reservation 3 below was tested and **confirmed as a blocking defect**, not a caution. Direct
+> measurement of shell amplitudes shows the cascade never populates the shells the grid varies:
+> the highest shell with `peak |a_n| > 1e-12` is **n=8** at `ν=0.01` and **n=10** at `ν=0.001`,
+> while the grid tests `N ∈ {8,12,16,20,24}`. The added shells are numerically **zero**, so
+> "flat in `N`" is close to a tautology and the bit-identical agreement is the signature of a
+> measurement with no power rather than of a strong result. See `LEDGER.md`'s correction block.
+> **The experiment must be redesigned (cutoffs *below* the dissipation shell) before any verdict
+> is meaningful.** §3's candidate text is retained only as a record of what was almost signed.
+
 **Status: DRAFT, prepared by the executing agent for the human owner. NOT a verdict.**
 Under `SPEC.md` §8 and `PLAN.md` §2, verdicts are issued by the human owner only; agents deliver
 data. This file exists so the owner edits or rejects a concrete paragraph rather than composing

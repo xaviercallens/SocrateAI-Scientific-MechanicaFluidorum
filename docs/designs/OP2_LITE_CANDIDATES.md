@@ -38,6 +38,40 @@ refuted.
 
 ---
 
+## 1b. A prediction the auditor should know BEFORE approving any run (added 2026-08-14)
+
+The constraint `a_{2n} = c·a_n²` is **not arbitrary — it is exactly Kolmogorov-compatible.**
+Under K41, `a_n ∼ k_n^{-1/3} = 2^{-n/3}`, hence
+
+```
+a_n²    ∼ 2^{-2n/3}
+a_{2n}  ∼ 2^{-(2n)/3} = 2^{-2n/3}      ← the same exponent
+```
+
+so a K41 cascade *already satisfies the Sym² relation*, with an O(1) constant. Measured on this
+programme's own shell runs (`ν=0.001`, profile P1, inertial range): peak amplitudes track
+`2^{-n/3}` to within 15–20% for `n = 2..6`, and `a_4 / a_2² ≈ 1.31`, i.e. `c ≈ 1.3`.
+
+**Why this must be settled before the experiment, not after.** It cuts both ways and determines
+what the measurement can possibly show:
+
+- **If the natural cascade already satisfies the constraint**, a penalty term (Candidate C) is
+  near-zero on physical states, and `β(γ)` will come out **flat — for a reason that has nothing
+  to do with the lock being powerless.** Reading that flatness as "the lock buys no exponent"
+  would be a false negative, and the pre-registered kill criterion in §3 would fire wrongly.
+- Conversely, the lock's real content cannot be in the mean inertial-range scaling, which it
+  reproduces by construction. It must be in the **deviations** — intermittent excursions where
+  `a_{2n}` departs from `c·a_n²`. That is precisely where finite-time blow-up would live in a
+  shell model, and precisely what a rigid algebraic constraint would suppress.
+
+**Consequence for the protocol.** The primary observable should not be the mean exponent
+`β(γ)` alone. It should include a measure of the *deviation* the lock actually acts on, e.g.
+`D(t) = max_n |a_{2n} − c·a_n²|` and its excursions, recorded at `γ = 0` (control) and under
+each candidate. **Recommend the auditor rule on this before any run is dispatched**, since it
+changes the kill criterion from "β flat ⇒ kill" to "β flat AND deviations unsuppressed ⇒ kill".
+
+---
+
 ## 2. The three candidates
 
 Notation: shells `n = 0..N`, wavenumbers `k_n = 2ⁿ`, amplitudes `a_n(t)`, the unmodified
