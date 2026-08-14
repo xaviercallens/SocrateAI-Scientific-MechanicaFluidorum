@@ -56,14 +56,27 @@ machine-checked on an instance.
     equations "split into the 2D Navier–Stokes equations for u₂D, while θ = u_z is passively
     advected". Continuum antecedent for the *plane-of-triads* observation: Moffatt, J. Fluid
     Mech. 741 (2014) R3 (cited by Biferale et al.; note itself unfetched, HTTP 500 — flag).
-  - **The upgrade the source check delivered:** Ponce–Racke–Sideris–Titi, *Global stability of
-    large solutions to the 3D Navier–Stokes equations*, Comm. Math. Phys. **159** (1994)
-    329–341 (fetched from Project Euclid). The 2D3C manifold is not merely invariant-and-regular:
-    **it has a published global-regularity neighbourhood** — 3-D solutions from data close to
-    2-D data are globally regular. So the lock buys an *open set* of regular initial data, not a
-    measure-zero slice. This coexists with the pilot's σ > 0: perturbations can grow (the
-    manifold need not be attractive) while regularity persists nearby (PRST's theorem). The
-    open question is thereby sharpened to **generic, far-from-planar data only**.
+  - **The neighbourhood theorem — scoped by a full read of the PDF (2026-08-15), which
+    NARROWS the first-pass claim.** Ponce–Racke–Sideris–Titi, *Global stability of large
+    solutions to the 3D Navier–Stokes equations*, Comm. Math. Phys. **159** (1994) 329–341
+    (PDF fetched from Project Euclid and read in full). What Theorem 1 actually gives: any
+    strong global reference solution with `∫₀^∞‖∇v‖⁴ dt < ∞` has an H¹-neighbourhood of
+    initial data (and forces) whose 3-D solutions are globally strong, with
+    `sup_t ‖u−v‖_{H¹} ≤ M(δ) → 0`. Three restrictions matter for us, all verbatim-checked:
+    (1) the smallness threshold is **Gronwall-exponential** — eq. (2.17) gives
+    `δ ≲ exp(−C·∫₀^∞‖∇v‖⁴)·(C₀/2C)^{1/2}` with C, C₀ never tracked in ν — so it is
+    **not quantitatively exploitable** against measured σ amplitudes without a full constant
+    re-derivation; (2) the 2-D application (Theorem 4) is for **pure 2-D two-component** flow
+    on ℝ² trivially extended (v₃ ≡ 0), unforced, with decay `v₀ ∈ Lᵖ(ℝ²), p < 2` — **not
+    2D3C and not the torus** (periodic solutions violate the required decay); (3) **no
+    periodic-T³ case is treated**, so our Galerkin setting is not covered verbatim — for T³
+    the successor literature (Gallay–Šverák, Chemin–Gallagher) would be the sources to check
+    [unverified]. What survives for OP-2′: the *concept* of a regularity neighbourhood around
+    near-2-D data is established in adjacent settings, and it coexists cleanly with the
+    pilot's σ > 0 (perturbations may grow while regularity persists nearby). What does NOT
+    survive: any claim that our specific 2D3C torus manifold has a *published* neighbourhood,
+    or any quantitative basin radius. The open question stays: generic, far-from-planar data
+    — now without a citable safety net on the near side for T³.
   - *The lattice/Galerkin form* (Fourier support in a 2-plane of ℤ³ invariant under the
     truncated, Leray-projected nonlinearity — this repo's K1, exact arithmetic) was **not found
     published in this form**: apparently a small new remark, with Moffatt 2014 / Biferale 2017
