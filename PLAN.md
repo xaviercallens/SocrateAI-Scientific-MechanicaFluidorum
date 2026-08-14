@@ -211,7 +211,7 @@ for fixed data and ν, is `sup_t Ω_N(t)` bounded *uniformly in N*?
 
 | ID | Missing object | Why agents must not improvise |
 |---|---|---|
-| OP-2 | The **Sym²-constrained spectrum** of the 𝕋³ flow (T1's counting set) | The lock is proven for scalar recurrences; its embedding into 3-D Fourier dynamics is open research. Any invented embedding would make T1's count meaningless. |
+| OP-2 | ~~The **Sym²-constrained spectrum** of the 𝕋³ flow (T1's counting set)~~ **KILLED 2026-08-14** — the draft radial embedding fails T1's own pre-registered kill criterion on measurement (permitted fraction rises to 0.525 at M=8; 99% of permitted triads are same-shell parity artifacts). T1 is closed with it. A viable successor must act on the **angular/vector** structure; the unconstrained triad-hypergraph baseline (`symbolic/triad_hypergraph.py`, gap ≈ 0.8334) is the reference any such candidate must beat. | The lock is proven for scalar recurrences; its embedding into 3-D Fourier dynamics is open research. Any invented embedding would make T1's count meaningless. |
 | OP-3 | **"Enstrophy echo"** as a formula in the truncated system (T2) | Landau-damping echoes are defined in Vlasov phase space; no NSE analogue exists in the literature. |
 | OP-4 | The **entropy functional h and reference state ū** (T3) | Choosing h *is* the mathematical content of the track. |
 | OP-5 | The **coupling of the percolation field to Sym²** (T4) | Without it, T4 measures generic percolation, which cannot beat CKN. |

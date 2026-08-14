@@ -1136,6 +1136,57 @@ invisible: the gate must re-elaborate with \texttt{lean} rather than rely on \te
 alone, because a \emph{cached} build target emits no axiom output at all --- which would make the
 footprint check silently vacuous rather than failing loudly.
 
+\section{Three Proposed Mechanisms, Killed by Measurement}
+\label{sec:killed}
+
+On 14~August 2026 the programme's central conjectural mechanism --- the Symmetric-Square lock ---
+was tested in three successive formulations. All three failed, each at a cost of hours rather
+than months, and each for a variant of the same reason.
+
+\begin{center}
+\small
+\begin{tabular}{@{}p{4.3cm}p{5.1cm}p{5.4cm}@{}}
+\toprule
+\textbf{Proposed mechanism} & \textbf{What it actually constrains} & \textbf{How it died} \\
+\midrule
+Pointwise, $a_{2n}=c\,a_n^2$ & the \emph{amplitude}; the spectral slope stays free & On paper: for any power law $a_n=Ar^n$ the ratio is $1/A$, independent of $r$. Blow-up is characterised by the slope. \\
+\addlinespace
+Recurrence signature, $c_2^3+c_1^3c_3=0$ & genuinely discriminating (controls separate by $10^{14}$) --- but nothing specific to blow-up & By measurement: $S$ rises from early to late in the blow-up regimes, \emph{and just as much at $\alpha=1$ where blow-up is provably impossible}. \\
+\addlinespace
+Radial embedding on $\Z^3$, shell indices $\{2i,i+j,2j\}$ & the \emph{parity} of the shell index & By counting, against a criterion fixed in advance: the permitted fraction \emph{rises} with $M$ ($0.019\to0.263\to0.525$), and at $M=8$, $99\%$ of permitted triads are same-shell. \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{keybox}{The common defect, and why it is worth naming}
+Each formulation carried the \emph{symbols} of the proven lock into a new setting while leaving
+free the quantity it was supposed to control. A translated constraint can look faithful,
+type-check, pass every gate, and constrain almost nothing. The cheap general test --- now a
+standing rule --- is to \textbf{compute the constraint's solution set in the new setting and
+check it is smaller than intended}: substitute the simplest family the setting supports and see
+whether the constraint restricts it.
+
+The third death is the most instructive, because the criterion it failed
+(\emph{``constrained count grows at the same order $\Rightarrow$ no depletion $\Rightarrow$ kill''})
+had been written into the specification \emph{before} the mechanism was proposed. The draft's
+own honesty clause had even anticipated the cause: a radial reduction discards the angular
+structure of $k$, which is where three-dimensional vortex stretching lives. Writing the kill
+criterion in advance is what turned a disappointment into a result.
+\end{keybox}
+
+\begin{keybox}{What was built in their place}
+The resonant-triad hypergraph --- vertices are Fourier modes, hyperedges are the resonances
+$k_1+k_2=k_3$ --- is \emph{definition-independent}: it is fixed by the Navier--Stokes
+nonlinearity itself and needs no blocked definition, so it could be built immediately. Its
+normalised-Laplacian spectral gap is stable at $\approx0.8334$ across $M=2,3,4$, apparently
+approaching $\approx 5/6$ (suggestive on three points, not established).
+
+The reading is a constraint on all future proposals: the triad structure is a \textbf{strong
+expander}, so no depletion is available for free, and any candidate lock must be shown to
+\emph{destroy} that expansion. The vague question ``does the locked sub-hypergraph have a
+spectral gap?'' now has a concrete number to beat.
+\end{keybox}
+
 \section{What Has Failed, and What That Taught}
 \label{sec:failures}
 %==============================================================================
