@@ -40,14 +40,35 @@ machine-checked on an instance.
 
 ## 3. Why this is the first translation with actual content
 
-- **It connects to a true theorem instead of a hoped-for estimate.** 2-D Navier–Stokes is
-  globally regular (classical; Ladyzhenskaya lineage), and z-independent "2.5-D" flows form an
-  invariant subspace of 3-D NSE on which vortex stretching vanishes. **[LL-6 flag: both facts
-  are textbook-level but MUST be source-verified with exact statements before entering SPEC —
-  in particular whether *every* plane sublattice, not just coordinate planes, yields an
-  invariant subspace of the truncated Galerkin system. For coordinate planes it is standard;
-  for tilted planes it should be checked by direct computation on `shellB`'s 3-D analogue, and
-  that check is part of Step 1 below.]**
+- **It connects to true theorems instead of hoped-for estimates — SOURCES VERIFIED 2026-08-14
+  (primary fetches; details and caveats below).**
+  - *2-D global regularity:* Fefferman's official Clay problem description states verbatim that
+    in two dimensions "the analogues of assertions (A) and (B) have been known for a long time
+    (Ladyzhenskaya [4])" — citable as O. Ladyzhenskaya, *The Mathematical Theory of Viscous
+    Incompressible Flow* (title **singular**; Fefferman's bibliography miswrites "Flows"), 2nd
+    ed., Gordon & Breach, 1969. Attribution nuance found in a fetched primary (Ponce–Racke–
+    Sideris–Titi 1994): 2-D global strong existence "was first established by **Leray**".
+    Lions–Prodi 1959 exists but is unverified at primary level — do not cite it bare.
+  - *Planar invariance:* the standard term is **2D3C** ("two-dimensional, three-component"),
+    not "2.5-D" — the latter also names a *different* class (u₃ linear in z, Lundgren/Gibbon)
+    in parts of the literature, so this memo now uses 2D3C throughout. Verified statement
+    (Biferale–Buzzicotti–Linkmann 2017, arXiv:1706.02371, fetched): for a 2D3C field the 3-D
+    equations "split into the 2D Navier–Stokes equations for u₂D, while θ = u_z is passively
+    advected". Continuum antecedent for the *plane-of-triads* observation: Moffatt, J. Fluid
+    Mech. 741 (2014) R3 (cited by Biferale et al.; note itself unfetched, HTTP 500 — flag).
+  - **The upgrade the source check delivered:** Ponce–Racke–Sideris–Titi, *Global stability of
+    large solutions to the 3D Navier–Stokes equations*, Comm. Math. Phys. **159** (1994)
+    329–341 (fetched from Project Euclid). The 2D3C manifold is not merely invariant-and-regular:
+    **it has a published global-regularity neighbourhood** — 3-D solutions from data close to
+    2-D data are globally regular. So the lock buys an *open set* of regular initial data, not a
+    measure-zero slice. This coexists with the pilot's σ > 0: perturbations can grow (the
+    manifold need not be attractive) while regularity persists nearby (PRST's theorem). The
+    open question is thereby sharpened to **generic, far-from-planar data only**.
+  - *The lattice/Galerkin form* (Fourier support in a 2-plane of ℤ³ invariant under the
+    truncated, Leray-projected nonlinearity — this repo's K1, exact arithmetic) was **not found
+    published in this form**: apparently a small new remark, with Moffatt 2014 / Biferale 2017
+    as continuum antecedents. Claim it carefully, as a lattice restatement, never as a new
+    mechanism.
 - **It explains all three deaths at once.** No depletion (planes are `D > 1`: the mechanism was
   never about triad counts — T1's frame was wrong, which is *why* T1 died); no dyadic shadow
   (a radial quotient of a planar confinement statement retains nothing — the plane's identity
@@ -90,9 +111,12 @@ a genuine discovery. Either outcome is a completed scientific result, per the ch
 ## 6. What this is NOT
 
 - Not a claim that 3-D NSE is regular, nor a step toward it for generic data unless K3 surprises.
-- Not new mathematics in its invariance half — 2.5-D invariance is classical **[verify + cite]**;
-  the candidate's novelty is only the *identification* of the Sym² closure with that manifold,
-  plus the attractivity question asked quantitatively in the truncated system.
+- Not new mathematics in its invariance half — 2D3C invariance is classical and now
+  source-verified (Biferale et al. 2017; PRST 1994); the candidate's novelty is only (i) the
+  *identification* of the Sym² closure with that manifold, (ii) its lattice/Galerkin
+  restatement (apparently unpublished as such), and (iii) the attractivity question asked
+  quantitatively in the truncated system — noting PRST 1994 already answers the *regularity*
+  question in a neighbourhood, which is stronger than anything σ alone could give there.
 - Not exempt from audit. This document is the audit's input, structured so the audit can kill it
   at K1 without any computation being run.
 
