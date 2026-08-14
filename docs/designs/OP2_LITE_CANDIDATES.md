@@ -38,6 +38,47 @@ refuted.
 
 ---
 
+## 1a-BIS. ⚠ A BLOCKING objection, found on paper 2026-08-14 — read before §1b
+
+**The shell-space constraint is blind to the spectral slope, which is the quantity blow-up is
+made of.**
+
+Take any pure power law `aₙ = A·rⁿ` (with `r = 2^{-θ}`, so `θ` is the spectral slope; K41 is
+`θ = 1/3`). Then
+
+```
+aₙ²  = A² r^{2n}          a₂ₙ = A r^{2n}          ⟹   a₂ₙ / aₙ²  =  1/A
+```
+
+The ratio is `1/A` — **constant in `n`, and independent of `r`, hence of `θ`.** Verified
+numerically across `θ ∈ {0.05, 0.10, 0.20, 1/3, 0.5}` and `A ∈ {1, 2}`: the ratio is exactly
+`1/A` in every case.
+
+**Consequence.** The functional equation `a₂ₙ = c·aₙ²` restricted to geometric sequences has as
+its solution set the *entire one-parameter family of power laws* with amplitude `A = 1/c`. It
+imposes **one** condition on a **two**-parameter family, and the parameter it fixes is the
+**amplitude**, not the slope.
+
+Finite-time blow-up in dyadic models is characterised by the *slope* — self-similar solutions
+`aₙ ∼ kₙ^{-θ}` with `θ` below a critical value, so that nonlinear transfer outruns dissipation.
+**A constraint that leaves `θ` entirely free cannot, at leading order, prevent such a blow-up.**
+It is satisfied identically along the whole blow-up family.
+
+**Honest limits of this objection.** It is a leading-order, self-similar argument, not a theorem:
+(i) real blow-up profiles carry corrections to pure power-law scaling, and the lock does act on
+those deviations; (ii) fixing the amplitude `A = 1/c` is not vacuous and could matter
+dynamically; (iii) the constraint is imposed at all `n` simultaneously, whereas the argument
+above checks a single family. So this does not *prove* the lock is inert — but it removes the
+mechanism by which it was hoped to work.
+
+**Recommendation to the auditor: treat this as a kill unless it can be answered.** The cheapest
+possible answer is analytic, not computational: exhibit a blow-up profile the constraint
+excludes, or show the constraint bounds `θ` from below. If neither can be produced, OP-2-lite
+should be killed on paper, at zero compute cost — which is the outcome the pre-registered
+protocol was designed to make possible.
+
+---
+
 ## 1b. A prediction the auditor should know BEFORE approving any run (added 2026-08-14)
 
 The constraint `a_{2n} = c·a_n²` is **not arbitrary — it is exactly Kolmogorov-compatible.**
