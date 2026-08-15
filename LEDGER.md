@@ -308,6 +308,38 @@ D1-scope reason as above. **Promotes
 to Tier A the identity that `tests/tier_b_nse_triad_convolution.py` (OP-6/D3) verified only
 computationally (`M=1,2,3`) and explicitly declined to claim as proven.**
 
+### `lean_src/DyadicRiccati.lean` — why the dyadic threshold is exactly `α = 1/2` (Tier A, 2026-08-15)
+
+**SCOPE, normative:** this is **not** a formalisation of Cheskidov's Theorem 4.4. It formalises
+the *reason its threshold is 1/2*, as a self-contained statement about exponents and
+integrability. It contains **no** bilinear estimate (an input, quoted from the source), **no**
+local existence, **no** Galerkin approximation and **no** limit passage — which is where the
+real cost of Thm 4.4 sits. Citing this file as "Thm 4.4 formalised" would be a D1-class
+overstatement of the kind the 2026-08-13 audit killed this programme's headline for.
+
+| Claim | Formal name | Since |
+|---|---|---|
+| Homogeneity `pExp + qExp = 3`; `2 − pExp = rhoExp`; `qExp = rhoExp + 1` (the collapse) | `pExp_add_qExp`, `two_sub_pExp`, `qExp_eq_rhoExp_add_one` | 2026-08-15 |
+| **Young absorption possible ⟺ `α > 1/3`** — the content of *local* regularity, and NOT the source of the 1/2 | `absorbable_iff` | 2026-08-15 |
+| Post-Young exponent `rExp α = (8α−2)/(3α−1)`, the source's displayed form | `rExp_eq`, `rhoExp_eq_div`, `rhoExp_ne_zero` | 2026-08-15 |
+| `sExp − 1 = 1/rhoExp`, hence `rhoExp = 1/(sExp−1)` — the identity behind the blow-up rate | `sExp_sub_one_eq_inv_rhoExp`, `rhoExp_eq_inv_sExp_sub_one` | 2026-08-15 |
+| The single use of `α ≥ 1/2`: `1 ≤ rhoExp α ⟺ 1/2 ≤ α`; and `0 < rhoExp α` for `α > 1/3` | `rhoExp_one_le_iff`, `rhoExp_pos` | 2026-08-15 |
+| Integrability half, **genuine measure theory** (Mathlib `integrableOn_Ioo_rpow_iff`): `x^(−ρ)` integrable on `Ioo 0 T` ⟺ `ρ < 1` | `rate_integrableOn_iff` | 2026-08-15 |
+| **THE THEOREM — the regularity threshold IS an integrability threshold**: the Riccati blow-up rate `(t*−t)^{−ρ(α)}` fails to be integrable ⟺ `α ≥ 1/2` | `blowupRate_not_integrable_iff` | 2026-08-15 |
+| **The barrier below 1/2, formalised**: the a priori exponent needed, `2/ρ(α)`, exceeds the `θ = 2` the energy inequality supplies ⟺ `α < 1/2` | `thetaStar_two_lt_iff` | 2026-08-15 |
+
+13 theorems, all footprints within the permitted axiom set (Gate 2 re-elaboration). Negative
+controls run on scratch perturbed copies before commit, all fail as required: NC1 perturbed
+rate `3 − 2/a` (9 errors), NC2 dropped `1/3 < a` from positivity (3 errors), NC3 weakened the
+main theorem's `1/2 ≤ a` to `1/3 < a` (1 error). Non-vacuity witnesses in-file: `ρ(1/2) = 1`
+(borderline), `ρ(2/5) = 1/2` (rate integrable, argument yields nothing), `rExp(2/5) = 6` and
+`rExp(1/2) = 4` reproducing the source's displayed `‖u‖⁶` and `‖u‖⁴`.
+
+**Why it matters for the real target.** The obstruction below `1/2` is now a Lean lemma about
+an integrability threshold rather than a folk remark, with exactly two doors enumerated: raise
+`θ`, or leave the Riccati route. Any `α < 1/2` proposal must name its door and its gain — the
+pre-registered screen the four dead Sym² translations lacked.
+
 ## Tier B — the Riccati exponent chain and the α<1/2 barrier, quantified (2026-08-15)
 
 Derivation memo (hand-derived first, LL-5): `docs/designs/ALPHA_HALF_FORMALISATION.md`.
