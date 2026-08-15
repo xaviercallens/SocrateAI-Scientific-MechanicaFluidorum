@@ -1187,6 +1187,94 @@ expander}, so no depletion is available for free, and any candidate lock must be
 spectral gap?'' now has a concrete number to beat.
 \end{keybox}
 
+\section{The Fourth Translation: Planar Confinement, and the Torus Theorem}
+\label{sec:op2prime}
+
+The post-mortem of the three deaths of \S\ref{sec:killed} produced a diagnosis rather than a
+fourth guess: all three translations searched for a \emph{scarcity} mechanism (fewer
+resonances, smaller exponents) while the proven lock is a \emph{closure} statement. Squaring a
+velocity field is the Sym$^2$ operation on its spectrum,
+$\mathrm{Sym}^2\{k_1,k_2\}=\{2k_1,\,k_1+k_2,\,2k_2\}$, and the closure of a mode pair under
+repeated triadic interaction stays in the 2-plane $\langle k_1,k_2\rangle$ --- computed
+exactly in this repository: six rounds, 2144 modes generated, zero outside the plane.
+
+\begin{keybox}{OP-2$'$: the lock's exact 3-D content is planar confinement}
+A flow whose spectrum lies in a 2-plane of $\Z^3$ is a \textbf{2D3C} flow (two-dimensional,
+three-component --- the standard term; ``2.5-D'' also names a different class in parts of the
+literature). The 3-D equations then split into 2-D Navier--Stokes plus a passively advected
+scalar (Biferale--Buzzicotti--Linkmann, arXiv:1706.02371, quoted verbatim in the design memo),
+and 2-D regularity is classical (Ladyzhenskaya; attribution to Leray for global strong
+existence, per Ponce--Racke--Sideris--Titi). \textbf{K1, verified in exact arithmetic}: a field
+supported on the \emph{tilted} plane $\langle(1,0,0),(0,1,2)\rangle$ has $N(u)=0$ on all 322
+out-of-plane modes under the Leray-projected truncated nonlinearity; the negative control (a
+generic field) leaks on all 322. The lattice/Galerkin form of this invariance was not found
+published as such; the continuum antecedents are Moffatt (J.~Fluid Mech.~741 (2014) R3, cited
+by Biferale et al., itself unfetched) and Biferale et al.\ 2017. This candidate, unlike its
+three dead predecessors, was screened \emph{before} authoring: the LL-11 vacuity test passes
+(plane sublattices are a measure-zero subfamily), and the depletion screen scores planes at
+$D=1.87>1$ --- the mechanism was never about triad counts.
+\end{keybox}
+
+\subsection{The attractivity experiment ($\sigma$), and a trap caught by its null model}
+
+The honest research question OP-2$'$ produces is dynamical: \emph{is the planar-locked
+manifold attractive, neutral, or repulsive under the truncated 3-D Galerkin flow?} The
+expected answer --- repulsive, by the classical instability of 2-D flows in 3-D --- is
+pre-registered as the null, with a theorem-backed positive control (exactly planar data must
+stay exactly planar; measured at literal $0.00$ out-of-plane energy) and a negative control
+(generic data must show $O(1)$ out-of-plane fraction; measured $0.62$--$0.74$). The pilot
+measured $\sigma=+0.57$ to $+1.04$: repulsive, $\varepsilon$-independent, faster at lower
+viscosity.
+
+The full experiment ($M=3$, coordinate \emph{and} tilted planes, exact rational grid-adequacy
+stamps) produced one line that exercised the programme's discipline: at $\nu=1/2$ the measured
+$\sigma$ was \emph{negative} ($-0.265$) --- the pre-registered ``candidate discovery'' branch.
+Before interpretation, the obvious null model was computed in closed form: under pure linear
+decay $u_k(t)=u_k(0)e^{-\nu|k|^2t}$, the out-of-plane fraction \emph{already} drifts at
+$\sigma_{\mathrm{lin}}=-0.305$, because the out-of-plane modes carry a higher energy-weighted
+$\langle|k|^2\rangle$ than the in-plane modes ($6.26$ vs $4.95$). The measured excess
+$\sigma-\sigma_{\mathrm{lin}}=+0.04>0$: the nonlinearity pushes \emph{out} of the plane even
+there, and the negative sign was spectral bookkeeping. The most seductive artifact is the one
+that would have announced a discovery; it was caught by the same rule (LL-14/LL-15: every
+measurement needs the null model computed \emph{before} the number is allowed to mean
+anything) that caught its predecessor, which had confirmed a hypothesis instead.
+
+\subsection{The neighbourhood theorem, scoped by a full read}
+
+A first-pass source check reported that the 2D3C manifold has a published global-regularity
+neighbourhood (Ponce--Racke--Sideris--Titi, Comm.~Math.~Phys.~\textbf{159} (1994) 329--341).
+A full read of the fetched PDF \emph{narrowed} this claim, and the correction is recorded with
+the same prominence as the claim: the smallness threshold is Gronwall-exponential
+($\delta\lesssim\exp\{-C\int_0^\infty\|\nabla v\|^4\}$, eq.~(2.17), constants never tracked in
+$\nu$), hence not quantitatively exploitable against measured $\sigma$ amplitudes; the 2-D
+application (their Theorem~4) is pure two-component 2-D on $\R^2$, unforced, with a decay
+hypothesis periodic solutions violate --- \emph{not} 2D3C and \emph{not} the torus; and no
+periodic-$T^3$ case is treated. What survives is the concept --- a regularity neighbourhood
+around near-2-D data in adjacent settings, coexisting cleanly with $\sigma>0$ --- not a
+citable safety net for the Galerkin torus.
+
+\subsection{The torus theorem (\tA{}) and the $5/6$ ball conjecture}
+
+While screening OP-2$'$, the unconstrained resonant-triad 2-section was solved exactly on the
+torus, and this became the programme's first \tA{} result about the genuine $\Z^3$-type
+resonance structure (\texttt{TriadTorus.lean}, 7 theorems, clean footprints; derivation memo
+written and hand-verified first, per LL-5). For any finite additive abelian group $G$,
+$\Lambda=G\setminus\{0\}$, counting (triad, slot-pair) \emph{incidences} --- the choice that
+absorbs the $(u,u,2u)$ degeneracy with no genericity hypothesis:
+\[
+A(u,v) \;=\; 6 - 2\cdot[\,u+v=0\,] \qquad\text{i.e.}\qquad A \;=\; 6(J-I) - 2P,
+\]
+with $P$ the mode-reversal involution. Spectral corollary (as kernel-verified sum identities):
+degree $6n-8$; zero-sum even vectors are eigenvectors with eigenvalue $-8$, odd vectors $-4$;
+normalised spectrum $\{1,\,-4/(6n-8),\,-8/(6n-8)\}$, so \textbf{the torus spectral gap tends
+to~1}. The measured ball-truncation gap $\approx5/6$ is therefore a \emph{pure boundary
+invariant} of the sphere cutoff --- an explicitly separated, still-open conjecture
+(second eigenvalue $1/6$ of the kernel $2\cdot\mathbf{1}_B(x+y)+4\cdot\mathbf{1}_B(x-y)$ on
+the unit ball). The measured deviations from $5/6$ fall monotonically:
+$1.7\times10^{-3}$, $2.4\times10^{-4}$, $8.6\times10^{-5}$, $5.9\times10^{-5}$ at $M=2..5$,
+and $2.5\times10^{-5}$ at $M=6$ ($924$ modes, $398{,}190$ triads) --- six points, still \tC{}
+evidence for a conjecture, not a result.
+
 \section{What Has Failed, and What That Taught}
 \label{sec:failures}
 %==============================================================================
@@ -1240,31 +1328,31 @@ LL-8 & \textbf{The verification gate itself had a false positive.} A lemma prove
 \midrule
 \texttt{CallensDualScale.lean} & T-dual $\Reff$ laws, Sym$^2$ lock, sharpness & \tA{} & 14 \\
 \texttt{DyadicShells.lean} & Energy-flux telescoping, monotonicity & \tA{} & 3 \\
-\texttt{DyadicShell\_Statements.lean} & Shell-model Hypothesis U; concrete \texttt{shellB} & \tA{} & 13 \\
+\texttt{DyadicShell\_Statements.lean} & Shell-model Hypothesis U; concrete \texttt{shellB} & \tA{} & 16 \\
  & \quad and its energy conservation (\textsc{draft}) & & \\
 \texttt{EnstrophyProduction.lean} & Exact enstrophy-production identity & \tA{} & 11 \\
 \texttt{EnstrophyProductionBound.lean} & Local bound $S_N^2\le2\Omega_N^3$ & \tA{} & 15 \\
 \texttt{AbstractAlgebraicConservation.lean} & Abstract triad conservation + transversality & \tA{} & 7 \\
+\texttt{TriadTorus.lean} & Triad 2-section on a torus: $A=6(J{-}I)-2P$, spectrum & \tA{} & 7 \\
 \midrule
-\multicolumn{2}{@{}l}{\textbf{Tier A subtotal}} & & \textbf{63} \\
+\multicolumn{2}{@{}l}{\textbf{Tier A subtotal}} & & \textbf{73} \\
 \midrule
 \texttt{MillenniumReduction.lean} & Conditional reduction skeleton & \tC{} & 7 \\
  & \quad (\textsc{demoted} 2026-08-13, verdict B1) & & \\
 \midrule
-\multicolumn{2}{@{}l}{\textbf{Total kernel-compiled, no axiom outside \texttt{\{propext, Classical.choice, Quot.sound\}}}} & & \textbf{72} \\
+\multicolumn{2}{@{}l}{\textbf{Total kernel-compiled, no axiom outside \texttt{\{propext, Classical.choice, Quot.sound\}}}} & & \textbf{80} \\
 \bottomrule
 \end{tabular}
 \end{center}
 
-All 72 theorems compile with clean axiom footprints; the demoted 7 remain wired into Gate~2 so
+All 80 theorems compile with clean axiom footprints; the demoted 7 remain wired into Gate~2 so
 that they cannot silently rot, but they carry \tC{} claims and may not be cited as established.
-The two new rows relative to the previous report are
-\texttt{DyadicShell\_Statements.lean}'s concrete nonlinearity block (\texttt{shellB},
-\texttt{shellB\_zero}, \texttt{sum\_mul\_shellB}, \texttt{shellB\_energy\_conservation},
-\texttt{galerkin\_shellB\_conservation}, and the headline definition
-\texttt{DyadicShellHypothesisU}). Six Tier B harnesses are wired into Gate~1, each with a
-negative control demonstrated to fail. All gates pass at commit \texttt{a35cb92}+, re-run
-independently for this report.
+The newest row is \texttt{TriadTorus.lean} (\S\ref{sec:op2prime}): the torus 2-section solved
+exactly, with its three negative controls run against scratch perturbed copies before commit
+(dropping $u\neq v$, dropping no-2-torsion, perturbing $-8$ to $-6$: each fails to compile, as
+required). Eight Tier B harnesses are wired into Gate~1, each with a negative control
+demonstrated to fail. All gates pass at commit \texttt{b4d0ac0}+, re-run independently for
+this report.
 
 \subsection{What is genuinely established}
 
