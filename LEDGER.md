@@ -308,6 +308,26 @@ D1-scope reason as above. **Promotes
 to Tier A the identity that `tests/tier_b_nse_triad_convolution.py` (OP-6/D3) verified only
 computationally (`M=1,2,3`) and explicitly declined to claim as proven.**
 
+## Tier B — the Riccati exponent chain and the α<1/2 barrier, quantified (2026-08-15)
+
+Derivation memo (hand-derived first, LL-5): `docs/designs/ALPHA_HALF_FORMALISATION.md`.
+Harness: `tests/tier_b_riccati_exponents.py` (Gate 1; exact `Fraction`s, negative control on a
+perturbed rate exponent demonstrated to fire).
+
+| Claim | Status | Evidence |
+|---|---|---|
+| The derived exponent chain **reproduces Cheskidov's own displayed formulas**: `r(α) = (8α−2)/(3α−1)`, `r(1/2)=4`, `r(2/5)=6`, `p(1/3)=2`, `p(2/5)=q(2/5)=3/2` | **Tier B** (exact rationals against four independent source displays) | harness anchors |
+| Young absorption possible **iff `α > 1/3`** (the content of Cheskidov's *local* Thm 4.3 — and *not* where the 1/2 comes from) | Tier B | ibid. |
+| Riccati blow-up rate `y ≥ c(t*−t)^{−ρ}` with **`ρ(α) = 3 − 1/α`** (derived; reproduces the paper's `c/(t*−t)` at `α=1/2`) | Tier B (algebra) | ibid. |
+| **The threshold, explained**: the energy inequality supplies `‖u‖² ∈ L¹_loc`, so blow-up is refuted iff the rate is non-integrable, iff `ρ ≥ 1`, **iff `α ≥ 1/2`** — the constant is an integrability threshold, not a technical artifact | **Tier B** | exact characterisation, flips precisely at 1/2 |
+| **The barrier below 1/2, quantified**: refuting blow-up needs `‖u‖^θ ∈ L¹_loc` with `θ ≥ θ*(α) = 2/(3−1/α)`; energy supplies exactly `θ = 2`, and `θ*(α) > 2 ⟺ α < 1/2`. At `α=2/5` one needs `θ=4`; at `α=7/20`, `θ=14` | **Tier B** | ibid. |
+
+**Consequence for the programme.** The obstruction is a single scalar deficit with exactly two
+doors: raise `θ`, or avoid the Riccati route entirely. Any future `α < 1/2` proposal must name
+which door it takes and by how much (LL-15 pre-registration). Lean target and its honesty
+clause — Steps 1–4 deliver the *continuation* half only, **not** Galerkin existence — are
+specified in the memo §4; **not started, awaiting owner go.**
+
 ## Tier B — the ball 2-section closed form and the linear eigenfunction (2026-08-15)
 
 Derivation memo (hand-derived first, LL-5/LL-7): `docs/designs/BALL_SPECTRAL_PROBLEM.md`.
