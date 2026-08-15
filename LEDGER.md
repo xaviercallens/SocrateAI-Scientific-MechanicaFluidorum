@@ -279,6 +279,19 @@ D1-scope reason as above. **Promotes
 to Tier A the identity that `tests/tier_b_nse_triad_convolution.py` (OP-6/D3) verified only
 computationally (`M=1,2,3`) and explicitly declined to claim as proven.**
 
+## Tier C — OP-2′ attractivity experiment K3 (run 2026-08-15; verdict pending owner)
+
+| Item | Result | Artifact |
+|---|---|---|
+| K3 σ measurement, M=3, planes z=0 and ⟨(1,0,0),(0,1,2)⟩ | Raw σ: −0.265/+1.230/+2.609 (z=0; ν=1/2, 1/10, 1/50) and −0.310/+0.586/+2.055 (tilted); ε-independent; Zmax/Z0 = 1.00 throughout; K2 positive control at literal 0.00e+00 on both planes, negative controls 0.739/0.886 | `exploration/sigma_planar_full.py` |
+| Linear null model (closed form, same seed/window/estimator) | σ_lin = −0.305/−0.392/−0.067 (z=0), −0.317/−0.164/−0.018 (tilted): the ν=1/2 negative raw σ is the linear spectral artifact (⟨k²⟩_out 6.26 vs ⟨k²⟩_in 4.95); **excess σ−σ_lin positive everywhere** (+0.040 … +2.676), the tilted ν=1/2 excess +0.007 at noise level | `exploration/sigma_linear_baseline.py` |
+| Grid adequacy stamps | Exact ν³M⁴ ≥ 1: adequate only at ν=1/2; ν=1/10, 1/50 rows labelled NO (sphere-radius adaptation of `tier_b_grid_adequacy`, recorded as an adaptation) | same file |
+
+**Status: pre-registered K3 kill criterion (σ > 0 everywhere for generic data) is met on its
+face after artifact correction; the verdict is the owner's to sign (SPEC §8), not this row's
+to assert.** The near-discovery at ν=1/2 (raw σ < 0) was caught as a linear artifact by the
+null model *before* interpretation — LL-14/LL-15 discipline working as designed.
+
 **How it closed, recorded because the earlier attempt failed:** the Tier B harness's docstring
 records that a direct *three-way* relabeling argument (cycling `p→q→r`) did not close. It does
 not need to — the cancellation is **two-way and termwise**: pairing `(p,q,r)` with `(p,r,q)`
