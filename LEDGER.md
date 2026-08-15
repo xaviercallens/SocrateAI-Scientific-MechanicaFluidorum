@@ -279,6 +279,28 @@ D1-scope reason as above. **Promotes
 to Tier A the identity that `tests/tier_b_nse_triad_convolution.py` (OP-6/D3) verified only
 computationally (`M=1,2,3`) and explicitly declined to claim as proven.**
 
+## Tier B — the ball 2-section closed form and the linear eigenfunction (2026-08-15)
+
+Derivation memo (hand-derived first, LL-5/LL-7): `docs/designs/BALL_SPECTRAL_PROBLEM.md`.
+Harness: `tests/tier_b_ball_2section.py` (Gate 1; exact integers/Fractions, three negative
+controls all demonstrated to fire: swapped coefficients 9714 mismatches, non-linear odd
+`u₁³` 94, even `u₁²` 122).
+
+| Claim | Status | Evidence |
+|---|---|---|
+| **Exact ball weight**: for distinct `u,v ∈ Λ_M`, `A_M(u,v) = 2·[u+v ∈ Λ_M] + 4·[u−v ∈ Λ_M]` — the boundary analogue of `TriadTorus.A_eq`, which it specialises to when every nonzero sum stays in the index set | **Tier B** (exact, vs an independently built 2-section that does not know the formula) | M=2,3,4: 81 034 ordered pairs, 0 mismatches |
+| **Continuum kernel is derived, not conjectured**: rescaling `x=u/M` turns the two conditions into `x±y ∈ B`, giving `K(x,y) = 2·1_B(x+y) + 4·1_B(x−y)` | Tier B consequence of the above | same |
+| **Sector splitting**: `A_M` commutes with `u ↦ −u`; even sector acts as `6C`, odd as `2C` (`C` = kernel `[u−v ∈ Λ_M]`), modulo an `O(n)` diagonal defect that vanishes in the limit and explains the approach to 5/6 from above | Tier B (algebraic) / Tier C (the eigenvalue measurement) | `exploration/ball_sector_split.py` |
+| **The odd sector carries μ₂** — even#2 stays clear below and is non-monotone; odd#1 rises monotonically to 1/6 (0.166425, 0.166581, 0.166608, 0.166641 at M=3..6). Positive control: even#1 = 1.000000 exactly | Tier C (floats) | ibid. |
+| **The linear eigenfunction (exact, every M)**: for `h(u)=⟨u,e⟩`, `(Ch)(u) = ½·V(u)·h(u)` pointwise, by the involution `v ↦ u−v` on `W(u)` | **Tier B** (exact rationals, pointwise at every mode) | M=3,4,5, two independent functionals, 0 mismatches |
+| **⟹ half the 5/6 conjecture is proved**: the odd Rayleigh quotient attains exactly ½, so `μ₂ ≥ 1/6` and the continuum gap is **≤ 5/6**, with an explicit witness | **Tier B** | measured `R[h] = 0.500000` at M=4,5,6 vs 0.454 (`u₁/|u|`) and 0.379 (`sign u₁`) — the value is specific to linearity |
+
+**What remains open** (the entire residue of "5/6"): that `½` is the *largest* odd generalised
+eigenvalue, i.e. `ν₁^odd = 1/12`, `μ₂ = 1/6`, gap → exactly 5/6. Seven-point Tier C support
+(deviations 1.7e-3 → 1.5e-5 over M=2..7, strictly monotone). Attack plan in the memo §5
+(spherical-harmonic block-diagonalisation, then exact rational Rayleigh upper bounds per
+block); **not started — awaiting owner go.**
+
 ## Tier C — OP-2′ attractivity experiment K3 (run 2026-08-15; verdict pending owner)
 
 | Item | Result | Artifact |
