@@ -50,8 +50,37 @@ not an implicit claim.
 > be described that way. The Tier A algebraic identities are unaffected — they are exact
 > identities, independent of regime.
 >
-> The live band is `1/3 ≤ α < 1/2`, with `α = 1/3` matching 4-D NSE nonlinear estimates.
-> Changing `α` is a statement-level decision (E-4) and is the owner's.
+> ~~The live band is `1/3 ≤ α < 1/2`~~ — **CORRECTED 2026-08-15, escalation E-3b**
+> (`docs/escalations/2026-08-15-E3b-band-is-narrower.md`): this statement was **wrong**, in two
+> ways, both established from PDFs read in full.
+>
+> 1. **The upper half was closed in 2011.** Barbato–Morandin–Romito, *Nonlinearity* **24**
+>    (2011) 3083–3097, Thm A: global regularity (with *uniqueness* and smoothness, from `ℓ²`
+>    data) for `β ∈ (2, 5/2]`, i.e. **`α ∈ [2/5, 1/2)`**, for **positive** initial data. The
+>    field's own survey (Cheskidov–Dai–Friedlander, arXiv:2209.10203) states verbatim that this
+>    "settles that solutions to the dyadic model corresponding to the 3D NSE are globally
+>    regular".
+> 2. **Both bounding theorems assume positivity**, so there are *two* bands. Cheskidov's
+>    blow-up theorem (Thm 5.3) needs `u_n(0) ≥ 0` **and large data**; BMR needs `x_n ≥ 0`;
+>    Cheskidov's regularity theorem (Thm 4.4, `α ≥ 1/2`) needs neither.
+>
+> | data class | blow-up | regularity | genuinely OPEN |
+> |---|---|---|---|
+> | positive | `α < 1/3`, large data | **`α ≥ 2/5`** | **`[1/3, 2/5)`** |
+> | sign-changing | *nowhere* | `α ≥ 1/2` | **`(0, 1/2)`** |
+>
+> With `d = 5 − 2/α`, the residual positive-data band is `d ∈ [−1, 0)` — **outside** the
+> physically relevant intermittency range `d ∈ [0,3]`. **The room is in sign-changing data**,
+> where nothing is proven below `1/2` in either direction.
+>
+> `tests/tier_b_regime_adequacy.py` had encoded the wrong band — and its own *positive control*
+> asserted `α = 2/5` is OPEN, which is exactly BMR's endpoint. Corrected: `classify` now takes
+> the data class, and a **regression control** asserts `classify(2/5, "positive") ==
+> PROVEN_REGULAR` so the error cannot return. Lesson (see `LL.md`): controls test code against
+> the thresholds you believe; only re-reading the primary source tests the belief — and LL-6
+> had been applied to this very paper, but only to its abstract, which does not carry the range.
+>
+> Changing `α` remains a statement-level decision (E-4) and is the owner's.
 
 ## Tier A — kernel-verified (zero sorry; no axiom outside {propext, Classical.choice, Quot.sound} — membership test, see SPEC §5.1 / LL-8)
 
@@ -367,7 +396,7 @@ confirmed to fail with `sorryAx` or a type error.
 | **Dyadic enstrophy-production identity** (mirrors `EnstrophyProduction.lean` above): `Σk_n²a_nNL_n = 3Σ_{n<N}k_n³a_n²a_{n+1}` for `k_n=2^n`, 240 exact cases; negative control (`k_n=n+1`, non-doubling) fails; bonus confirms general formula (ratio `r`, coeff `r²−1`) at `r=3` | P1 | `tests/tier_b_enstrophy_production.py` |
 | Rational IMEX-Euler discretization of the truncated dyadic shell model, negative control (perturbed influx term) fails as required — **instrument verified; the intended cutoff-uniformity measurement was NOT obtained; DEMOTED to Tier C, see decision below** | D5 | `symbolic/dyadic_imex.py`, `data/dyadic_omega_sup_imex.csv` (sha256 `8844dd2e…3580128`) |
 | **Experiment-grid adequacy** (exact integers, no floats/logs): a cutoff is at/above the dissipation scale iff `2^(4N)·p³ ≥ q³` for `ν=p/q`. Negative control is the programme's OWN historical grid — **0 of 15 configurations had a biting cutoff**; positive control is a cutoff-biting grid | Gate 1b-adj | `tests/tier_b_grid_adequacy.py` |
-| **Dissipation-regime adequacy** (exact rationals): classifies `α` into PROVEN_BLOWUP (`<1/3`) / OPEN (`[1/3,1/2)`) / PROVEN_REGULAR (`≥1/2`) per Cheskidov. Negative control is the programme's OWN `α=1`, correctly refused as a discovery regime (E-3); positive control `α=2/5` accepted. Boundary anchors at 1/4, 1/3, 2/5, 1/2, 1 | E-3 | `tests/tier_b_regime_adequacy.py` |
+| **Dissipation-regime adequacy** (exact rationals), **corrected 2026-08-15 per E-3b**: `classify(α, data)` over two data classes — positive (`blow-up <1/3` large data / OPEN `[1/3,2/5)` / PROVEN_REGULAR `≥2/5`, BMR) and sign-changing (OPEN below `1/2` / PROVEN_REGULAR `≥1/2`, Cheskidov). Negative control is the programme's OWN `α=1`, refused in both classes; positive control `α=7/20`; **regression control `classify(2/5,'positive') = PROVEN_REGULAR`** — the anchor the previous version got wrong. Anchors at 1/4, 1/3, 7/20, 2/5, 1/2, 1 in both classes | E-3 | `tests/tier_b_regime_adequacy.py` |
 | **Fourier-Galerkin NSE nonlinearity, two structural identities** (transversality `k·N(û)_k=0`, unconditional; detailed energy conservation `Σ_k conj(û_k)·N(û)_k=0`, given divergence-free + conjugate-symmetric input), exact Gaussian-rational arithmetic, `M∈{1,2,3}` (`|Λ|`=26,124,342); two negative controls (drop Leray projection; break divergence-free on one mode) each confirmed to fail exactly one fact and leave the other intact, matching the hand derivation. **Caught and corrected a genuine formula erratum in the process** (the web-search-sourced formula in `docs/designs/B_INSTANTIATION_SCOPING.md` was identically zero; corrected same day) — recorded honestly in both the harness's own docstring and the design memo. Fact 2's general triad identity is verified computationally here, not yet proven symbolically. | OP-6/D3 | `tests/tier_b_nse_triad_convolution.py` |
 
 **Human-owner decision on `docs/escalations/2026-08-12-D5-digit-blowup.md`, recorded 2026-08-12

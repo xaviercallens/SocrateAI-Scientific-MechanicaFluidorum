@@ -66,10 +66,18 @@ re-targeted accordingly:
   `−ν|k|²`. So **`α = 1` *is* the Navier–Stokes dissipation** — the same exponent, not an
   analogy. Cheskidov proves global regularity for `α ≥ 1/2`, hence **the dyadic model at
   Navier–Stokes dissipation is provably regular**, and the model's difficult regime
-  (`α < 1/2`) corresponds to dissipation *weaker* than NSE. A result in the open band
-  `[1/3, 1/2)` is therefore a result about **hypo-dissipative shell models** — live mathematics,
-  with `α = 1/3` carrying Cheskidov's 4-D NSE analogy — but **not a step toward 3-D
-  Navier–Stokes, and it may never be reported as one.**
+  (`α < 1/2`) corresponds to dissipation *weaker* than NSE. A result below `α = 1` is therefore
+  a result about **hypo-dissipative shell models** — live mathematics — but **not a step toward
+  3-D Navier–Stokes, and it may never be reported as one.**
+  **CORRECTION 2026-08-15 (E-3b, `docs/escalations/2026-08-15-E3b-band-is-narrower.md`): the
+  open band is NOT `[1/3, 1/2)`.** Barbato–Morandin–Romito (*Nonlinearity* **24** (2011)
+  3083–3097, Thm A) closed `α ∈ [2/5, 1/2)` for **positive** data in 2011, with uniqueness and
+  smoothness. And *both* bounding theorems (that one, and Cheskidov's blow-up Thm 5.3) assume
+  positivity, so the correct statement is two-fold: for **positive** data the open band is
+  `[1/3, 2/5)`, which sits at intermittency dimension `d ∈ [−1, 0)`, *outside* the physically
+  relevant range and which the field's own survey describes as settling the 3-D-relevant case;
+  for **sign-changing** data nothing is proven below `α = 1/2` in either direction, and that is
+  where the genuine room is. Any α-claim in this repository must name its data class.
   **Owner decision, 2026-08-14:** this gap is to be treated as a *gap to close*, not a ceiling
   to accept. The programme will pursue the bridge — the `ℤ³` embedding (OP-2) and the
   instantiation of `B` (OP-6/D1). Both are `BLOCKED-ON-DEFINITION`; E-1 applies in full, so

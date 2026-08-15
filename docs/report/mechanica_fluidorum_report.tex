@@ -1067,10 +1067,33 @@ regularity for $\alpha\ge1/2$. Therefore:
 \end{center}
 
 The model's difficult regime, $\alpha<1/2$, corresponds to dissipation \emph{weaker} than
-Navier--Stokes. A result in the open band $[1/3,1/2)$ is a result about \emph{hypo-dissipative}
-shell models. That is live mathematics --- the band is open, and Cheskidov singles out
-$\alpha=1/3$ as carrying the same nonlinear estimates as 4-D Navier--Stokes --- but it is
+Navier--Stokes. A result below $\alpha=1$ is a result about \emph{hypo-dissipative}
+shell models. That is live mathematics --- Cheskidov singles out $\alpha=1/3$ as carrying the
+same nonlinear estimates as 4-D Navier--Stokes --- but it is
 \textbf{not a step toward 3-D Navier--Stokes and must never be reported as one}.
+
+\begin{keybox}{Correction (E-3b, 15~August 2026): the band is narrower, and there are two of them}
+Source verification commissioned before opening this track found this report's own statement of
+the band to be wrong. \textbf{Barbato--Morandin--Romito} (\emph{Nonlinearity} \textbf{24}
+(2011) 3083--3097, Thm~A) closed $\alpha\in[2/5,1/2)$ in 2011 --- with \emph{uniqueness} and
+smoothness, from mere $\ell^2$ data --- for \textbf{positive} initial data. And \emph{both}
+bounding theorems assume positivity (the blow-up theorem additionally needs \emph{large} data),
+so there are two bands, not one: for positive data the open region is $[1/3,2/5)$; for
+sign-changing data \emph{nothing} is proven below $1/2$ in either direction. With intermittency
+dimension $d=5-2/\alpha$, the residual positive-data band sits at $d\in[-1,0)$, outside the
+physically relevant range --- and the field's own survey (Cheskidov--Dai--Friedlander) states
+verbatim that BMR ``settles that solutions to the dyadic model corresponding to the 3D NSE are
+globally regular''. \textbf{The genuine room is sign-changing data.}
+
+The failure mode is worth more than the correction. The Tier~B gate encoding these thresholds
+had \emph{both} controls, and both fired --- but its positive-control anchor asserted that
+$\alpha=2/5$ is open, which is precisely BMR's endpoint. A control tests the code against the
+premise you believe; it cannot test the belief. And LL-6 had already been applied to this very
+paper --- to its \emph{abstract}, which does not carry the $\beta$ range. New rule (LL-16): a
+numerical threshold taken from the literature must be sourced to the \emph{theorem statement}
+with its hypotheses, and a correction ships with a regression control pinning the value that
+was wrong.
+\end{keybox}
 
 An unplanned consistency check fell out of the same calculation. The K41 balance
 $\nu k^{2\alpha}\sim k\,a_k$ with $a_k\sim k^{-1/3}$ gives a dissipation scale

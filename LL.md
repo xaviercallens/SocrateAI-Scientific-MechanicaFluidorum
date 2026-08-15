@@ -507,3 +507,35 @@ design could have produced a negative. The control is the only part of an experi
 log grows. A lesson earns an entry here when it changed a rule somewhere else in the repo
 (`PLAN.md`, `CLAUDE.md`, or a memory file) — if it didn't change a rule, it probably belongs
 in an escalation file or a design memo instead, not here.*
+
+## LL-16 — a control can only test the code against the premise you believe (2026-08-15)
+
+**Incident.** `tests/tier_b_regime_adequacy.py` classified the dyadic dissipation degree `α`
+into PROVEN_BLOWUP / OPEN / PROVEN_REGULAR, and had **both** controls: a negative one (the
+programme's own `α = 1` must be refused as a discovery regime) and a positive one
+(`α = 2/5` must be accepted as open). Both fired; the gate passed on every run for a day.
+
+The positive-control anchor was **false**. `α = 2/5` is exactly the endpoint Barbato–Morandin–
+Romito closed in 2011 (*Nonlinearity* **24**, Thm A: `β ∈ (2, 5/2] ⟺ α ∈ [2/5, 1/2)`, positive
+data). The gate was confidently returning a wrong verdict, and the wrongness lived **inside the
+control that existed to prove the gate meaningful**. A second error compounded it: both the
+blow-up theorem and BMR's regularity theorem assume *positive* initial data, so there is not
+one band but two, and the repository had collapsed them into one.
+
+**Why LL-12/LL-15 could not catch it.** Those rules make a checker demonstrate that it *can*
+fail. This checker could fail — it just could not fail *in the direction of a mis-stated
+premise*, because controls test code against believed thresholds, and the belief was the
+defect. No amount of control discipline reaches a wrong literature claim.
+
+**Why LL-6 did not catch it either — the sharp part.** LL-6 ("verify literature precisely
+before citing") had already been applied to *this very paper*: it is cited in `LL.md`'s own
+LL-6 entry. But it was applied to the **abstract**, which does not carry the `β` range. The
+abstract was verified; the theorem was not.
+
+**Rule.** When a *numerical threshold* is taken from the literature and hard-coded into an
+instrument, the source obligation is the **theorem statement**, not the abstract — and the
+citation must record the hypotheses that scope it (here: positivity, largeness of data, the
+function space), because a threshold quoted without its hypotheses is a different claim.
+Corollary: when a correction lands, add a **regression control** pinning the exact value that
+was wrong (`classify(2/5, "positive") == "PROVEN_REGULAR"`), so the old belief cannot return
+silently.
