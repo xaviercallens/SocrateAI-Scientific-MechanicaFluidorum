@@ -1,6 +1,13 @@
 # OP-2′ — the Sym² lock's exact 3-D content: planar confinement, not depletion
 
-**Status: Tier C authoring, `[top]`, AWAITING HUMAN AUDIT.** Per PLAN §6 authorship never
+> **VERDICT 2026-08-15 (owner-issued, Xavier Callens; recorded in `LEDGER.md`): K3 KILLS this
+> candidate as a route to global regularity for GENERIC data.** Excess `σ − σ_lin > 0` at all
+> six measurement points, both planes, ε-independent. The geometric half (Sym² closure ⟹ exact
+> 2D3C confinement, K1-verified) survives as a separate, still-interesting statement; so do the
+> companion torus theorem and the 5/6 conjecture. The document below is preserved unedited as
+> the record of what was proposed and how it was tested.
+
+**Status: Tier C authoring, `[top]`, KILLED AT K3 (see verdict above).** Per PLAN §6 authorship never
 unblocks anything. Unlike its three dead predecessors, this candidate was **screened before
 submission** (LL-11 test, depletion screen, and an exact closure computation) and its central
 classical ingredient is flagged for source verification (LL-6) rather than asserted.

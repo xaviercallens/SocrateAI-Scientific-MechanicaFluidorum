@@ -287,10 +287,25 @@ computationally (`M=1,2,3`) and explicitly declined to claim as proven.**
 | Linear null model (closed form, same seed/window/estimator) | σ_lin = −0.305/−0.392/−0.067 (z=0), −0.317/−0.164/−0.018 (tilted): the ν=1/2 negative raw σ is the linear spectral artifact (⟨k²⟩_out 6.26 vs ⟨k²⟩_in 4.95); **excess σ−σ_lin positive everywhere** (+0.040 … +2.676), the tilted ν=1/2 excess +0.007 at noise level | `exploration/sigma_linear_baseline.py` |
 | Grid adequacy stamps | Exact ν³M⁴ ≥ 1: adequate only at ν=1/2; ν=1/10, 1/50 rows labelled NO (sphere-radius adaptation of `tier_b_grid_adequacy`, recorded as an adaptation) | same file |
 
-**Status: pre-registered K3 kill criterion (σ > 0 everywhere for generic data) is met on its
-face after artifact correction; the verdict is the owner's to sign (SPEC §8), not this row's
-to assert.** The near-discovery at ν=1/2 (raw σ < 0) was caught as a linear artifact by the
-null model *before* interpretation — LL-14/LL-15 discipline working as designed.
+> ### ✅ VERDICT K3 — OWNER-ISSUED, 2026-08-15 (Xavier Callens; PLAN §8)
+>
+> **OP-2′ is KILLED as a route to global regularity for _generic_ data.** The pre-registered
+> criterion (`σ > 0` everywhere ⇒ the planar-locked manifold is repulsive, so generic
+> trajectories flee it) is met at all six measurement points after artifact correction, on
+> both a coordinate and a tilted plane, ε-independently. The mechanism is dead **with a
+> number**, which is the outcome the charter counts as a completed scientific result.
+>
+> **What this verdict does NOT kill**, and may not be read as killing:
+> - the *geometric* half — Sym² closure ⟹ exact planar (2D3C) confinement, K1-verified in
+>   exact arithmetic including tilted planes, and apparently unpublished in its lattice form;
+> - `TriadTorus.lean` and the 5/6 ball conjecture, which are independent results that merely
+>   arose during the screening;
+> - the possibility that some *admissible modification* makes the manifold attractive — not
+>   tested here, and now a lower priority given the measured repulsion strengthens as ν falls.
+>
+> The near-discovery at ν=1/2 (raw σ < 0) was caught as a linear spectral artifact by the
+> closed-form null model *before* interpretation — LL-14/LL-15 discipline working as designed,
+> and the reason this verdict is trustworthy rather than merely convenient.
 
 **How it closed, recorded because the earlier attempt failed:** the Tier B harness's docstring
 records that a direct *three-way* relabeling argument (cycling `p→q→r`) did not close. It does
