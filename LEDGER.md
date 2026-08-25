@@ -340,6 +340,40 @@ an integrability threshold rather than a folk remark, with exactly two doors enu
 `θ`, or leave the Riccati route. Any `α < 1/2` proposal must name its door and its gain — the
 pre-registered screen the four dead Sym² translations lacked.
 
+## Tier B — door #1 of the α<1/2 barrier: CLOSED for banded quartic invariants (2026-08-25)
+
+Memo (hand-derived first, LL-5): `docs/designs/QUARTIC_INVARIANT_SEARCH.md`.
+Harness: `tests/tier_b_quartic_invariants.py` (Gate 1; exact `Fraction` linear algebra).
+
+**Why quartic.** `DyadicRiccati.thetaStar_two_lt_iff` (Tier A) needs `‖u‖^θ ∈ L¹_loc` with
+`θ ≥ 4` at α=2/5, while the energy inequality supplies `θ = 2`. `‖u‖² = H_α` is *quadratic*;
+`‖u‖⁴ = H_α²` is *quartic*. Energy methods yield L¹ control of quadratics — that is what they
+are. So door #1 is the algebraic question: is there a quartic conserved quantity at all?
+
+| Claim | Result | Status |
+|---|---|---|
+| **Identity (Q1), derived**: `d/dt H_γ = −2ν H_{γ+α} + 2(λ^{2γ}−1)·Σ λ^{(2γ+1)n+1} u_n² u_{n+1}` | prefactor vanishes **only** at γ=0 ⟹ **energy is the unique conserved weighted quadratic**; `θ = 2` is the entire quadratic supply, not an artifact of technique. Generalises the repo's Tier A `shellB_energy_conservation` (its γ=0 case). At γ<0 with **positive** data the prefactor is negative and Σ ≥ 0, giving a monotone family — *precisely where positivity does its work in the literature, and precisely what is unavailable for sign-changing data* | **Tier B** |
+| Quartic search, diagonal `Σc_n u_n⁴` and neighbour `Σc_n u_n²u_{n+1}²`, N=5,7,9 | **nullspace dim 0** | Tier B |
+| Quartic search, banded general (all 4-index monomials of index spread < w), N=5,6,7 at w=3 and N=5,6 at w=4 (up to 75 monomials) | **nullspace dim 0** | Tier B |
+
+**Pre-registered kill criterion met (fixed before any number was seen): DOOR #1 IS CLOSED for
+banded polynomial quartic conserved quantities** — the natural home of an energy-method
+improvement. Not even `E²` survives, since it is not banded (it couples index 1 to index N).
+
+**Scope of the closure, which must travel with it:** it does **not** close quartics that are
+monotone without a polynomial certificate, non-polynomial quantities, quantities conserved only
+on invariant subsets, or **door #2** (leaving the Riccati route). A closed door is not a closed
+problem — the distinction the four dead Sym² mechanisms failed to observe.
+
+**Control note (LL-12 discipline, recorded because it was informative rather than merely
+corrective):** the originally-designed negative control *failed* — perturbing the in-flux
+exponent `λ^n → λ^{n+1}` does **not** destroy conservation, it only moves the conserved weights
+from `c_n = 1` to `c_n = λ^{−n}`. The telescoping is robust to the exponent and sensitive to the
+*index structure*. That perturbation is now kept as a **second positive control** (the search
+must find the shifted weights, testing that it tracks weights rather than pattern-matching the
+constant vector), and the real negative control breaks the index structure instead
+(`u_n u_{n+2}`), returning dim 0 as required.
+
 ## Tier C — θ probe: screen for room below α=1/2 (2026-08-15; NO ADMISSIBLE READING at large A)
 
 `exploration/theta_probe.py`. Observable: `I_θ(T) = ∫₀^T ‖u‖^θ dt` versus shell truncation `N`
