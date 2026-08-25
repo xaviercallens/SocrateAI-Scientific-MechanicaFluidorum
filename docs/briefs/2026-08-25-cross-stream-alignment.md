@@ -168,11 +168,25 @@ no counterpart in another stream. No other stream is working on the dyadic shell
 
 ## 3. Proposed alignment actions, in order of value
 
+**ARBITRATED 2026-08-25 (owner).** Actions 1–3 executed: transmitted as a single memo,
+`SocrateAIShared/2026-08-25-MEMO-Stream1-to-Stream6-NS-corrections.md` (copy retained at
+`docs/proposals/2026-08-25-MEMO-sent-to-Stream6.md`). Actions 4–6 remain open.
+
+**One correction made to the Director's draft before transmission, flagged here for the record.**
+The draft memo read "un plan retient environ 6 % des modes bruts" and derived a null of
+`f³ ≈ 0.02 %`. **6.4 % is the fraction of *triads* retained; the *mode* fraction is 32.5 %,
+and it is the mode fraction that gets cubed.** Cubing 0.06 gives a null of 0.02 % and an
+apparent `D ≈ 290` instead of the true `1.87` — a discrepancy Stream 6 would very likely have
+caught, which would have discredited a correction that is otherwise right. Transmitted with the
+exact figures (924/398 190 lattice, 300 modes, 25 518 triads, null 13 628, `D = 1.87`) and with
+the mode-vs-triad distinction called out explicitly, since it is the easy slip in this
+computation and the memo's whole point is that a missing null model inverts a reading.
+
 | # | Action | Cost | Owner decision needed? |
 |---|---|---|---|
-| 1 | Offer `FourierStateZ3`'s Leray theorems to Stream 6 to close its two `sorry` stubs (A4) | ~0 | no — but flag F1 travels |
-| 2 | Correct the "NS Lean proofs do not exist" gap via Stream 0's map (A3) | small | no |
-| 3 | Offer the depletion screen + the OP-2′ verdict against the "97 % depletion" reading (A5) | small | no |
+| 1 | ✅ **SENT** — `FourierStateZ3`'s Leray theorems + the indicator-sum technique, to close Stream 6's two `sorry` stubs (A4) | ~0 | done; flag F1 travels with it |
+| 2 | ✅ **SENT** — the two perceived gaps corrected against our Tier A inventory (A3) | small | done |
+| 3 | ✅ **SENT** — the depletion screen, the corrected arithmetic, and the OP-2′ verdict (A5) | small | done |
 | 4 | Adopt Tier **L** in `SPEC.md` and re-letter our literature rows (A2) | small | **yes** — notation change |
 | 5 | Decide the `Reff` migration: move, keep as second proof per `MX-C-0011`, or both (A1) | medium | **yes** |
 | 6 | Write the "Mathlib only, from other streams" constraint into `SPEC.md` (A6) | small | no |

@@ -308,6 +308,27 @@ D1-scope reason as above. **Promotes
 to Tier A the identity that `tests/tier_b_nse_triad_convolution.py` (OP-6/D3) verified only
 computationally (`M=1,2,3`) and explicitly declined to claim as proven.**
 
+> ## ⚖ OWNER ARBITRATION — 2026-08-25 (Xavier Callens, PLAN §8)
+>
+> Issued in response to `docs/briefs/2026-08-25-cross-stream-alignment.md` and
+> `docs/designs/DOOR2_SIGN_FRAGILITY.md` §6.
+>
+> 1. **Effort split 40 / 40 / 20 — GO.** 40 % Door #2 (sign fragility), 40 % the Ball Spectral
+>    Problem paper (*explicitly noted as insulated from Hypothesis U's fate*), 20 % OP-6b.
+> 2. **Door #2 theory memo and its pre-registration — GO.** The classification
+>    (sign-free / sign-repairable / sign-critical) is mandatory, an explicit breaking
+>    configuration is required for every sign-critical step, and the three hard requirements
+>    (hypothesis guard, budget-vs-physics stop reasons, null model first) are **obligatory for
+>    the experiment to be valid at all**.
+> 3. **EMBARGO — cross-stream circulation of Door #2 fragility signals before audit: STRICT
+>    NO-GO.** Until a fragility result is sealed by a Lean theorem (Tier A) **or** a formally
+>    validated pre-registered run (Tier B), it may not be shared with any other stream — not as
+>    a result, not as an intuition. Rationale accepted from Stream 0: the narrative surface is
+>    the programme's highest-consequence failure mode, and a claim that reaches a video has left
+>    the system.
+> 4. **Corrective memo to Stream 6 — transmit immediately** (unblock their Lean proof; correct
+>    the triadic-depletion reading; close the two perceived gaps).
+
 ### `lean_src/FourierStateZ3.lean` — OP-6a, the 3-D Fourier kinematic state space (**DRAFT**, 2026-08-25)
 
 **Provenance: externally submitted.** Verbatim submission archived at

@@ -3,8 +3,10 @@
 **Purpose:** record the direction split proposed with the OP-6a submission, the deliverables
 accepted, and the next executable step for each. **Companion to:**
 `2026-08-25-situation-brief.md` (state) and `LEDGER.md` (claims).
-**Status:** the effort split in §2 is a **recommendation awaiting owner arbitration**; §1 and §3
-are settled facts.
+**Status:** ~~recommendation awaiting arbitration~~ — **ARBITRATED 2026-08-25 (owner).** The
+40/40/20 split is **GO**; the Door #2 theory memo and its pre-registration are **GO**; and
+cross-stream circulation of any Door #2 fragility signal before audit is a **STRICT NO-GO
+(embargo)**. Full text of the arbitration in `LEDGER.md`.
 
 ---
 
