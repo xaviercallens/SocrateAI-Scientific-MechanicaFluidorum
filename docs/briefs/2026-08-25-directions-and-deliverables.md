@@ -114,7 +114,10 @@ already verified in exact arithmetic at `M ≤ 3`; **(iv)** then the ODE and loc
   author under LL-2, and that reasoning is endorsed: the compiled repository is the artifact of
   record, and regenerating files from conversation memory would produce strictly less reliable
   artefacts than the gates-green tree.
-- The `CallensDualScale` rename directive — unverified premise (§1).
+- ~~The `CallensDualScale` rename directive~~ — **this rejection is withdrawn**: the premise was
+  sound and my verification scope was too narrow (§1). The migration is now an open owner
+  decision, with Stream 0's own `MX-C-0011` arguing that two independent proofs of `Reff` are
+  worth keeping, so "migrate" and "keep" are not exclusive.
 - Any reading of `sublattice_invariance` as evidence for confinement-based regularity. The
   guardrail is in the file header, the LEDGER row, and here.
 
