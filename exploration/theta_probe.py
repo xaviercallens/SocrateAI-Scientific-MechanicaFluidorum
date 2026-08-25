@@ -104,7 +104,7 @@ def run(alpha, nu, N, amplitude, beta, signed, thetas):
         z = enstrophy(u, w2a)
         if not (z < GUARD) or not np.all(np.isfinite(u)):
             series.append((t, dict(acc)))
-            return None, acc, worst_flux, t, series
+            return None, acc, worst_flux, t, series, "GUARD(magnitude)"
         # adaptive step from the nonlinear rate
         rate = float(np.max(pw2 * np.abs(u))) + 1e-30
         dt = min(0.05 / rate, 1e-2, T_END - t)
@@ -126,7 +126,8 @@ def run(alpha, nu, N, amplitude, beta, signed, thetas):
             series.append((t, dict(acc)))
     series.append((t, dict(acc)))
     hit_cap = steps >= MAX_STEPS
-    return (None if hit_cap else u), acc, worst_flux, t, series
+    reason = "CAP(compute budget)" if hit_cap else "ok"
+    return (None if hit_cap else u), acc, worst_flux, t, series, reason
 
 
 def at_time(series, t_target):
@@ -152,16 +153,16 @@ def sweep(label, alpha, nu, amplitude, beta, signed, thetas, Ns):
 
     runs = []
     for N in Ns:
-        u, acc, flux, tfin, series = run(alpha, nu, N, amplitude, beta, signed, thetas)
-        runs.append((N, u, acc, flux, tfin, series))
+        u, acc, flux, tfin, series, reason = run(alpha, nu, N, amplitude, beta, signed, thetas)
+        runs.append((N, u, acc, flux, tfin, series, reason))
     t_common = min(r[4] for r in runs)
     print(f"    common window [0, {t_common:.4g}]  (per-N final times: "
           + ", ".join(f"N={r[0]}:{r[4]:.3g}" for r in runs) + ")")
     print("      N  " + "".join(f"{'I_'+str(th):>13}" for th in thetas) + "   flux_err  status")
     rows = []
-    for N, u, acc, flux, tfin, series in runs:
+    for N, u, acc, flux, tfin, series, reason in runs:
         a = at_time(series, t_common)
-        status = "ok" if u is not None else "STOPPED EARLY"
+        status = reason
         print(f"    {N:>3}  " + "".join(f"{a[th]:>13.4g}" for th in thetas)
               + f"   {flux:.1e}  {status}")
         rows.append((N, a))
@@ -174,9 +175,14 @@ def sweep(label, alpha, nu, amplitude, beta, signed, thetas, Ns):
         print(f"        theta={th}: " + "  ".join(f"{r:.3f}" for r in rs))
     tmin = min(r[4] for r in runs)
     tmax = max(r[4] for r in runs)
-    if tmax > 0 and tmin / tmax < 0.5:
-        print(f"      NOTE: final times shrink with N ({tmax:.3g} -> {tmin:.3g}) -- the")
-        print("      signature of genuine blow-up in the limit, not of saturation.")
+    capped = [r[0] for r in runs if r[6].startswith("CAP")]
+    if capped:
+        print(f"      *** COMPUTE-LIMITED at N={capped}: those runs hit the step cap, they did")
+        print("      NOT detect anything. Shrinking final times here mean the integrator ran out")
+        print("      of budget, NOT blow-up. NO READING OF THIS BLOCK IS ADMISSIBLE. ***")
+    elif tmax > 0 and tmin / tmax < 0.5:
+        print(f"      NOTE: final times shrink with N ({tmax:.3g} -> {tmin:.3g}) with every run")
+        print("      terminated by the MAGNITUDE guard -- that is the blow-up signature.")
     return rows
 
 

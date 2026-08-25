@@ -340,6 +340,37 @@ an integrability threshold rather than a folk remark, with exactly two doors enu
 `θ`, or leave the Riccati route. Any `α < 1/2` proposal must name its door and its gain — the
 pre-registered screen the four dead Sym² translations lacked.
 
+## Tier C — θ probe: screen for room below α=1/2 (2026-08-15; NO ADMISSIBLE READING at large A)
+
+`exploration/theta_probe.py`. Observable: `I_θ(T) = ∫₀^T ‖u‖^θ dt` versus shell truncation `N`
+(a finite truncation cannot blow up, so growth-without-saturation is the only signature).
+
+| Regime | Result | Admissible? |
+|---|---|---|
+| **Positive control** α=1 (regularity is a theorem) | saturates: ratios 1.001 / 1.000 / 1.000 | ✅ instrument sound here |
+| **Negative control** α=1/4, large positive data (blow-up is a theorem) | diverges over the common window (θ=4: 4.54, 5.95, 6.95), final times collapse 2 → 0.0176 under the **magnitude** guard | ✅ can detect divergence |
+| α=2/5, both data classes, **A=2** | both saturate (θ=4 ratio → 1.006) | ⚠️ small-data regime — regularity is trivial there, so this carries **no information** |
+| α=2/5, both data classes, **A=8, 32** | apparent blow-up signature in **both** columns | ❌ **INADMISSIBLE — artifact** |
+
+**The failed control, and what it caught.** BMR 2011 proves **positive** data at α=2/5 globally
+regular at *every* amplitude, so that column must saturate however large `A`. It did not — and
+since the positive case is a theorem, the signature had to be an artifact. It was: every early
+stop at A≥8 was the integrator's **step-count cap**, not its magnitude guard. Shrinking final
+times meant the computation ran out of budget. Verified directly: `A=8, N=17` returns
+`CAP(compute budget)` in both sign classes. The harness now separates the two stop reasons and
+refuses to let a compute-limited block be read.
+
+**Net scientific state: no numerical evidence in either direction below α=1/2.** The question
+stands exactly where `DyadicRiccati.lean`'s Tier A barrier leaves it. Answering it needs an
+integrator that resolves the cascade at large amplitude (implicit/exponential, far larger step
+budget) or an observable that does not require following the trajectory that far.
+
+**Methodological note (LL-17, and the campaign's recurring finding).** This is the third
+occasion in this campaign where a pre-registered control turned a publishable-looking number
+into a caught artifact — after the σ null-model catch (OP-2′) and the mis-stated regime band
+(E-3b/LL-16). In this domain the artifact rate for uncontrolled measurements appears close to
+one.
+
 ## Tier B — the Riccati exponent chain and the α<1/2 barrier, quantified (2026-08-15)
 
 Derivation memo (hand-derived first, LL-5): `docs/designs/ALPHA_HALF_FORMALISATION.md`.
