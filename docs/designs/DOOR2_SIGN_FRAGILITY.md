@@ -54,6 +54,11 @@ the band is narrower than currently recorded.
 
 ## 3. Deliverable 1 — the theory memo (`[top]`, hand-derived first, LL-5)
 
+> **STATUS 2026-08-25: DRAFTED — `docs/designs/DOOR2_MEMO_SIGN_AUDIT.md`, awaiting owner
+> validation.** All nine steps of Cheskidov §5 classified; four sign-critical, one
+> sign-repairable, four sign-free; the explicit breaking configuration supplied and its
+> threshold verified in exact arithmetic; the observables fixed in that memo's §6.
+
 **Target:** a line-by-line audit of the blow-up argument, answering for each inequality:
 *does this step use `u_n ≥ 0`, and if so, how?* Three outcomes per step, and the memo must
 classify every step into exactly one:
