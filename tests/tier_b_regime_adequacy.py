@@ -73,12 +73,29 @@ CONTROLS (PLAN.md: "a checker that cannot fail is not a checker"):
 Exact arithmetic: fractions.Fraction only. Deterministic.
 """
 
+import os
 import sys
 from fractions import Fraction as Q
 
-BLOWUP_BELOW = Q(1, 3)        # positive data, large: blow-up proven below this (Cheskidov 5.3)
-REGULAR_FROM_POS = Q(2, 5)    # positive data: regularity proven from here (BMR Thm A)
-REGULAR_FROM_ANY = Q(1, 2)    # any sign: regularity proven from here (Cheskidov Thm 4.4)
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from controls import cite_threshold          # noqa: E402  (LL-16, mechanised)
+
+# Each threshold carries its SOURCE (a theorem, never an abstract) and the HYPOTHESES that
+# scope it. cite_threshold refuses a constant lacking either -- this is LL-16 made mechanical
+# after a number taken from an abstract shipped inside this file's own positive control.
+_BLOWUP = cite_threshold(
+    Q(1, 3), "Cheskidov arXiv:math/0601074 Thm 5.3",
+    "POSITIVE initial data u_n(0) >= 0 AND large data ||u(0)||_gamma > M(gamma)")
+_REG_POS = cite_threshold(
+    Q(2, 5), "Barbato-Morandin-Romito, Nonlinearity 24 (2011) 3083-3097, Thm A",
+    "POSITIVE initial data x_n >= 0 in l^2 (gives uniqueness and smoothness too)")
+_REG_ANY = cite_threshold(
+    Q(1, 2), "Cheskidov arXiv:math/0601074 Thm 4.4",
+    "u_0 in V = H^alpha, ANY sign; EXISTENCE of a strong global solution, uniqueness NOT asserted")
+
+BLOWUP_BELOW = _BLOWUP.value        # positive data, large: blow-up proven below this
+REGULAR_FROM_POS = _REG_POS.value   # positive data: regularity proven from here
+REGULAR_FROM_ANY = _REG_ANY.value   # any sign: regularity proven from here
 
 
 def classify(alpha: Q, data: str = "positive") -> str:
@@ -125,6 +142,10 @@ def report(alpha: Q, label: str, data: str = "positive"):
 
 def main():
     print("== Tier B: dissipation-regime adequacy (exact rational thresholds) ==")
+    print("   thresholds, each carrying source + scope (LL-16, enforced by controls.py):")
+    for t in (_BLOWUP, _REG_POS, _REG_ANY):
+        print(f"      {t.describe()}")
+    print()
     print(f"   POSITIVE data : blow-up < {BLOWUP_BELOW};  regular >= {REGULAR_FROM_POS} (BMR);"
           f"  open band [{BLOWUP_BELOW}, {REGULAR_FROM_POS})")
     print(f"   SIGNED   data : regular >= {REGULAR_FROM_ANY} (Cheskidov); nothing proven below,"

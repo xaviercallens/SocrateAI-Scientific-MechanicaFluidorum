@@ -572,3 +572,83 @@ the physics.
 Related: LL-16 (a control tests the code against the premise you believe). Together they name
 the two ways a passing control can still be worthless — a wrong premise, and a hypothesis the
 run does not satisfy.
+
+## LL-18 — "stopped early" must never mean two opposite things (2026-08-25)
+
+**Incident.** `exploration/theta_probe.py` terminates a run either because the magnitude guard
+fires (the solution is blowing up — *physics*) or because the step counter hits its cap (the
+integrator ran out of budget — *bookkeeping*). Both printed `STOPPED EARLY`, and the sweep
+summary read shrinking final times as the blow-up signature.
+
+At large amplitude the summary duly announced blow-up — in the **positive-data** column, where
+Barbato–Morandin–Romito's theorem guarantees global regularity at every amplitude. That column
+is a theorem, so the signature had to be an artifact, and it was: every early stop at `A ≥ 8`
+was the step cap. Nothing had been detected.
+
+**Rule.** When an instrument can stop for reasons that mean *opposite* things, it must report
+**which**, and any summary that aggregates across runs must refuse to interpret a block
+containing a bookkeeping stop. A shared status string is not a convenience; it is a defect that
+converts a resource limit into a physical claim. `theta_probe` now distinguishes
+`GUARD(magnitude)` from `CAP(compute budget)` and prints `NO READING OF THIS BLOCK IS
+ADMISSIBLE` when any run was capped.
+
+Note what did the catching: not the code, not review — the *theorem-backed* control. A control
+whose expected answer is a published theorem is worth several whose expected answer is a
+guess, because it cannot be talked out of.
+
+## LL-19 — a negative control must be *demonstrated* destructive, not assumed (2026-08-25)
+
+**Incident.** `tests/tier_b_quartic_invariants.py` searches for conserved quantities of the
+truncated dyadic system. Its negative control perturbed the in-flux exponent
+`λ^n → λ^{n+1}`, on the reasoning that this would break the telescoping and leave no invariant.
+The control failed: the search still returned a one-dimensional space.
+
+The reasoning was wrong, not the code. Cancellation requires `c_{n+1}λ^{n+2} = c_nλ^{n+1}`, so
+shifting the exponent does not destroy conservation — it **moves the conserved weights** from
+`c_n = 1` to `c_n = λ^{−n}`. The telescoping is robust to the exponent and sensitive to the
+*index structure*; the genuinely destructive perturbation couples `u_n u_{n+2}`, whose monomial
+pattern can never cancel against `u_{n−1}²u_n`.
+
+**Rule.** A negative control is a *claim* — "this input has no solution / must fail" — and it
+carries the same burden of proof as any other claim in this repository. Either prove the
+perturbation destroys the structure, or verify it independently, before relying on it. A
+perturbation that merely *looks* damaging often preserves the very symmetry under test.
+
+**Corollary worth as much as the rule.** A failed negative control is frequently *informative*:
+this one revealed that the model's conservation law is exponent-robust and index-fragile, which
+is a real structural fact and is now recorded as such. The failed perturbation was kept as a
+**second positive control** — the search must find the *shifted* weights `λ^{−n}`, which tests
+that it tracks weights rather than pattern-matching the constant vector `c_n = 1`. Do not delete
+a control that fails; find out why, and often it becomes a better control than the one intended.
+
+---
+
+# Synthesis — the four ways a passing control is still worthless
+
+Six of the nineteen lessons above are about controls, and by 2026-08-25 they had accumulated
+into a pattern worth stating once, flatly, at the top of any future campaign. **In this domain
+the artifact rate for uncontrolled measurements is close to one**: in a single cycle, three
+separate publishable-looking numbers were each caught as artifacts — the σ null-model catch, the
+mis-stated regime band, and the compute-limited θ sweep. None was caught by review; all three
+were caught by pre-registered controls, and two of those controls were themselves defective at
+first.
+
+So the control is necessary and *not* sufficient. It can pass, or fail, for reasons unrelated to
+what it was built to test:
+
+| Failure mode | What passes anyway | Lesson |
+|---|---|---|
+| **Wrong premise** — the threshold or fact the control encodes is false | both controls fire; the gate is confidently wrong | LL-16 |
+| **Violated hypothesis** — the run does not satisfy the theorem the control invokes | the control fails, and the failure is blamed on the code | LL-17 |
+| **Ambiguous instrument state** — one status covers outcomes with opposite meanings | a resource limit is reported as a physical finding | LL-18 |
+| **Undemonstrated perturbation** — the "negative" input still satisfies the property | the negative control cannot fail, silently | LL-19 |
+
+The practical consequences, now normative in `SPEC.md` §7.3:
+1. Prefer controls whose expected answer is a **published theorem**. They cannot be argued with,
+   and in this cycle every real catch came from one.
+2. Enforce the control's **hypotheses at runtime** — refuse to run rather than comment.
+3. Give distinct **stop reasons** distinct names, and refuse to interpret aggregates containing
+   a bookkeeping stop.
+4. Treat a negative control's perturbation as a **claim requiring proof**.
+5. When a control fails, the *first* hypothesis is that the control or the run is wrong — not
+   the code, and never the world.

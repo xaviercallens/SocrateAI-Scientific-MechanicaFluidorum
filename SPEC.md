@@ -377,6 +377,32 @@ what the harness is, and the distinction is not cosmetic:
 | **Identity / inequality verifier** (`tier_b_enstrophy_production`, `tier_b_production_bound`, `tier_b_dyadic_checks`, …) | the main sweep **is** the positive control: the identity is asserted to *hold* on many valid inputs (e.g. "240 cases, all exact LHS == RHS"). An inverted or mis-wired implementation fails there. | already satisfied by construction; no separate control needed |
 | **Classifier / detector / judgment** (`tier_b_grid_adequacy`, `tier_b_regime_adequacy`, `exploration/sym2_signature_detector`) | the body returns a *verdict*, not an assertion. An implementation that rejects **everything** passes the negative control. | **an explicit positive control is mandatory** — an input the harness must accept or must fire on |
 
+**Amendment 2026-08-25 — four further requirements, each after an incident, each mechanised in
+`tests/controls.py` (whose own self-test runs in Gate 1).** A control is necessary and *not*
+sufficient: it can pass, or fail, for reasons unrelated to what it tests. See `LL.md`'s synthesis
+table.
+
+1. **Prefer a control whose expected answer is a published theorem.** Every real catch in the
+   2026-08 cycle came from one; a control whose expected answer is a guess cannot arbitrate.
+2. **Enforce the control's hypotheses at runtime** (`require_hypothesis`). A theorem-backed
+   control is void if the *run* violates the theorem's hypotheses, and the failure then looks
+   like a code defect. Refuse to run; do not leave the hypothesis in a comment. (LL-17)
+3. **Distinct termination causes get distinct names** (`StopReason`, `Aggregate`), and an
+   aggregate containing a resource-limit stop **refuses to be interpreted**. A shared status
+   string that covers both "diverged" and "ran out of budget" converts a compute limit into a
+   physical claim. (LL-18)
+4. **A negative control's perturbation is a claim requiring proof** (`demonstrated_negative`).
+   Either prove it destroys the property or verify it independently; a perturbation that merely
+   looks damaging often preserves the symmetry under test, and the control is then inert and
+   silent. (LL-19)
+5. **A literature threshold must carry its source and its scope at the point of definition**
+   (`cite_threshold`, which refuses a constant lacking either). The source is a *theorem
+   statement*, never an abstract; the scope is the hypotheses, because a number quoted without
+   them is a different claim. (LL-16)
+
+When a control fails, the first hypothesis is that the control or the run is wrong — not the
+code, and never the world.
+
 The second row is where the rule bites, and it was written after a Sym² detector shipped with an
 inverted sign that its negative control passed cleanly: generic sequences read `O(1)` under both
 the correct and the inverted formula, because both are generically nonzero. Only the positive
