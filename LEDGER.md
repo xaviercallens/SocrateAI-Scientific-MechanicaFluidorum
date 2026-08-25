@@ -352,11 +352,21 @@ merge, all fail as required: drop `hv` from `applyLeray_eq_self` (2 errors); dro
 - **F3 — checked, consistent.** `GalerkinState.cutoff` keeps `|k|² ≤ M²`, matching
   `symbolic/triad_hypergraph.py`'s `0 < n2 <= M*M`.
 
-**Unverified claim in the accompanying spec, flagged not actioned:** the submission asserts a
-"standing rename decision" against `CallensDualScale.lean` and that a migration target
-`Mathesis.Scale.Reff` "exists". **No such decision appears in `SPEC.md`, `PLAN.md`, `LEDGER.md`
-or `docs/Memo 1.md`, and no such target exists in the repository.** Recorded here as an
-owner-decision item, not as an accepted directive.
+**~~Unverified claim~~ — CORRECTION 2026-08-25, my flag was wrong.** I first recorded the
+submission's `CallensDualScale` rename directive as an unsourced claim, having searched
+`SPEC.md`, `PLAN.md`, `LEDGER.md` and `docs/Memo 1.md`. **That search scope was too narrow: the
+claim is cross-stream, and both halves check out.** `~/xdev/SocrateAI-Mathesis` (Stream 0, the
+shared verification kernel) contains `lean/Mathesis/Scale/Reff.lean`, whose header states it is
+the single source of truth for `Reff`, "consolidated from
+`SocrateAI-Scientific-MechanicaFluidorum/lean_src/CallensDualScale.lean`, renamed per the
+standing decision that no structure in this library carries a person's name (§9, L4.5)". The
+decision is recorded in `SPEC-STREAM0` §9. **The migration is a live owner-decision item, not a
+fabrication.** See `docs/briefs/2026-08-25-cross-stream-alignment.md` §2.
+
+*Lesson (candidate LL): a claim about a cross-repository target must be verified across the
+repositories it names. Applying LL-6 within one repo and concluding "unsourced" is the same
+class of error as verifying a threshold against an abstract (LL-16) — right discipline, wrong
+scope.*
 
 ### `lean_src/DyadicRiccati.lean` — why the dyadic threshold is exactly `α = 1/2` (Tier A, 2026-08-15)
 

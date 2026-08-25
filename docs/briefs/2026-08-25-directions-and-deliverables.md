@@ -43,11 +43,14 @@ right instinct: the operator acts on states; the matrix identity was decoration.
 | **F2** | `planeSubgroup` is defined but exercised by no theorem, and carries no witness that it is a proper subgroup. |
 | **F3** | Checked and consistent: `GalerkinState.cutoff` keeps `\|k\|² ≤ M²`, matching the repo's lattice convention. |
 
-**Unverified claim, flagged not actioned.** The accompanying spec asserts a "standing rename
-decision" against `CallensDualScale.lean` and that the migration target `Mathesis.Scale.Reff`
-"exists". **Neither appears in `SPEC.md`, `PLAN.md`, `LEDGER.md`, `docs/Memo 1.md`, nor in the
-repository tree.** It is recorded as an owner-decision item. Renaming a Tier A file on an
-unverified premise is precisely what the tier system exists to prevent.
+**~~Unverified claim~~ — CORRECTED 2026-08-25.** I flagged the `CallensDualScale` rename
+directive as unsourced after searching this repository. **The scope was wrong and the claim is
+sound:** `~/xdev/SocrateAI-Mathesis` (Stream 0) contains `lean/Mathesis/Scale/Reff.lean`, whose
+header cites consolidation from our file "renamed per the standing decision that no structure in
+this library carries a person's name (§9, L4.5)", recorded in `SPEC-STREAM0` §9. The migration
+is a live owner-decision item. See `2026-08-25-cross-stream-alignment.md` §A1 — including the
+nuance that Stream 0's `MX-C-0011` deliberately keeps *two* independent proofs of `Reff`, so
+consolidation need not mean deletion here.
 
 ## 2. Direction split — recommendation, pending arbitration
 
@@ -120,6 +123,16 @@ already verified in exact arithmetic at `M ≤ 3`; **(iv)** then the ODE and loc
 1. **Statement-adequacy audit of `FourierStateZ3.lean`** — structure fields, `GalerkinState.cutoff`
    shape, and the abstract `htriad` formulation, with **F1 the priority question**.
 2. **Arbitrate the effort split** (recommendation: 40/40/20 as above, with the §2.3 amendment).
-3. **Decide the `CallensDualScale` rename** — it is currently an unsourced claim, not a decision.
-4. Carried from the situation brief, unchanged: the `IsGalerkinLimit` adequacy audit (now
+3. **Decide the `Reff` migration** — the Stream 0 rename decision is real (§1, corrected). The
+   options are: migrate, keep our copy as a second independent kernel proof per `MX-C-0011`, or
+   both. Stream 0's stated philosophy favours keeping two proofs.
+4. **Adopt Tier `L`?** Stream 0 records the owner's 2026-08-14 adoption of a fifth tier for
+   literature (`MX-C-0007`); our literature rows are currently unlettered under it.
+5. **Go / no-go on the Door #2 theory memo** (`docs/designs/DOOR2_SIGN_FRAGILITY.md` §6) — it is
+   the cheap half and it gates the experiment, which has no observable until the memo fixes one.
+6. Carried from the situation brief, unchanged: the `IsGalerkinLimit` adequacy audit (now
    load-bearing for direction 3) and the two remaining draft-file audits.
+7. **Cross-stream offers** (no decision needed, but worth knowing): Stream 6 is blocked on a
+   Leray `Fin 3` lemma we proved today, believes NS Lean proofs "do not exist" when we hold 103,
+   and carries a "2D3C depletes 97 % of triads" reading that our null model shows is enrichment
+   (`D = 1.87`). Details and proposed offers in `2026-08-25-cross-stream-alignment.md` §3.
