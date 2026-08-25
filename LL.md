@@ -46,7 +46,7 @@ background-workflows.md`.
 
 ## LL-2 — "Verified, no sorry" claims must be checked against the compiled artifact, not the source text
 
-**What happened.** An external proposal for `CallensDualScale.lean` claimed all four theorems
+**What happened.** An external proposal for `LocalDualScale.lean` claimed all four theorems
 were proven with "no sorry placeholders." Compiling it as submitted: one theorem
 (`sym2_recurrence`) was genuinely correct; another (`genesis_no_singularity`) compiled but
 carried a custom axiom in its footprint, contradicting its own stated expectation; the third

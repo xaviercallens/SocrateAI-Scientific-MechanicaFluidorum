@@ -16,7 +16,7 @@ WHAT THIS CHECKS (and, as importantly, what it does not)
      `def`, `noncomputable def`, `abbrev`, `instance`, `structure`, `class`, and CLASS FIELDS
      (`  field_name : ...` inside a class body) -- the last of these matters and was found
      empirically: LEDGER.md's Tier A table cites `resonance_law`, which is a class field of
-     `CosmicWave` in CallensDualScale.lean, not a standalone theorem. A checker that only
+     `CosmicWave` in LocalDualScale.lean, not a standalone theorem. A checker that only
      matched `theorem|lemma|def` would report it as an orphan. That false positive is exactly
      the failure mode this file is designed around.
 

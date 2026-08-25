@@ -71,7 +71,7 @@ finding — please report it.
 
 | File | Content |
 |---|---|
-| `CallensDualScale.lean` | Laws of `Reff(α,R) = max(R, α/R)`, incl. sharpness; the Sym² recurrence lock |
+| `LocalDualScale.lean` | Laws of `Reff(α,R) = max(R, α/R)`, incl. sharpness; the Sym² recurrence lock |
 | `DyadicShells.lean` | Energy-flux telescoping; `dE/dt ≤ 0` |
 | `EnstrophyProduction.lean` | Exact identity `dΩ/dt = 3Σk_n³a_n²a_{n+1} − νΣk_n⁴a_n²` |
 | `EnstrophyProductionBound.lean` | Local bound `S_N² ≤ 2Ω_N³` |

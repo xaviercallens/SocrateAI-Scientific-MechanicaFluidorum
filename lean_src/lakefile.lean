@@ -16,7 +16,7 @@ require mathlib from git
   "https://github.com/leanprover-community/mathlib4.git" @ "6d605ae1ac45de240cdb83ce104fe60b3c1d9237"
 
 @[default_target]
-lean_lib CallensDualScale
+lean_lib LocalDualScale
 
 @[default_target]
 lean_lib DyadicShells

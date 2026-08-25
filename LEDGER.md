@@ -86,7 +86,7 @@ not an implicit claim.
 
 | Claim | Formal name | Artifact | Since |
 |---|---|---|---|
-| Effective radius is positive (α, R > 0) | `Reff_pos` | `lean_src/CallensDualScale.lean` | 2026-08-12 |
+| Effective radius is positive (α, R > 0) | `Reff_pos` | `lean_src/LocalDualScale.lean` | 2026-08-12 |
 | T-dual bound √α ≤ Reff α R | `Reff_ge_sqrt` | ibid. | 2026-08-12 |
 | Bounce: R < √α → Reff = α/R | `Reff_bounce` | ibid. | 2026-08-12 |
 | Inertial invisibility: √α ≤ R → Reff = R | `Reff_inertial` | ibid. | 2026-08-12 |
@@ -308,6 +308,30 @@ D1-scope reason as above. **Promotes
 to Tier A the identity that `tests/tier_b_nse_triad_convolution.py` (OP-6/D3) verified only
 computationally (`M=1,2,3`) and explicitly declined to claim as proven.**
 
+## Tier L — Literature (adopted 2026-08-25; see `SPEC.md` §2)
+
+Published mathematics this programme relies on. **A Tier L row never discharges a Lean
+obligation** — it motivates, scopes, or refutes. Each is cited to a *theorem statement* with the
+hypotheses that scope it, because a threshold quoted without its hypotheses is a different claim
+(LL-16). Declared in code through `cite_threshold` (`tests/controls.py`), which refuses a
+constant lacking either.
+
+| # | Statement | Source (theorem, never an abstract) | Hypotheses that scope it |
+|---|---|---|---|
+| **L-1** | Global regularity of the dyadic model for `α ≥ 1/2` | Cheskidov, arXiv:math/0601074, **Thm 4.4** | `u₀ ∈ V = H^α`; **any sign**; asserts **existence** of a strong global solution — **not uniqueness** |
+| **L-2** | Local regularity for `α > 1/3` | ibid., **Thm 4.3** | `u₀ ∈ V`; any sign; finite time interval only |
+| **L-3** | Finite-time blow-up for `α < 1/3` | ibid., **Thm 5.3** | **`u_n(0) ≥ 0`** *and* **large data** `‖u(0)‖_γ > M(γ)`; it is *not* "every solution blows up" |
+| **L-4** | Global regularity, with **uniqueness and smoothness**, for `β ∈ (2, 5/2]` i.e. `α ∈ [2/5, 1/2)` | Barbato–Morandin–Romito, *Nonlinearity* **24** (2011) 3083–3097, **Thm A** | **`x_n ≥ 0`** in `ℓ²`; method is an invariant region on `(X_n, X_{n+1})`, **not** an energy estimate |
+| **L-5** | The equivalence `∫‖∇v‖⁴ < ∞ ⟺ global Serrin class`, at zero force | Ponce–Racke–Sideris–Titi, *Comm. Math. Phys.* **159** (1994), **Thm 2** | `Ω = ℝ³` or a Poincaré domain; zero external force |
+| **L-6** | Global stability of large solutions: an `H¹` neighbourhood of a strong reference solution is globally regular | ibid., **Thm 1** | smallness is **Gronwall-exponential** (eq. 2.17), constants never tracked in `ν` — **not quantitatively usable**; the 2-D application (Thm 4) is **ℝ² two-component**, unforced, with decay `v₀ ∈ Lᵖ`, `p < 2` — **not 2D3C and not the torus**; **no periodic `T³` case is treated** |
+| **L-7** | 2-D global regularity | Ladyzhenskaya, *The Mathematical Theory of Viscous Incompressible Flow* (title **singular**), 2nd ed. 1969, via Fefferman's Clay problem description | 2-D; PRST record that global strong existence "was first established by **Leray**" |
+| **L-8** | A 2D3C field splits the 3-D equations into 2-D NSE plus a passively advected scalar | Biferale–Buzzicotti–Linkmann, arXiv:1706.02371 | continuum; the **lattice/Galerkin** form is *not* found published and is claimed here only as our own exact computation |
+
+**Migration note.** These rows previously sat unlettered or implicitly under this repository's
+`B`. Nothing about their truth changed; only the letter carrying them. Our `B` usage was already
+the exact-arithmetic one, so no row was mis-tiered — the risk `MX-C-0001` names was inbound, not
+outbound.
+
 > ## ⚖ OWNER ARBITRATION — 2026-08-25 (Xavier Callens, PLAN §8)
 >
 > Issued in response to `docs/briefs/2026-08-25-cross-stream-alignment.md` and
@@ -374,12 +398,12 @@ merge, all fail as required: drop `hv` from `applyLeray_eq_self` (2 errors); dro
   `symbolic/triad_hypergraph.py`'s `0 < n2 <= M*M`.
 
 **~~Unverified claim~~ — CORRECTION 2026-08-25, my flag was wrong.** I first recorded the
-submission's `CallensDualScale` rename directive as an unsourced claim, having searched
+submission's `LocalDualScale` rename directive as an unsourced claim, having searched
 `SPEC.md`, `PLAN.md`, `LEDGER.md` and `docs/Memo 1.md`. **That search scope was too narrow: the
 claim is cross-stream, and both halves check out.** `~/xdev/SocrateAI-Mathesis` (Stream 0, the
 shared verification kernel) contains `lean/Mathesis/Scale/Reff.lean`, whose header states it is
 the single source of truth for `Reff`, "consolidated from
-`SocrateAI-Scientific-MechanicaFluidorum/lean_src/CallensDualScale.lean`, renamed per the
+`SocrateAI-Scientific-MechanicaFluidorum/lean_src/LocalDualScale.lean`, renamed per the
 standing decision that no structure in this library carries a person's name (§9, L4.5)". The
 decision is recorded in `SPEC-STREAM0` §9. **The migration is a live owner-decision item, not a
 fabrication.** See `docs/briefs/2026-08-25-cross-stream-alignment.md` §2.

@@ -13,7 +13,7 @@ or Maple `gfun`; this module provides the exact-ℚ core needed now:
 Everything is exact (fractions.Fraction).  A guess that fits the fitting
 window but fails verification is rejected — this is the Tier C → Tier B
 promotion step.  Tier B → Tier A promotion is a Lean proof (see
-lean_src/CallensDualScale.lean, `sym2_recurrence`).
+lean_src/LocalDualScale.lean, `sym2_recurrence`).
 """
 
 from fractions import Fraction as Q

@@ -97,7 +97,7 @@ ESCALATED in your report, and stop. Escalate when:
 ### F1 — Migrate the variable-coefficient Sym² proof  `[any]`
 - **Objective:** Port `sym2_recurrence_variable` from the prior tree into the active core.
 - **Inputs:** `~/xdev/SocrateAI-Scientific-RajMathRecovery/dualscale/lean/DualScale/K3Lock/Basic.lean`
-  (lines 50–70); target `lean_src/CallensDualScale.lean`.
+  (lines 50–70); target `lean_src/LocalDualScale.lean`.
 - **Steps:** copy the theorem + proof; rename to project conventions; add a non-vacuity
   `example` (aₙ = n+1, bₙ = 1 works — verify in ℚ first with a 5-line script); add
   `#print axioms` line; run `./scripts/verify.sh`.

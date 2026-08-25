@@ -81,7 +81,7 @@ Print a theorem's axiom footprint (the actual Tier A gate, more reliable than re
 
 **`lean_src/`** — one active Lean file per mathematical object, imports chained, never
 versioned copies (`_v2`, `_final` are banned — git history is the archive):
-- `CallensDualScale.lean` — the T-dual effective-radius laws (`Reff`) and the Symmetric-Square
+- `LocalDualScale.lean` — the T-dual effective-radius laws (`Reff`) and the Symmetric-Square
   recurrence lock (`sym2_recurrence`), the program's oldest, most-reviewed core.
 - `DyadicShells.lean` — energy-flux telescoping identity for the truncated Katz–Pavlović
   dyadic shell model (the Stage-1 "laboratory" before any continuum PDE work).

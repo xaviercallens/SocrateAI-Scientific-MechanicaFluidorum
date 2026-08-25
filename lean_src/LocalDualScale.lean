@@ -1,5 +1,16 @@
 /-
-  CallensDualScale.lean — Tier A core of the Dual-Scale program (v0.2)
+  RENAMED 2026-08-25 (owner decision; Stream 0 SPEC-STREAM0 §9, L4.5 — no structure in the
+  programme's libraries carries a person's name). Formerly `CallensDualScale.lean`; the
+  mathematics and the proofs are unchanged, and git history is the archive.
+
+  RELATION TO THE CANONICAL TARGET. `Mathesis.Scale.Reff` (Stream 0) is the canonical home for
+  `Reff` and is consolidated FROM this file. This copy is deliberately RETAINED as an
+  independence certificate: per Stream 0's own `MX-C-0011`, two independent kernel proofs of one
+  statement is the differential-gate philosophy applied inside Lean — if an edit breaks one and
+  not the other, the disagreement is information rather than a silent regression. "Migrate" and
+  "keep" coexist by owner decision of 2026-08-25.
+
+  LocalDualScale.lean — Tier A core of the Dual-Scale program (v0.2)
   =====================================================================
   Repaired foundation file. Differences from the v0.1 specification draft:
 
@@ -22,7 +33,7 @@ import Mathlib.Tactic.Linarith
 import Mathlib.Tactic.FieldSimp
 import Mathlib.Tactic.NormNum
 
-namespace CallensDualScale
+namespace LocalDualScale
 universe u
 
 /-! ### Pillar 1: the T-dual effective radius
@@ -319,4 +330,4 @@ instance : WaveCoupling ℝ ℝ where
 #print axioms sym2_recurrence_variable
 #print axioms wave_mass_nonzero
 
-end CallensDualScale
+end LocalDualScale

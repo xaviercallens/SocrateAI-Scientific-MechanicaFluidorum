@@ -19,7 +19,7 @@ independently re-verified and gated — every theorem's `#print axioms` footprin
 
 | File | Theorems | Content |
 |---|---|---|
-| `lean_src/CallensDualScale.lean` | 14 | T-dual effective-radius laws (`Reff`), the Symmetric-Square recurrence lock, sharpness |
+| `lean_src/LocalDualScale.lean` | 14 | T-dual effective-radius laws (`Reff`), the Symmetric-Square recurrence lock, sharpness |
 | `lean_src/DyadicShells.lean` | 3 | Energy-flux telescoping identity, truncated dyadic shell model |
 | `lean_src/HypothesisU_Statements.lean` | 9 | Non-vacuous statement-level formalization of Hypothesis U (draft, awaiting statement-adequacy audit) |
 | `lean_src/EnstrophyProduction.lean` | 11 | Exact enstrophy-production identity — the dyadic vortex-stretching analogue |

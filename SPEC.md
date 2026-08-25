@@ -22,6 +22,7 @@ Three-tier gating, mechanically enforced by `scripts/verify.sh`:
 | Tier | Meaning | Gate |
 |---|---|---|
 | **C — Conjecture** | proposals, analogies, physical narratives, unverified reductions | none (but must be tagged) |
+| **L — Literature** | a statement of published mathematics, cited to a **theorem statement** (never an abstract) together with the hypotheses that scope it | declared through `cite_threshold` in `tests/controls.py`, which refuses a constant lacking either its source or its hypotheses. **Adopted 2026-08-25** in alignment with the programme-wide decision recorded as Stream 0's `MX-C-0007`, which resolved a real collision: Stream 1 and Stream 5 both used the letter **B** for incompatible criteria — exact rational arithmetic here, peer-reviewed literature there — so "a claim exported from one and imported by the other would silently convert a citation into a computation". **`B` is now reserved programme-wide for exact arithmetic.** A Tier L row is *never* an input to a Tier A proof: a cited theorem may motivate, scope or refute, but may not discharge a Lean obligation |
 | **B — Checkable** | identities validated in exact rational arithmetic; certified witnesses; no floats | `tests/` harness exits 0, exercising **both** directions — negative control always; explicit positive control for any harness that returns a *verdict* rather than asserting an identity (§7.3) |
 | **A — Established** | Lean 4 kernel-compiled, zero `sorry`, axiom footprint containing **no axiom outside** `{propext, Classical.choice, Quot.sound}` (a strict subset is cleaner, and passes — see §5.1) | kernel + `#print axioms` membership test |
 
@@ -134,7 +135,7 @@ the self-dual radius R = √α. The minimal scale *is* the self-dual scale.
 `genesis_no_singularity : 0 < tDualRadius α R` follows axiom-free. The side condition is real:
 at α = 4, R = −1 the forms give −4 and −1 respectively (witnessed `example`, §7.5).
 
-Proven in `lean_src/CallensDualScale.lean`; zero `sorry`; zero custom axioms; footprint
+Proven in `lean_src/LocalDualScale.lean`; zero `sorry`; zero custom axioms; footprint
 `[propext, Classical.choice, Quot.sound]` (log: `docs/verification-log-2026-08-12.txt`).
 α' is a *hypothesis parameter* (0 < α), never an axiom — see §7.1 for why this is forced by
 Hypothesis U itself. Tier B mirror: sqrt-free square-form checks over ℚ
@@ -234,7 +235,7 @@ SocrateAI-Scientific-MechanicaFluidorum/
 │   ├── proposals/                   ← submitted artifacts: verbatim record + kernel log + review
 │   └── narrative/                   ← Tier C physical interpretation (quarantine)
 ├── lean_src/
-│   ├── CallensDualScale.lean        ← Tier A core (single active file)
+│   ├── LocalDualScale.lean        ← Tier A core (single active file)
 │   ├── lean-toolchain               ← leanprover/lean4:v4.33.0-rc2
 │   └── lakefile.lean                ← mathlib dependency (cold build: lake exe cache get && lake build)
 ├── symbolic/
@@ -361,6 +362,30 @@ Never accept "no `sorry` in the source" as a substitute for the gate.
 **7.2 Strict epistemic gating.** Every result is tagged C/B/A in `LEDGER.md` at creation.
 Promotion B→A requires the kernel; promotion C→B requires the exact-arithmetic harness;
 *statement adequacy* at any tier requires human sign-off, not an LLM judge.
+
+**7.2b AXIOMATIC QUARANTINE — imports from other streams (owner decision, 2026-08-25).**
+
+**`lean_src/` may import Mathlib and nothing else from any other stream's tree. Importing
+`SocrateAI-Scientific-RajMathRecovery/DualScale/` is forbidden outright.**
+
+The reason is specific, not hygienic caution. Stream 0's survey `MX-C-0003` records that
+Stream 5's `DualScale/` carries **34 axioms across 14 files plus 2 `sorry`**, while this
+repository's `lean_src/` carries **0 and 0**. Contamination today is *latent, not live*: we use
+that tree solely as a Mathlib provider. Three names would become load-bearing the moment one
+`import` line were added —
+
+| name | there | here |
+|---|---|---|
+| `aubin_lions_compactness` | axiom (×2) | a hypothesis parameter |
+| `dyadic_cascade_conservation` | axiom | **proved, Tier A** |
+| `enstrophy` | axiomatized | defined |
+
+— so a single import would silently convert a theorem of ours into a consequence of someone
+else's axiom, and `#print axioms` would report it only if someone looked. The move to a
+standalone `lean_src/` Lake project already removed the *build* coupling (`MX-C-0005`: which
+`LEAN_ENV_DIR` was in use used to determine what was *provable*, with no diagnostic separating
+"false" from "not built"). This rule closes the *axiom* coupling. The quarantine is absolute
+and is not waived for convenience.
 
 **7.3 Counterexample before attack.** Before any formal proof attempt on a new goal: run
 degenerate/boundary probes and an exact-arithmetic falsification sweep; strategies must file
