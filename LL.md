@@ -539,3 +539,36 @@ function space), because a threshold quoted without its hypotheses is a differen
 Corollary: when a correction lands, add a **regression control** pinning the exact value that
 was wrong (`classify(2/5, "positive") == "PROVEN_REGULAR"`), so the old belief cannot return
 silently.
+
+## LL-17 — a control can fail because the *hypothesis* was violated, not the code (2026-08-15)
+
+**Incident.** `exploration/theta_probe.py` measures whether `∫‖u‖^θ` saturates as the shell
+truncation `N` grows, to screen whether any a priori bound better than `θ = 2` is plausible
+below `α = 1/2`. Its positive control is theorem-backed: at `α = 1`, global regularity is a
+published theorem, so the integral **must** saturate.
+
+On the first run it did not. Growth ratios at `α = 1` rose steadily (`θ=4`: 4.06, 5.89, 6.40),
+i.e. the instrument reported divergence in a regime where divergence is impossible.
+
+**The cause was neither the integrator nor the observable.** The seed was
+`u_n(0) = A·2^{−βn}` with `β = 0.7`, and the enstrophy of that datum is
+`Σ 2^{2αn}u_n² = A²Σ2^{2(α−β)n}`, which converges **iff `β > α`**. At `α = 1`, `β = 0.7` gives
+initial data of *infinite* enstrophy in the limit — so `u₀ ∉ V`, the theorem's hypothesis was
+violated, and the measured `N`-dependence was the initial data's, not the dynamics'.
+
+**Second defect, found by the same failure.** The blow-up control stopped early (the magnitude
+guard fired sooner at larger `N`), so each `N` accumulated its integral over a *different* time
+window. The totals then *decreased* with `N` — a diverging control that looked like it was
+saturating. Fixed by evaluating every run at a **common** window, and by reporting the
+shrinking final time explicitly, since that shrinkage is itself the blow-up signature.
+
+**Rule.** When a theorem-backed control fails, the first hypothesis to test is that **the run
+violates the theorem's hypotheses**, not that the code is wrong. Encode the hypothesis as a
+runtime refusal rather than a comment: the harness now refuses to run at all when `β ≤ α`, and
+prints why. Corollary for any observable accumulated over time: if runs can terminate at
+different times, compare them over a common window or the comparison measures the window, not
+the physics.
+
+Related: LL-16 (a control tests the code against the premise you believe). Together they name
+the two ways a passing control can still be worthless — a wrong premise, and a hypothesis the
+run does not satisfy.
