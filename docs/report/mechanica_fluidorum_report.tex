@@ -1402,9 +1402,50 @@ this domain, the artifact rate for uncontrolled measurements appears to be close
 \end{keybox}
 
 The open question therefore stands exactly where the \tA{} barrier leaves it, with no numerical
-evidence in either direction: answering it needs an integrator that can resolve the cascade at
-large amplitude --- an implicit or exponential scheme with a far larger step budget --- or an
-observable that does not require following the trajectory that far.
+evidence in either direction. Rather than build a better integrator, the next step changed the
+observable and attacked the barrier's first door algebraically, where this programme's
+instruments are exact rather than approximate.
+
+\subsection{Door \#1, closed: there is no banded quartic invariant}
+
+The barrier needs $L^1_{\mathrm{loc}}$ control of $\|u\|^\theta$ with $\theta\ge4$ at
+$\alpha=2/5$. Now $\|u\|^2=H_\alpha$ is \emph{quadratic} in $u$ and $\|u\|^4=H_\alpha^2$ is
+\emph{quartic}, while energy methods produce $L^1$ control of quadratics --- that is what they
+are. So door \#1 reduces to one algebraic question, and it has an exact answer.
+
+\begin{keybox}{Identity (Q1), and what it settles}
+For $H_\gamma=\sum_n\lambda^{2\gamma n}u_n^2$ on the truncated system,
+\[
+\frac{d}{dt}H_\gamma \;=\; -2\nu H_{\gamma+\alpha} \;+\; 2\bigl(\lambda^{2\gamma}-1\bigr)
+\sum_{n}\lambda^{(2\gamma+1)n+1}\,u_n^2u_{n+1}.
+\]
+The nonlinear prefactor vanishes \textbf{only} at $\gamma=0$. Hence \emph{energy is the unique
+conserved weighted quadratic}: $\theta=2$ is the entire quadratic supply, not an artifact of
+technique, and door \#1 genuinely requires leaving degree~2. (Q1) generalises this repository's
+own \tA{} \texttt{shellB\_energy\_conservation}, which is its $\gamma=0$ case. A second reading
+matters as much: for $\gamma<0$ and \emph{positive} data the prefactor is negative and the sum
+non-negative, giving a monotone family --- which is exactly where positivity does its work in
+the literature, and exactly what is unavailable for sign-changing data.
+\end{keybox}
+
+An exact rational search for conserved quartics of the inviscid truncated system --- diagonal
+$\sum c_nu_n^4$, neighbour $\sum c_nu_n^2u_{n+1}^2$, and all banded quartics of index spread
+below $w$, up to 75 monomials --- returns \textbf{nullspace dimension zero in every case}. The
+pre-registered criterion is met: \textbf{door \#1 is closed for banded polynomial quartic
+conserved quantities}, the natural home of an energy-method improvement. Not even $E^2$
+survives, since it is not banded.
+
+What the closure does \emph{not} reach, and what must travel with any citation of it: quartics
+that are monotone without a polynomial certificate, non-polynomial quantities, quantities
+conserved only on invariant subsets, and door \#2 --- leaving the Riccati route altogether. A
+closed door is not a closed problem.
+
+The search's own control history is worth one line, because it was informative rather than
+merely corrective. Its first negative control \emph{failed}: perturbing the in-flux exponent
+$\lambda^n\to\lambda^{n+1}$ does not destroy conservation at all, it merely moves the conserved
+weights from $c_n=1$ to $c_n=\lambda^{-n}$. The telescoping is robust to the exponent and
+sensitive to the \emph{index structure}. That perturbation now serves as a second positive
+control, and the genuine negative control breaks the index structure instead.
 
 \section{What Has Failed, and What That Taught}
 \label{sec:failures}
@@ -1482,7 +1523,7 @@ that they cannot silently rot, but they carry \tC{} claims and may not be cited 
 The newest row is \texttt{TriadTorus.lean} (\S\ref{sec:op2prime}): the torus 2-section solved
 exactly, with its three negative controls run against scratch perturbed copies before commit
 (dropping $u\neq v$, dropping no-2-torsion, perturbing $-8$ to $-6$: each fails to compile, as
-required). Ten Tier B harnesses are wired into Gate~1, each with a negative control
+required). Eleven Tier B harnesses are wired into Gate~1, each with a negative control
 demonstrated to fail. All gates pass at commit \texttt{b4d0ac0}+, re-run independently for
 this report.
 
