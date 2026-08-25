@@ -1,0 +1,422 @@
+/-
+=============================================================================
+FourierStateZ3.lean — OP-6a: The 3D Fourier Kinematic State Space (v2)
+=============================================================================
+Status  : Tier A target (DRAFT pending human statement-adequacy audit).
+Scope   : KINEMATICS ONLY. Defines the constrained state space, the Leray
+          projector and its theorems, non-vacuity witnesses, the finite
+          Galerkin variant, and the sublattice-invariance theorem for
+          arbitrary triadic bilinear maps. Does NOT define the convolution
+          nonlinearity B (OP-6b) nor any form of Hypothesis U.
+
+GUARDRAIL (owner verdict, 15 Aug 2026 — OP-2' killed):
+  `sublattice_invariance` below is GEOMETRY, not a regularity mechanism.
+  The 2D3C manifold is exactly invariant AND measurably repulsive
+  (σ − σ_lin > 0, both planes, all six points). Nothing in this file may be
+  cited as evidence for confinement-based regularity. Its roles: (a) the
+  possibly-unpublished lattice/Galerkin invariance statement, (b) shared
+  infrastructure for OP-6b and the ball-gap programme, (c) phase-space
+  structure for Door #2 work.
+
+SPEC DEVIATIONS (logged for audit):
+  D1. LerayProjector is ℂ-valued (not ℝ-valued as first drafted): removes
+      all ℝ↔ℂ casting from every proof; reality is recovered as the theorem
+      `leray_conj`.
+  D2. Idempotence is proved at the OPERATOR level (`applyLeray_idem`) as a
+      one-line corollary of transversality + fixed-point — the entrywise
+      matrix identity P² = P is thereby optional.
+
+GATE-2 ARBITRATION, 2026-08-25 — the submitted version did NOT compile (15 errors).
+  Repaired in-repo; the verbatim submission is archived at
+  `docs/proposals/2026-08-25-FourierStateZ3-v2-proposed.lean.txt`. What was wrong and
+  what changed:
+    * `![1,0,0] 2` does not reduce under `norm_num`; added the `Matrix.cons_val_two /
+      head_cons / tail_cons` family (3 errors).
+    * `leray_symm` used `split_ifs`, which also split the inner Kronecker deltas and
+      invalidated the `hδ` bridge; restructured as an explicit `by_cases` (3 errors).
+    * THE STRUCTURAL ONE: every `fin_cases` + `simp only [reduceIte]` block failed,
+      because `fin_cases` emits indices as `⟨0, ⋯⟩` rather than literals, which the
+      `reduceIte` simp-proc does not see through (9 errors). Rather than apply the
+      submission's own fallback, both proofs were rewritten to use INDICATOR SUMS
+      (`Finset.sum_ite_eq` / `sum_ite_eq'`), which never mention a `Fin` literal. The
+      three `linear_combination` coefficients disappeared with them — the whole
+      GATE-RISK register is now retired rather than patched.
+  Post-repair: exit 0, zero errors, ten clean certificates. Negative controls run on
+  scratch copies (drop `hv` from `applyLeray_eq_self`; drop `hv` from
+  `sublattice_invariance`; invert `k_sq_eq_zero_iff`) — each fails as required.
+
+STATEMENT-ADEQUACY FLAGS raised by the repairer (for the human audit, NOT resolved here):
+  F1. `sublattice_invariance` is CONDITIONAL on `htriad`, and the zero map satisfies
+      `htriad` trivially. Its non-vacuity therefore rests entirely on OP-6b producing a
+      B that (a) satisfies `htriad` and (b) is not identically zero. Until that exists
+      the theorem is true but possibly empty — precisely the LL-11 failure mode. A
+      witness B should accompany the OP-6b merge.
+  F2. `planeSubgroup` is defined but exercised by no theorem and carries no witness that
+      it is a proper subgroup (i.e. that some `k` lies outside it). Unexercised
+      infrastructure.
+  F3. `GalerkinState.cutoff` keeps `|k|² ≤ M²`, which matches `symbolic/triad_hypergraph.py`'s
+      `0 < n2 <= M*M` — checked, consistent.
+
+GATE-RISK (original submission note, retained for the record): written blind against
+  current Mathlib names; Gate 2 arbitrates.
+  Known risk points, each marked below: `reduceIte` blocks (fallback: plain
+  `simp` before the closing tactic) and `linear_combination` coefficients
+  (fallback: flip sign). Zero `axiom`, zero `sorry` by construction;
+  footprint audited at end of file.
+=============================================================================
+-/
+
+import Mathlib
+
+set_option autoImplicit false
+
+namespace MechanicaFluidorum.FourierZ3
+
+open ComplexConjugate
+
+/-! ### 1. The wavevector lattice -/
+
+/-- Wavevectors in ℤ³. `abbrev` (not `def`) so the additive group structure
+of the Pi type flows through unchanged. -/
+abbrev Wavevector := Fin 3 → ℤ
+
+/-- Squared magnitude |k|² ∈ ℤ. -/
+def k_sq (k : Wavevector) : ℤ := ∑ i : Fin 3, (k i) ^ 2
+
+theorem k_sq_nonneg (k : Wavevector) : 0 ≤ k_sq k :=
+  Finset.sum_nonneg fun i _ => sq_nonneg (k i)
+
+/-- The load-bearing lemma: |k|² = 0 iff k = 0. This is what lets every
+`k_sq = 0` branch collapse to the zero mode instead of a hand-wave. -/
+theorem k_sq_eq_zero_iff (k : Wavevector) : k_sq k = 0 ↔ k = 0 := by
+  constructor
+  · intro h
+    funext i
+    have h1 : ∀ j ∈ Finset.univ, (0 : ℤ) ≤ (k j) ^ 2 := fun j _ => sq_nonneg (k j)
+    have h2 := (Finset.sum_eq_zero_iff_of_nonneg h1).mp h i (Finset.mem_univ i)
+    exact pow_eq_zero_iff (two_ne_zero) |>.mp h2
+  · rintro rfl
+    simp [k_sq, Fin.sum_univ_three]
+
+theorem k_sq_neg (k : Wavevector) : k_sq (-k) = k_sq k := by
+  unfold k_sq
+  simp only [Pi.neg_apply, neg_sq]
+
+/-! ### 2. Complex dot product -/
+
+noncomputable def fourier_dot (k : Wavevector) (v : Fin 3 → ℂ) : ℂ :=
+  ∑ i : Fin 3, (k i : ℂ) * v i
+
+/-! ### 3. The constrained kinematic state space -/
+
+/-- A physically valid Fourier state: divergence-free, real-valued in
+physical space, zero mean flow. -/
+structure FourierState where
+  u : Wavevector → (Fin 3 → ℂ)
+  div_free : ∀ k : Wavevector, fourier_dot k (u k) = 0
+  conj_sym : ∀ k : Wavevector, ∀ i : Fin 3, u (-k) i = conj (u k i)
+  zero_mean : ∀ i : Fin 3, u 0 i = 0
+
+/-! ### 4. Witnesses (SPEC §7.5) — the zero state AND a nontrivial state.
+The zero witness proves inhabitation; the pair witness proves the
+constraints are not secretly forcing triviality. -/
+
+noncomputable def zeroState : FourierState where
+  u := fun _ _ => 0
+  div_free := fun k => by unfold fourier_dot; simp
+  conj_sym := fun _ _ => by simp
+  zero_mean := fun _ => rfl
+
+def k0 : Wavevector := ![1, 0, 0]
+
+noncomputable def modeAmp : Fin 3 → ℂ := ![0, 1, 0]
+
+/-- The mode pair {k₀, −k₀} with a transverse real amplitude. -/
+noncomputable def pairState : Wavevector → Fin 3 → ℂ :=
+  fun k => if k = k0 then modeAmp else if k = -k0 then modeAmp else 0
+
+theorem k0_ne_zero : k0 ≠ 0 := by
+  intro h
+  have h0 := congrFun h 0
+  simp [k0] at h0
+
+theorem k0_ne_neg : k0 ≠ -k0 := by
+  intro h
+  have h0 := congrFun h 0
+  simp only [k0, Matrix.cons_val_zero, Pi.neg_apply] at h0
+  omega
+
+theorem k_sq_k0 : k_sq k0 = 1 := by
+  norm_num [k_sq, k0, Fin.sum_univ_three, Matrix.cons_val_two, Matrix.head_cons, Matrix.tail_cons, Matrix.cons_val_one]
+
+theorem pairState_at_k0 : pairState k0 = modeAmp := by
+  unfold pairState; rw [if_pos rfl]
+
+theorem pairState_at_neg : pairState (-k0) = modeAmp := by
+  unfold pairState
+  rw [if_neg (fun h => k0_ne_neg h.symm), if_pos rfl]
+
+theorem pairState_other {k : Wavevector} (h1 : k ≠ k0) (h2 : k ≠ -k0) :
+    pairState k = 0 := by
+  unfold pairState; rw [if_neg h1, if_neg h2]
+
+theorem dot_k0_amp : fourier_dot k0 modeAmp = 0 := by
+  norm_num [fourier_dot, k0, modeAmp, Fin.sum_univ_three, Matrix.cons_val_two, Matrix.head_cons, Matrix.tail_cons, Matrix.cons_val_one]
+
+theorem dot_negk0_amp : fourier_dot (-k0) modeAmp = 0 := by
+  norm_num [fourier_dot, k0, modeAmp, Fin.sum_univ_three, Matrix.cons_val_two, Matrix.head_cons, Matrix.tail_cons, Matrix.cons_val_one]
+
+theorem modeAmp_real (i : Fin 3) : conj (modeAmp i) = modeAmp i := by
+  fin_cases i <;> simp [modeAmp, Matrix.cons_val_two, Matrix.head_cons, Matrix.tail_cons, Matrix.cons_val_one]
+
+theorem pairState_div_free : ∀ k : Wavevector, fourier_dot k (pairState k) = 0 := by
+  intro k
+  by_cases h1 : k = k0
+  · subst h1; rw [pairState_at_k0]; exact dot_k0_amp
+  · by_cases h2 : k = -k0
+    · subst h2; rw [pairState_at_neg]; exact dot_negk0_amp
+    · rw [pairState_other h1 h2]
+      unfold fourier_dot
+      simp
+
+theorem pairState_conj_sym : ∀ (k : Wavevector) (i : Fin 3),
+    pairState (-k) i = conj (pairState k i) := by
+  intro k i
+  by_cases h1 : k = k0
+  · subst h1
+    rw [pairState_at_neg, pairState_at_k0, modeAmp_real]
+  · by_cases h2 : k = -k0
+    · subst h2
+      rw [neg_neg, pairState_at_k0, pairState_at_neg, modeAmp_real]
+    · have hn1 : -k ≠ k0 := fun h => h2 (neg_eq_iff_eq_neg.mp h)
+      have hn2 : -k ≠ -k0 := fun h => h1 (neg_injective h)
+      rw [pairState_other hn1 hn2, pairState_other h1 h2]
+      simp
+
+/-- The nontrivial witness: constraints admit genuinely nonzero states. -/
+noncomputable def pairWitness : FourierState where
+  u := pairState
+  div_free := pairState_div_free
+  conj_sym := pairState_conj_sym
+  zero_mean := fun i => by
+    rw [pairState_other (Ne.symm k0_ne_zero)
+        (fun h => k0_ne_zero (neg_eq_zero.mp h.symm))]
+    rfl
+
+theorem pairWitness_nontrivial : pairWitness.u k0 1 = 1 := by
+  show pairState k0 1 = 1
+  rw [pairState_at_k0]
+  norm_num [modeAmp]
+
+/-! ### 5. The Galerkin (finite) variant — without it, no energy is
+definable and no ODE existence theory can start (Thm 4.4 path). -/
+
+structure GalerkinState (M : ℕ) extends FourierState where
+  cutoff : ∀ k : Wavevector, (M : ℤ) ^ 2 < k_sq k → toFourierState.u k = 0
+
+/-- The pair witness lives at |k|² = 1, hence inside every M ≥ 1 ball. -/
+noncomputable def pairGalerkin : GalerkinState 1 where
+  toFourierState := pairWitness
+  cutoff := by
+    intro k hk
+    show pairState k = 0
+    apply pairState_other
+    · rintro rfl
+      rw [k_sq_k0] at hk
+      norm_num at hk
+    · rintro rfl
+      rw [k_sq_neg, k_sq_k0] at hk
+      norm_num at hk
+
+/-! ### 6. The Leray projector (ℂ-valued; deviation D1) -/
+
+noncomputable def LerayProjector (k : Wavevector) (i j : Fin 3) : ℂ :=
+  if k_sq k = 0 then (if i = j then 1 else 0)
+  else (if i = j then 1 else 0) - (k i : ℂ) * (k j : ℂ) / (k_sq k : ℂ)
+
+/-- Reality of the projector: entries are self-conjugate. -/
+theorem leray_conj (k : Wavevector) (i j : Fin 3) :
+    conj (LerayProjector k i j) = LerayProjector k i j := by
+  unfold LerayProjector
+  split_ifs <;>
+    simp [apply_ite (conj), map_sub, map_div₀, map_mul, map_intCast]
+
+/-- Symmetry P i j = P j i. -/
+theorem leray_symm (k : Wavevector) (i j : Fin 3) :
+    LerayProjector k i j = LerayProjector k j i := by
+  unfold LerayProjector
+  have hd : (if i = j then (1 : ℂ) else 0) = (if j = i then (1 : ℂ) else 0) := by
+    by_cases hij : i = j
+    · rw [if_pos hij, if_pos hij.symm]
+    · rw [if_neg hij, if_neg (fun h => hij h.symm)]
+  by_cases h : k_sq k = 0
+  · rw [if_pos h, if_pos h, hd]
+  · rw [if_neg h, if_neg h, hd]; ring
+
+/-- Column orthogonality: k annihilates every column of P(k). -/
+theorem leray_col_orthogonal (k : Wavevector) (j : Fin 3) :
+    ∑ i : Fin 3, (k i : ℂ) * LerayProjector k i j = 0 := by
+  by_cases h : k_sq k = 0
+  · have hk := (k_sq_eq_zero_iff k).mp h
+    subst hk
+    simp
+  · have hS : (k_sq k : ℂ) ≠ 0 := Int.cast_ne_zero.mpr h
+    have hcast : (k_sq k : ℂ) = ∑ i : Fin 3, (k i : ℂ) ^ 2 := by
+      unfold k_sq; push_cast; rfl
+    have expand : ∀ i : Fin 3, (k i : ℂ) * LerayProjector k i j
+        = (if i = j then (k i : ℂ) else 0)
+          - (k i : ℂ) ^ 2 * ((k j : ℂ) / (k_sq k : ℂ)) := by
+      intro i
+      unfold LerayProjector
+      rw [if_neg h]
+      by_cases hij : i = j
+      · rw [if_pos hij, if_pos hij, hij]; ring
+      · rw [if_neg hij, if_neg hij]; ring
+    calc ∑ i : Fin 3, (k i : ℂ) * LerayProjector k i j
+        = ∑ i : Fin 3, ((if i = j then (k i : ℂ) else 0)
+            - (k i : ℂ) ^ 2 * ((k j : ℂ) / (k_sq k : ℂ))) :=
+          Finset.sum_congr rfl fun i _ => expand i
+      _ = (∑ i : Fin 3, if i = j then (k i : ℂ) else 0)
+            - (∑ i : Fin 3, (k i : ℂ) ^ 2) * ((k j : ℂ) / (k_sq k : ℂ)) := by
+          rw [Finset.sum_sub_distrib, Finset.sum_mul]
+      _ = (k j : ℂ) - (k_sq k : ℂ) * ((k j : ℂ) / (k_sq k : ℂ)) := by
+          rw [Finset.sum_ite_eq' Finset.univ j (fun i => (k i : ℂ)),
+              if_pos (Finset.mem_univ j), hcast]
+      _ = 0 := by field_simp; ring
+
+/-! ### 7. The projector as an operator -/
+
+noncomputable def applyLeray (k : Wavevector) (v : Fin 3 → ℂ) : Fin 3 → ℂ :=
+  fun i => ∑ j : Fin 3, LerayProjector k i j * v j
+
+theorem applyLeray_zero (k : Wavevector) :
+    applyLeray k (0 : Fin 3 → ℂ) = 0 := by
+  funext i
+  unfold applyLeray
+  simp
+
+/-- **DoD-1 (transversality).** The projected field is divergence-free —
+for every input, including the zero mode (where `k_sq_eq_zero_iff` pays). -/
+theorem applyLeray_div_free (k : Wavevector) (v : Fin 3 → ℂ) :
+    fourier_dot k (applyLeray k v) = 0 := by
+  unfold fourier_dot applyLeray
+  calc ∑ i : Fin 3, (k i : ℂ) * ∑ j : Fin 3, LerayProjector k i j * v j
+      = ∑ i : Fin 3, ∑ j : Fin 3, (k i : ℂ) * LerayProjector k i j * v j := by
+        refine Finset.sum_congr rfl fun i _ => ?_
+        rw [Finset.mul_sum]
+        exact Finset.sum_congr rfl fun j _ => by ring
+    _ = ∑ j : Fin 3, ∑ i : Fin 3, (k i : ℂ) * LerayProjector k i j * v j :=
+        Finset.sum_comm
+    _ = ∑ j : Fin 3, (∑ i : Fin 3, (k i : ℂ) * LerayProjector k i j) * v j := by
+        refine Finset.sum_congr rfl fun j _ => ?_
+        rw [Finset.sum_mul]
+    _ = 0 := by
+        refine Finset.sum_eq_zero fun j _ => ?_
+        rw [leray_col_orthogonal k j, zero_mul]
+
+/-- **DoD-2 (fixed point).** On already-transverse fields, P is the
+identity — the operator does no work above its own constraint. -/
+theorem applyLeray_eq_self {k : Wavevector} {v : Fin 3 → ℂ}
+    (hv : fourier_dot k v = 0) : applyLeray k v = v := by
+  funext i
+  unfold applyLeray
+  have hdot : ∑ j : Fin 3, (k j : ℂ) * v j = 0 := hv
+  by_cases h : k_sq k = 0
+  · have expand : ∀ j : Fin 3, LerayProjector k i j * v j
+        = (if i = j then v j else 0) := by
+      intro j
+      unfold LerayProjector
+      rw [if_pos h]
+      by_cases hij : i = j
+      · simp only [if_pos hij]; ring
+      · simp only [if_neg hij]; ring
+    rw [Finset.sum_congr rfl fun j _ => expand j,
+        Finset.sum_ite_eq Finset.univ i v, if_pos (Finset.mem_univ i)]
+  · have hS : (k_sq k : ℂ) ≠ 0 := Int.cast_ne_zero.mpr h
+    have expand : ∀ j : Fin 3, LerayProjector k i j * v j
+        = (if i = j then v j else 0)
+          - (k i : ℂ) / (k_sq k : ℂ) * ((k j : ℂ) * v j) := by
+      intro j
+      unfold LerayProjector
+      rw [if_neg h]
+      by_cases hij : i = j
+      · simp only [if_pos hij]; field_simp
+      · simp only [if_neg hij]; field_simp; ring
+    rw [Finset.sum_congr rfl fun j _ => expand j, Finset.sum_sub_distrib,
+        Finset.sum_ite_eq Finset.univ i v, if_pos (Finset.mem_univ i),
+        ← Finset.mul_sum, hdot, mul_zero, sub_zero]
+
+/-- **DoD-3 (idempotence, deviation D2).** One line: P(Pv) = Pv because Pv
+is transverse (DoD-1) and P fixes transverse fields (DoD-2). The entrywise
+matrix identity P² = P is now optional decoration. -/
+theorem applyLeray_idem (k : Wavevector) (v : Fin 3 → ℂ) :
+    applyLeray k (applyLeray k v) = applyLeray k v :=
+  applyLeray_eq_self (applyLeray_div_free k v)
+
+/-! ### 8. Sublattice invariance — the geometric half that survived OP-2'
+
+Formulated for an ARBITRARY triadic bilinear map, so that the concrete B of
+OP-6b inherits the theorem verbatim on the day it is defined. -/
+
+/-- A plane through the origin as an additive subgroup of ℤ³ (the 2D3C
+support), for any integer normal vector e. -/
+def planeSubgroup (e : Fin 3 → ℤ) : AddSubgroup (Fin 3 → ℤ) where
+  carrier := {k | ∑ i : Fin 3, e i * k i = 0}
+  zero_mem' := by simp
+  add_mem' := by
+    intro a b ha hb
+    simp only [Set.mem_setOf_eq] at ha hb ⊢
+    simp only [Pi.add_apply, mul_add, Finset.sum_add_distrib, ha, hb, add_zero]
+  neg_mem' := by
+    intro a ha
+    simp only [Set.mem_setOf_eq] at ha ⊢
+    simp only [Pi.neg_apply, mul_neg, Finset.sum_neg_distrib, ha, neg_zero]
+
+/-- **Sublattice invariance.** Any bilinear interaction whose output at k
+draws only on triads p + q = k cannot create modes outside an additive
+subgroup Λ: if both inputs are supported in Λ, so is the output. Applies to
+every subgroup — planes (2D3C), lines, rank-2 sublattices from the atlas —
+and to the OP-6b nonlinearity by construction, once defined. -/
+theorem sublattice_invariance
+    (Λ : AddSubgroup (Fin 3 → ℤ))
+    (B : (Wavevector → Fin 3 → ℂ) → (Wavevector → Fin 3 → ℂ) →
+         (Wavevector → Fin 3 → ℂ))
+    (htriad : ∀ u v k,
+      (∀ p q : Wavevector, p + q = k → u p = 0 ∨ v q = 0) → B u v k = 0)
+    (u v : Wavevector → Fin 3 → ℂ)
+    (hu : ∀ p, p ∉ Λ → u p = 0) (hv : ∀ q, q ∉ Λ → v q = 0)
+    {k : Wavevector} (hk : k ∉ Λ) :
+    B u v k = 0 := by
+  apply htriad
+  intro p q hpq
+  by_cases hp : p ∈ Λ
+  · right
+    apply hv
+    intro hq
+    exact hk (hpq ▸ Λ.add_mem hp hq)
+  · left
+    exact hu p hp
+
+/-- The Leray step never moves support: the third leg of the composite
+invariance (B-closure + this + diagonal dissipation ⇒ the full Galerkin
+vector field preserves Λ-support; assembled in OP-6b). -/
+theorem leray_support (Λ : AddSubgroup (Fin 3 → ℤ))
+    (u : Wavevector → Fin 3 → ℂ) (hu : ∀ p, p ∉ Λ → u p = 0) :
+    ∀ p, p ∉ Λ → applyLeray p (u p) = 0 := fun p hp => by
+  rw [hu p hp, applyLeray_zero]
+
+/-! ### Audit certificates — expected on every line:
+[propext, Classical.choice, Quot.sound] and nothing else. -/
+
+#print axioms k_sq_eq_zero_iff
+#print axioms pairWitness_nontrivial
+#print axioms leray_conj
+#print axioms leray_symm
+#print axioms leray_col_orthogonal
+#print axioms applyLeray_div_free
+#print axioms applyLeray_eq_self
+#print axioms applyLeray_idem
+#print axioms sublattice_invariance
+#print axioms leray_support
+
+end MechanicaFluidorum.FourierZ3

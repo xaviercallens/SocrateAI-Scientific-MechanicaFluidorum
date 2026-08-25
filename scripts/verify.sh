@@ -52,7 +52,7 @@ else
   exit 1
 fi
 FAILED=0
-for f in CallensDualScale DyadicShells DyadicShell_Statements EnstrophyProduction EnstrophyProductionBound MillenniumReduction AbstractAlgebraicConservation TriadTorus DyadicRiccati; do
+for f in CallensDualScale DyadicShells DyadicShell_Statements EnstrophyProduction EnstrophyProductionBound MillenniumReduction AbstractAlgebraicConservation TriadTorus DyadicRiccati FourierStateZ3; do
   echo "-- lean_src/$f.lean"
   OUT=$(cd "$LEAN_CMD_DIR" && LEAN_PATH="$LEAN_PATH_EXT" lean "$f.lean" 2>&1)
   if echo "$OUT" | grep -qiE "^.*error|sorry"; then

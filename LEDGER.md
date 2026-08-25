@@ -308,6 +308,56 @@ D1-scope reason as above. **Promotes
 to Tier A the identity that `tests/tier_b_nse_triad_convolution.py` (OP-6/D3) verified only
 computationally (`M=1,2,3`) and explicitly declined to claim as proven.**
 
+### `lean_src/FourierStateZ3.lean` — OP-6a, the 3-D Fourier kinematic state space (**DRAFT**, 2026-08-25)
+
+**Provenance: externally submitted.** Verbatim submission archived at
+`docs/proposals/2026-08-25-FourierStateZ3-v2-proposed.lean.txt`. **It did not compile as
+submitted — 15 errors.** Repaired in-repo (see the file header for the full arbitration record);
+the structural fix retired the whole GATE-RISK register rather than patching it, by replacing
+every `fin_cases` + `reduceIte` block with indicator sums (`Finset.sum_ite_eq`). This is LL-2
+working exactly as intended: the submission's own self-report claimed "zero `sorry` by
+construction", which was true and irrelevant — it did not compile.
+
+**Status: DRAFT pending human statement-adequacy audit** (same posture as
+`DyadicShell_Statements.lean` before its Q1/Q2 audit). Kinematics only: **no** nonlinearity `B`
+(that is OP-6b), **no** Hypothesis U.
+
+> **Guardrail, carried from the file header.** `sublattice_invariance` is **geometry, not a
+> regularity mechanism**. The owner verdict of 2026-08-15 killed planar confinement as a
+> mechanism: the 2D3C manifold is exactly invariant *and measurably repulsive*. Nothing in this
+> file may be cited as evidence for confinement-based regularity.
+
+| Claim | Formal name | Since |
+|---|---|---|
+| `|k|² = 0 ↔ k = 0` — the load-bearing lemma that collapses every degenerate branch | `k_sq_eq_zero_iff` | 2026-08-25 |
+| Constrained state space (divergence-free, conjugate-symmetric, zero mean) with a **nontrivial** witness (mode pair `{k₀,−k₀}`), not merely the zero state | `pairWitness_nontrivial` | 2026-08-25 |
+| Leray projector: reality and symmetry | `leray_conj`, `leray_symm` | 2026-08-25 |
+| Column orthogonality `Σᵢ kᵢ P(k)ᵢⱼ = 0` | `leray_col_orthogonal` | 2026-08-25 |
+| **DoD-1** projected field is transverse, for *every* `k` including the zero mode | `applyLeray_div_free` | 2026-08-25 |
+| **DoD-2** identity on already-transverse fields | `applyLeray_eq_self` | 2026-08-25 |
+| **DoD-3** idempotence, as a one-line corollary of DoD-1 + DoD-2 (operator level, deviation D2) | `applyLeray_idem` | 2026-08-25 |
+| Sublattice invariance for an **arbitrary** triadic bilinear map; Leray never moves support | `sublattice_invariance`, `leray_support` | 2026-08-25 |
+
+10 theorems, footprints within the permitted set. Negative controls run on scratch copies before
+merge, all fail as required: drop `hv` from `applyLeray_eq_self` (2 errors); drop `hv` from
+`sublattice_invariance` (2); invert `k_sq_eq_zero_iff` (3).
+
+**Audit flags raised by the repairer, unresolved (they are the audit's input, not its output):**
+- **F1 — possible vacuity.** `sublattice_invariance` is conditional on `htriad`, which the zero
+  map satisfies trivially. Its content rests entirely on OP-6b producing a `B` that satisfies
+  `htriad` *and* is not identically zero. Until then the theorem is true and possibly empty —
+  the LL-11 failure mode exactly. **A witness `B` must accompany the OP-6b merge.**
+- **F2 — unexercised infrastructure.** `planeSubgroup` is defined but used by no theorem and has
+  no witness that it is proper (that some `k` lies outside it).
+- **F3 — checked, consistent.** `GalerkinState.cutoff` keeps `|k|² ≤ M²`, matching
+  `symbolic/triad_hypergraph.py`'s `0 < n2 <= M*M`.
+
+**Unverified claim in the accompanying spec, flagged not actioned:** the submission asserts a
+"standing rename decision" against `CallensDualScale.lean` and that a migration target
+`Mathesis.Scale.Reff` "exists". **No such decision appears in `SPEC.md`, `PLAN.md`, `LEDGER.md`
+or `docs/Memo 1.md`, and no such target exists in the repository.** Recorded here as an
+owner-decision item, not as an accepted directive.
+
 ### `lean_src/DyadicRiccati.lean` — why the dyadic threshold is exactly `α = 1/2` (Tier A, 2026-08-15)
 
 **SCOPE, normative:** this is **not** a formalisation of Cheskidov's Theorem 4.4. It formalises

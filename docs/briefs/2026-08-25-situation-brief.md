@@ -3,14 +3,15 @@
 **Audience:** the human owner and any external auditor picking the programme up cold.
 **Status of this document:** summary only. It creates no claim; every statement below is
 sourced to a `LEDGER.md` row, a Lean file, or a harness, and where it says *open* it means no
-tier has been granted. **Author:** orchestrator. **Verified against:** commit `15f9a23`,
-both gates exit 0.
+tier has been granted. **Author:** orchestrator. **Verified against:** commit `f371d8a`+,
+both gates exit 0. **Amended 2026-08-25** with the OP-6a merge; see
+`2026-08-25-directions-and-deliverables.md` for that arbitration and the direction split.
 
 ---
 
 ## 1. One paragraph
 
-The programme's formal core is healthy and growing: **93 kernel-verified theorems across nine
+The programme's formal core is healthy and growing: **103 kernel-verified theorems across ten
 Lean files**, all with clean axiom footprints, plus **twelve Gate-1 harnesses** in exact
 arithmetic. Since the external audit of 13 August the target has been the truncated viscous
 Katz–Pavlović dyadic shell model rather than Navier–Stokes itself, and that pivot is holding.
@@ -33,9 +34,10 @@ numbers were each caught as artifacts, none by review, all by pre-registered con
 | `AbstractAlgebraicConservation.lean` | Abstract triad conservation, transversality | A | 7 |
 | `TriadTorus.lean` | Triad 2-section on a torus: `A = 6(J−I) − 2P`, spectrum | A | 7 |
 | `DyadicRiccati.lean` | The `α = 1/2` threshold as an integrability threshold | A | 13 |
+| `FourierStateZ3.lean` | OP-6a 3-D Fourier kinematic state space (**draft**) | A | 10 |
 | `MillenniumReduction.lean` | Conditional reduction skeleton (**demoted**, audit B1) | C | 7 |
 
-**86 Tier A + 7 demoted = 93**, no axiom outside `{propext, Classical.choice, Quot.sound}`,
+**96 Tier A + 7 demoted = 103**, no axiom outside `{propext, Classical.choice, Quot.sound}`,
 zero `sorry`. Gate 1: `controls.py` self-test plus eleven exact-arithmetic harnesses, each with
 a control demonstrated to fail.
 
