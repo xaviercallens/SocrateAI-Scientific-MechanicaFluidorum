@@ -419,16 +419,18 @@ theorem summand_eq_zero_of_notMem_ball {M : ℕ} (s : GalerkinState M)
 
 The inverse is `(p, q) ↦ (p + q, p)`; it lands back in the ball because `triadSet` constrains
 `−(p+q)`, and the ball is negation-closed. -/
-theorem sum_double_eq_sum_triadSet {M : ℕ} (s : GalerkinState M) :
+theorem sum_double_eq_sum_triadSet_weighted {M : ℕ} (s : GalerkinState M)
+    (w : Wavevector → ℂ) :
     ∑ k ∈ ball M, ∑ p ∈ ball M,
-        AbstractAlgebraicConservation.summand kmap s.toFourierState.u (p, k - p)
-      = ∑ pq ∈ triadSet M, AbstractAlgebraicConservation.summand kmap s.toFourierState.u pq := by
+        AbstractAlgebraicConservation.wsummand kmap s.toFourierState.u w (p, k - p)
+      = ∑ pq ∈ triadSet M,
+          AbstractAlgebraicConservation.wsummand kmap s.toFourierState.u w pq := by
   classical
   set u := s.toFourierState.u with hudef
   set F : Wavevector × Wavevector → ℂ :=
-    fun kp => AbstractAlgebraicConservation.summand kmap u (kp.2, kp.1 - kp.2) with hF
+    fun kp => AbstractAlgebraicConservation.wsummand kmap u w (kp.2, kp.1 - kp.2) with hF
   have hprod : ∑ k ∈ ball M, ∑ p ∈ ball M,
-      AbstractAlgebraicConservation.summand kmap u (p, k - p)
+      AbstractAlgebraicConservation.wsummand kmap u w (p, k - p)
         = ∑ kp ∈ (ball M) ×ˢ (ball M), F kp := by
     rw [Finset.sum_product]
   rw [hprod]
@@ -438,10 +440,12 @@ theorem sum_double_eq_sum_triadSet {M : ℕ} (s : GalerkinState M) :
   have hsub : T ⊆ (ball M) ×ˢ (ball M) := Finset.filter_subset _ _
   have hdrop : ∀ kp ∈ (ball M) ×ˢ (ball M), kp ∉ T → F kp = 0 := by
     intro kp hmem hnot
-    have : kp.1 - kp.2 ∉ ball M := by
+    have hq : kp.1 - kp.2 ∉ ball M := by
       intro hc
       exact hnot (Finset.mem_filter.mpr ⟨hmem, hc⟩)
-    exact summand_eq_zero_of_notMem_ball s this
+    show AbstractAlgebraicConservation.wsummand kmap u w (kp.2, kp.1 - kp.2) = 0
+    unfold AbstractAlgebraicConservation.wsummand
+    rw [summand_eq_zero_of_notMem_ball s hq, mul_zero]
   rw [← Finset.sum_subset hsub hdrop]
   -- and reindex what is left
   refine Finset.sum_nbij' (i := fun kp => (kp.2, kp.1 - kp.2))
@@ -469,6 +473,14 @@ theorem sum_double_eq_sum_triadSet {M : ℕ} (s : GalerkinState M) :
     simp [this]
   · intro kp _
     rfl
+
+/-- The unweighted reindexing, which Task 2.2 consumes, as the constant-weight case. -/
+theorem sum_double_eq_sum_triadSet {M : ℕ} (s : GalerkinState M) :
+    ∑ k ∈ ball M, ∑ p ∈ ball M,
+        AbstractAlgebraicConservation.summand kmap s.toFourierState.u (p, k - p)
+      = ∑ pq ∈ triadSet M, AbstractAlgebraicConservation.summand kmap s.toFourierState.u pq := by
+  have h := sum_double_eq_sum_triadSet_weighted s (fun _ => (1 : ℂ))
+  simpa only [AbstractAlgebraicConservation.wsummand_one] using h
 
 /-- The outer pairing against the convective term, written as a sum of `summand`s. This is where
 the conjugate symmetry `conj(u_k) = u_{−k}` is used, and the only place it is needed: it turns the
@@ -552,11 +564,101 @@ theorem energy_conservation (M : ℕ) : EnergyConservationStatement M := by
   rw [key]
   simp
 
+/-! ### 9. The enstrophy production, in exact closed form
+
+`docs/HYPOTHESIS_U_SPECIFICATION.md` Definition 1.1 states Hypothesis U for the **enstrophy**
+`E = ‖∇u‖²_{L²}`, which on the lattice is `Σ_k |k|² |u_k|²`. Its production under the truncated
+nonlinearity is therefore the *same sum* as the energy identity, weighted by `|k|²` — and since
+`k = −r`, the weight lands on the triad's third member. So this is exactly the situation
+`AbstractAlgebraicConservation.weighted_triad_sum` describes, and the bridge of §8 carries over
+verbatim once it is stated with a weight.
+
+Derivation and scope: `docs/designs/WEIGHTED_TRIAD_IDENTITY.md` (DRAFT, awaiting the owner's
+statement-adequacy audit).
+
+**Read the scope note on `enstrophy_production_identity` before citing it.** It is an identity, not
+a bound. -/
+
+/-- The enstrophy weight, as a complex-valued function on the lattice. -/
+noncomputable def ksqC (a : Wavevector) : ℂ := ((k_sq a : ℤ) : ℂ)
+
+theorem ksqC_neg (a : Wavevector) : ksqC (-a) = ksqC a := by
+  unfold ksqC
+  rw [k_sq_neg]
+
+/-- The weight seen by the reindexed triad is the weight at the outer index, because the triad's
+third member is `−k`, and `k_sq` is even. -/
+theorem ksqC_third (k p : Wavevector) : ksqC (-(p + (k - p))) = ksqC k := by
+  have h : -(p + (k - p)) = -k := by abel
+  rw [h, ksqC_neg]
+
+/-- `Σ_k |k|² ⟨u_k, B(u,u)_k⟩`. The physical enstrophy production is the **real part** of this;
+the identity below is stated for the complex quantity, from which the real statement follows by
+taking `.re` of both sides. -/
+noncomputable def enstrophyProduction (M : ℕ) (u : Wavevector → Fin 3 → ℂ) : ℂ :=
+  ∑ k ∈ ball M, ksqC k * pairing (u k) (B M u u k)
+
+/-- **The enstrophy production in exact closed form — vortex stretching, algebraically.**
+
+```
+    2 · Σ_k |k|² ⟨u_k, B(u,u)_k⟩  =  −i · Σ_{triads}  ( |r|² − |q|² ) · (q·u_p) · (u_q·u_r)
+```
+
+Compare `energy_conservation`, which is the same computation with the weight removed and whose
+right-hand side is therefore **zero**. Everything separating the two sits in the single factor
+`|r|² − |q|²`: the two orderings of a triad differ in the weight and in nothing else. So a triad
+transfers enstrophy in proportion to how **unequal in wavenumber** its two swapped members are, and
+a triad whose two swapped members share a sphere transfers none.
+
+**SCOPE, and it matters more than the theorem.** This is an **identity, not a bound**. It gives no
+estimate on the production, and it says **nothing** about uniformity in the truncation `M`, which is
+the entire content of Hypothesis U. SPEC obstruction **O5** stands untouched: at fixed truncation
+the system is regular by an elementary argument, so a result that does not use the limit uniformly
+proves nothing about the limit — and this one does not use the limit at all. It is also not new
+mathematics; the enstrophy production of the Fourier–Galerkin system is classical. What is new is
+only that it is kernel-checked in the same abstract form as the energy identity.
+
+Non-vacuity of the index set is `triadSet_nonempty_two`; non-vacuity of the right-hand side —
+that it is genuinely nonzero for a non-constant weight — is established at Tier B in
+`tests/tier_b_weighted_triad.py`. -/
+theorem enstrophy_production_identity (M : ℕ) (s : GalerkinState M) :
+    2 * enstrophyProduction M s.toFourierState.u
+      = (-Complex.I) * ∑ pq ∈ triadSet M,
+          (ksqC (-(pq.1 + pq.2)) - ksqC pq.2)
+            * (AbstractAlgebraicConservation.dot (kmap pq.2) (s.toFourierState.u pq.1)
+               * AbstractAlgebraicConservation.dot (s.toFourierState.u pq.2)
+                   (s.toFourierState.u (-(pq.1 + pq.2)))) := by
+  have hdiv : ∀ pq ∈ triadSet M,
+      AbstractAlgebraicConservation.dot (kmap pq.1) (s.toFourierState.u pq.1) = 0 :=
+    fun pq _ => s.toFourierState.div_free pq.1
+  have hstep : enstrophyProduction M s.toFourierState.u
+      = (-Complex.I) * ∑ pq ∈ triadSet M,
+          AbstractAlgebraicConservation.wsummand kmap s.toFourierState.u ksqC pq := by
+    unfold enstrophyProduction
+    have hA : ∀ k ∈ ball M, ksqC k * pairing (s.toFourierState.u k)
+        (B M s.toFourierState.u s.toFourierState.u k)
+          = (-Complex.I) * ∑ p ∈ ball M,
+              AbstractAlgebraicConservation.wsummand kmap s.toFourierState.u ksqC (p, k - p) := by
+      intro k _
+      rw [B, pairing_leray_drop (s.toFourierState.div_free k), pairing_convective_expand,
+        Finset.mul_sum, Finset.mul_sum]
+      refine Finset.sum_congr rfl fun p _ => ?_
+      unfold AbstractAlgebraicConservation.wsummand
+      rw [ksqC_third k p]
+      ring
+    rw [Finset.sum_congr rfl hA, ← Finset.mul_sum, sum_double_eq_sum_triadSet_weighted s ksqC]
+  rw [hstep, ← mul_assoc, mul_comm (2 : ℂ) (-Complex.I), mul_assoc,
+    AbstractAlgebraicConservation.weighted_triad_sum kmap s.toFourierState.u ksqC (triadSet M)
+      kmap_add (triadSet_swap3_closed M) hdiv]
+
 #print axioms neg_mem_ball
 #print axioms fourier_dot_conj
 #print axioms pairing_leray_drop
 #print axioms pairing_convective_expand
 #print axioms energy_conservation
+#print axioms sum_double_eq_sum_triadSet_weighted
+#print axioms ksqC_third
+#print axioms enstrophy_production_identity
 #print axioms kmap_add
 #print axioms summand_eq_zero_of_notMem_ball
 #print axioms sum_double_eq_sum_triadSet

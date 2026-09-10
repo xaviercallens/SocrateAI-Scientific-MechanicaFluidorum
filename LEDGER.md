@@ -561,6 +561,35 @@ to a single factor. **It does not unblock Task 2.3 or Tasks 3.1/3.2.**
 (N3, and Lean NC-J, which matters because §3 uses that hypothesis exactly once); and asserting the
 pair cancels for a non-constant weight (N4).
 
+### Instantiated for the concrete 3-D operator: the enstrophy production (2026-09-10)
+
+`lean_src/FourierDynamicsZ3.lean` §9. The bridge of §8 was generalised to carry a weight, and the
+unweighted lemma Task 2.2 consumes is now derived from it as the constant-weight case — so the two
+results share one reindexing proof rather than two copies.
+
+| Claim | Theorem | Date |
+|---|---|---|
+| The weighted reindexing onto `triadSet M` | `sum_double_eq_sum_triadSet_weighted` | 2026-09-10 |
+| The unweighted reindexing, as the `w ≡ 1` corollary | `sum_double_eq_sum_triadSet` | 2026-09-10 |
+| The enstrophy weight is even, so the triad's third member carries the outer weight | `ksqC_neg`, `ksqC_third` | 2026-09-10 |
+| **THE ENSTROPHY PRODUCTION, EXACTLY**: `2 Σ_k \|k\|²⟨u_k,B_k⟩ = −i Σ (\|r\|²−\|q\|²)(q·u_p)(u_q·u_r)` | `enstrophy_production_identity` | 2026-09-10 |
+
+Set beside `energy_conservation`, which is the same computation with the weight removed and whose
+right-hand side is therefore **zero**, this displays the entire difference between the two
+conservation questions as one factor.
+
+**Two Lean negative controls, both confirmed to fail. The first is the one that matters:**
+
+- **NC-L** — replace the weight difference by `0`, i.e. assert that enstrophy is conserved exactly
+  as energy is. Had it passed, the identity would say nothing that `energy_conservation` does not.
+- **NC-M** — use the sum of the weights rather than the difference.
+
+**Scope, restated because it is the important half.** Identity, not bound. No estimate on the
+production. **Nothing about uniformity in `M`**, which is all Hypothesis U asks. **SPEC obstruction
+O5 stands**: at fixed truncation the system is regular by an elementary argument, so a result that
+does not use the limit uniformly proves nothing about the limit — and this one does not use the
+limit at all.
+
 **Audit flags — BOTH CLOSED 2026-09-10.** F1′ by `B_witness_ne_zero` / `B_not_identically_zero`
 (rows above). F4 by `mem_ball_iff`: `k ∈ ball M ↔ k_sq k ≤ M²`. The non-obvious direction is that
 `k_sq k ≤ M²` already forces every coordinate into `[−M, M]`, because each `(kᵢ)²` is one
