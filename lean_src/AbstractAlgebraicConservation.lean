@@ -313,6 +313,117 @@ NC3 — delete `h2` from `triad_sum_zero`: the fixed-point branch cannot conclud
 `dot (k q) (u p) = 0` from `2 * dot (k q) (u p) = 0`. Each is expected to leave an unsolved
 goal, i.e. `sorryAx` in the footprint. -/
 
+/-! ## 4. The WEIGHTED triad identity — one theorem containing both energy conservation and the
+vortex-stretching obstruction
+
+Derivation and scope: `docs/designs/WEIGHTED_TRIAD_IDENTITY.md` (DRAFT, awaiting the owner's
+statement-adequacy audit).
+
+`triad_sum_zero` above is the energy identity: the two orderings cancel outright. The physically
+decisive sum is not that one but the **weighted** one — enstrophy is `Σ |k|²|u_k|²`, so the
+production carries a factor `|k|²`, and `k = −r` puts the weight on the triad's **third** member.
+
+The question is not whether the swap still cancels — it does not, or three-dimensional
+Navier–Stokes would be easy — but exactly **how** it fails. The answer is sharp: everything except
+the weight is common to the two orderings, so the entire residue is the weight *difference* across
+the swap. Constant weight ⟹ zero ⟹ energy conservation. Weight `|·|²` ⟹ the vortex-stretching
+term, driven by wavenumber disparity within the triad and nothing else.
+
+**This is an identity, not a bound.** It gives no estimate, and it says nothing about uniformity in
+the truncation, which is the entire content of Hypothesis U — SPEC obstruction O5 still stands. -/
+
+/-- The triad summand carrying a weight on the third member `r = −(p+q)`. With `w ≡ 1` this is
+`summand`. -/
+def wsummand (k u : I → Fin n → K) (w : I → K) (pq : I × I) : K :=
+  w (-(pq.1 + pq.2)) * summand k u pq
+
+theorem wsummand_one (k u : I → Fin n → K) (pq : I × I) :
+    wsummand k u (fun _ => (1 : K)) pq = summand k u pq := by
+  unfold wsummand
+  rw [one_mul]
+
+/-- **The pair identity — the whole content, in one line of algebra.**
+
+The two orderings of a triad differ in the weight and in nothing else, because `dot uq ur` is
+symmetric and `dot (k r) (u p) = −dot (k q) (u p)` by divergence-freeness at `p`. So their sum is
+the weight difference times the common factor. -/
+theorem weighted_triad_pairing (kp kq kr up uq ur : Fin n → K) (wq wr : K)
+    (hk : ∀ i, kp i + kq i + kr i = 0)
+    (hdiv : dot kp up = 0) :
+    wr * (dot kq up * dot uq ur) + wq * (dot kr up * dot ur uq)
+      = (wr - wq) * (dot kq up * dot uq ur) := by
+  have hsum : dot kp up + dot kq up + dot kr up = 0 := by
+    unfold dot
+    rw [← Finset.sum_add_distrib, ← Finset.sum_add_distrib]
+    refine Finset.sum_eq_zero fun i _ => ?_
+    linear_combination up i * hk i
+  have hkr : dot kr up = -dot kq up := by
+    rw [hdiv] at hsum
+    linear_combination hsum
+  rw [dot_comm ur uq, hkr]
+  ring
+
+/-- **The weighted sum over a `swap3`-closed set.** Twice the weighted triad sum is the sum of the
+weight differences against the common factor. `swap3` is an involution of `S`, which is what turns
+the pair identity into a statement about the whole sum. -/
+theorem weighted_triad_sum
+    (k u : I → Fin n → K) (w : I → K) (S : Finset (I × I))
+    (hkadd : ∀ (a b : I) (i : Fin n), k (a + b) i = k a i + k b i)
+    (hclosed : ∀ pq ∈ S, swap3 pq ∈ S)
+    (hdiv : ∀ pq ∈ S, dot (k pq.1) (u pq.1) = 0) :
+    2 * ∑ pq ∈ S, wsummand k u w pq
+      = ∑ pq ∈ S, (w (-(pq.1 + pq.2)) - w pq.2)
+          * (dot (k pq.2) (u pq.1) * dot (u pq.2) (u (-(pq.1 + pq.2)))) := by
+  classical
+  have hreindex : ∑ pq ∈ S, wsummand k u w (swap3 pq) = ∑ pq ∈ S, wsummand k u w pq :=
+    Finset.sum_nbij' (i := swap3) (j := swap3) hclosed hclosed
+      (fun pq _ => swap3_involutive pq) (fun pq _ => swap3_involutive pq) (fun _ _ => rfl)
+  have htwo : 2 * ∑ pq ∈ S, wsummand k u w pq
+      = ∑ pq ∈ S, (wsummand k u w pq + wsummand k u w (swap3 pq)) := by
+    rw [Finset.sum_add_distrib, hreindex]
+    ring
+  rw [htwo]
+  refine Finset.sum_congr rfl fun pq hpq => ?_
+  -- the wavevector map annihilates the closed triad
+  have hk0 : ∀ i, k pq.1 i + k pq.2 i + k (-(pq.1 + pq.2)) i = 0 := by
+    intro i
+    have hadd : k (pq.1 + pq.2) i = k pq.1 i + k pq.2 i := hkadd _ _ i
+    have hz : k (0 : I) i = 0 := by
+      have h00 := hkadd 0 0 i
+      rw [add_zero] at h00
+      linear_combination -h00
+    have hneg : k (pq.1 + pq.2) i + k (-(pq.1 + pq.2)) i = 0 := by
+      have hcancel := hkadd (pq.1 + pq.2) (-(pq.1 + pq.2)) i
+      rw [add_neg_cancel, hz] at hcancel
+      linear_combination -hcancel
+    linear_combination -hadd + hneg
+  unfold wsummand summand swap3
+  simp only
+  have hrr : -(pq.1 + -(pq.1 + pq.2)) = pq.2 := by abel
+  rw [hrr]
+  exact weighted_triad_pairing (k pq.1) (k pq.2) (k (-(pq.1 + pq.2)))
+    (u pq.1) (u pq.2) (u (-(pq.1 + pq.2))) (w pq.2) (w (-(pq.1 + pq.2))) hk0 (hdiv pq hpq)
+
+/-- **Energy conservation is the constant-weight case**, derived *from* the weighted identity — so
+the memo's claim that the two are one theorem is machine-checked, not asserted. Nothing about the
+value of the constant is used. -/
+theorem weighted_triad_sum_eq_zero_of_const
+    (k u : I → Fin n → K) (c : K) (S : Finset (I × I))
+    (h2 : ∀ x : K, 2 * x = 0 → x = 0)
+    (hkadd : ∀ (a b : I) (i : Fin n), k (a + b) i = k a i + k b i)
+    (hclosed : ∀ pq ∈ S, swap3 pq ∈ S)
+    (hdiv : ∀ pq ∈ S, dot (k pq.1) (u pq.1) = 0) :
+    ∑ pq ∈ S, wsummand k u (fun _ => c) pq = 0 := by
+  refine h2 _ ?_
+  rw [weighted_triad_sum k u (fun _ => c) S hkadd hclosed hdiv]
+  refine Finset.sum_eq_zero fun pq _ => ?_
+  simp
+
+#print axioms wsummand_one
+#print axioms weighted_triad_pairing
+#print axioms weighted_triad_sum
+#print axioms weighted_triad_sum_eq_zero_of_const
+
 #print axioms dot_comm
 #print axioms dot_add_left
 #print axioms dot_neg_left

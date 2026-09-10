@@ -506,6 +506,61 @@ fail, each for the predicted reason:**
 ODE conserves energy exactly, which is a prerequisite for global existence **of the truncated
 system**. It is not evidence about the `α′ → 0` limit, about Hypothesis U, or about Navier–Stokes.
 
+## Tier A + Tier B — the WEIGHTED triad identity (2026-09-10)
+
+`lean_src/AbstractAlgebraicConservation.lean` §4 and `tests/tier_b_weighted_triad.py` (Gate 1).
+Derivation: `docs/designs/WEIGHTED_TRIAD_IDENTITY.md`.
+
+**⚠ THE MEMO IS SELF-AUTHORED AND AWAITS THE OWNER'S STATEMENT-ADEQUACY AUDIT.** Unlike
+`TASK22_ENERGY_IDENTITY.md`, it was not issued by the orchestrator; I derived it while looking for
+unblocked work on the goal after Task 2.2 closed. The proofs are machine-checked and the arithmetic
+is exact, but **whether the statement is the one the programme wants is a human judgement** — the
+gap the two-gate system structurally cannot close.
+
+**Why this and not the roadmap.** Hypothesis U is about **enstrophy**, not energy
+(`docs/HYPOTHESIS_U_SPECIFICATION.md` Definition 1.1). The production is the same sum as the energy
+identity weighted by `|k|²`, and `k = −r` puts the weight on the triad's third member. Task 2.3 and
+Tasks 3.1/3.2 remain blocked under E-1 on undefined objects; this is not, since enstrophy is
+specified and `B` is already Tier A here.
+
+> **The pair identity.** For any weight `w`, given only divergence-freeness at `p`:
+>
+> `wsummand w (p,q) + wsummand w (swap3 (p,q)) = (w r − w q) · dot (k q) (u p) · dot (u q) (u r)`
+
+| Claim | Theorem | Date |
+|---|---|---|
+| The weighted summand reduces to `summand` at `w ≡ 1` | `wsummand_one` | 2026-09-10 |
+| **The pair identity** — the two orderings differ in the weight and in nothing else | `weighted_triad_pairing` | 2026-09-10 |
+| The weighted sum over a `swap3`-closed set, via the involution | `weighted_triad_sum` | 2026-09-10 |
+| **Energy conservation recovered as the constant-weight corollary**, proved *from* the weighted identity | `weighted_triad_sum_eq_zero_of_const` | 2026-09-10 |
+
+**What it says.** The obstruction is carried **entirely by the weight difference across the swap** —
+not by the triad's geometry, not by chirality, not by the lattice, since every other factor is
+common to the two orderings. Constant weight gives zero, so **energy conservation and the
+vortex-stretching obstruction are one theorem**, and that claim is machine-checked rather than
+asserted: the constant-weight corollary is derived from the weighted identity. With `w = |·|²`,
+
+> `2 P = Σ (|r|² − |q|²) · (q·u_p) · (u_q·u_r)`
+
+so a triad transfers enstrophy in proportion to how **unequal in wavenumber** its two swapped
+members are, and a triad whose two swapped members share a sphere transfers none. The Tier B
+harness confirms that sharp criterion on an isoceles triad, and confirms non-vacuity: the pair sum
+is nonzero on 5 of 6 generic triads for every non-constant weight tried.
+
+**What it does NOT say, and this is the important half.** It is an **identity, not a bound**, and
+gives no estimate on the production whatsoever. It says **nothing about uniformity in the
+truncation**, which is the entire content of Hypothesis U — **SPEC obstruction O5 stands untouched**,
+and an argument that does not use the limit uniformly proves nothing about the limit. It is also
+**not new mathematics**: the enstrophy production of the Fourier–Galerkin system is classical. What
+is new is only that it is kernel-checked in the same abstract form as the energy identity. The
+honest summary is that this converts a known fact into a Tier A one and localises the 3-D difficulty
+to a single factor. **It does not unblock Task 2.3 or Tasks 3.1/3.2.**
+
+**Four Tier B and two Lean negative controls, all confirmed to fail:** exchanging the two weights
+(N1, and Lean NC-K); replacing the difference by a sum (N2); breaking divergence-freeness at `p`
+(N3, and Lean NC-J, which matters because §3 uses that hypothesis exactly once); and asserting the
+pair cancels for a non-constant weight (N4).
+
 **Audit flags — BOTH CLOSED 2026-09-10.** F1′ by `B_witness_ne_zero` / `B_not_identically_zero`
 (rows above). F4 by `mem_ball_iff`: `k ∈ ball M ↔ k_sq k ≤ M²`. The non-obvious direction is that
 `k_sq k ≤ M²` already forces every coordinate into `[−M, M]`, because each `(kᵢ)²` is one
