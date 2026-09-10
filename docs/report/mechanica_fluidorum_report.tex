@@ -63,8 +63,8 @@ Revised After the External Audit of 13 August 2026}}
 \small\texttt{SocrateAI-Scientific-MechanicaFluidorum}}
 
 \date{13 August 2026 \quad$\vert$\quad revised 10 September 2026\\[0.3em]
-\small Repository state: commit \texttt{c4e149a} \quad$\vert$\quad All verification gates PASS (exit 0)\\[0.2em]
-\small 12 Lean files, 174 kernel-compiled theorems, zero \texttt{sorry} \quad$\vert$\quad 13 exact-arithmetic harnesses}
+\small Repository state: commit \texttt{33a76df} \quad$\vert$\quad All verification gates PASS (exit 0)\\[0.2em]
+\small 12 Lean files, 197 kernel-compiled theorems, zero \texttt{sorry} \quad$\vert$\quad 14 exact-arithmetic harnesses}
 
 \begin{document}
 \maketitle
@@ -1667,6 +1667,63 @@ $p\times q$, orthogonal to $p$, to $q$, and --- since $k=p+q$ --- to $k$ as well
 exactly on the collinear triads, that is, by Theorem~\ref{thm:reso}, exactly where the coefficient
 has no content anyway.
 
+\subsection{The closed form in the kernel, and the converse that closes the inventory}
+\label{sec:closedform}
+
+\paragraph{A gap between tiers, found and closed.}
+Theorem~\ref{thm:reso} is stated ``for some choice of signs'', and the exact-arithmetic sweep that
+first established it quantified over all three relabellings. The first Lean transcription did not:
+it assumed $-|k|+|p|+|q|=0$, the single pattern in which $k$ is the odd one out. The two tiers were
+therefore asserting different propositions, and the machine-checked one was the weaker --- a failure
+mode worth naming, because it is invisible to both gates individually. The remaining two patterns
+are now proved by rewriting $p+q=k$ as $k+(-q)=p$ and $k+(-p)=q$, and the general statement
+quantifies over $s\in\{\pm1\}^3$: of its eight branches, two are impossible because a sum of three
+positive reals is not zero, and the other six are the three patterns, each arising twice under
+global sign flip.
+
+\paragraph{The closed form, verified in three independent ways (\tA{}, \tB{}).}
+Equation~\eqref{eq:coeff} is now kernel-compiled. In the triad's own integer frame $N=p\times q$ the
+memo's $S_{pq}$ and $|N|^2$ coincide, so in the unnormalised scaling that keeps every proof free of
+square roots and divisions it reads
+\begin{equation}
+  g \;=\; -\,i\,\bigl(N\!\cdot\!N\bigr)^{2}\bigl(s_p|p|+s_q|q|+s_k|k|\bigr),
+  \qquad
+  C \;=\; \frac{i}{4}\bigl(N\!\cdot\!N\bigr)^{2}
+          \bigl(s_p|p|+s_q|q|+s_k|k|\bigr)\bigl(s_p|p|-s_q|q|\bigr).
+  \label{eq:closed}
+\end{equation}
+The proof needs no $i^2=-1$: every term quadratic in $i$ is a triple product $(N\times x)\cdot N$,
+identically zero, so $i$ survives only linearly and the whole identity is a degree-9 polynomial
+identity in six integer variables.
+
+The kernel certifies the \emph{proof}, not the \emph{statement}, and a mis-transcribed sign would be
+proved just as happily --- which is exactly what happened to the first draft of \eqref{eq:coeff}. So
+\eqref{eq:closed} is also transcribed independently and checked in \emph{exact integers}. This is
+possible, despite $|p|,|q|,|k|$ being irrational at almost every lattice point, because the closed
+form is linear in them and the brute force at worst quadratic: both sides are polynomials in three
+formal symbols with integer coefficients, and polynomial equality is integer equality. The identity
+is thereby confirmed \emph{in the magnitudes}, over $5\,256$ triad-by-chirality-class checks, rather
+than at the particular magnitudes those triads happen to have. Three negative controls fail as
+required, the sharpest being an orientation flip to $q\times p$: $N\!\cdot\!N$ is blind to it and
+$g$ is not.
+
+\paragraph{The converse, and why it is the result that matters.}
+Every vanishing statement to this point has been one-directional. None excluded a fourth, unnoticed
+locus, so the programme had no way to know when its inventory of inert triads was complete. Since
+$\C$ has no zero divisors, \eqref{eq:closed} settles it: $C=0$ if and \emph{only} if the triad is
+collinear, or resonant, or balanced. With Theorem~\ref{thm:reso} folding the second into the first,
+\emph{the inventory is closed and has two members} --- a degeneracy that carries no transfer for
+want of a plane, and the balance condition $s_p|p|=s_q|q|$, which is the only non-degenerate one and
+is witnessed non-collinearly.
+
+Two further remarks. The vanishing theorems of the preceding subsection were proved
+\emph{geometrically}, by degenerating the frame; \eqref{eq:closed} re-derives all three
+\emph{algebraically}, from an identity that never mentions a degenerate frame, so the agreement of
+the two routes is a cross-check the kernel now runs on every build --- and precisely the check the
+erroneous first draft would have failed. And the deflation of \S\ref{sec:waleffe} is sharpened
+rather than softened: the closed form gives the exact size of the transfer everywhere off the two
+loci, and nothing in it distinguishes $\Z^3$ from $\R^3$.
+
 \section{What Has Failed, and What That Taught}
 \label{sec:failures}
 %==============================================================================
@@ -1729,14 +1786,15 @@ LL-8 & \textbf{The verification gate itself had a false positive.} A lemma prove
 \texttt{DyadicRiccati.lean} & The $\alpha=1/2$ threshold as an integrability threshold & \tA{} & 14 \\
 \texttt{FourierStateZ3.lean} & 3-D Fourier state space, Leray projector (\textsc{draft}) & \tA{} & 24 \\
 \texttt{FourierDynamicsZ3.lean} & The operator $B$ of \eqref{eq:Bop}; $B\neq0$ witness; $F1$, $F4$ closed & \tA{} & 18 \\
-\texttt{HelicalBasis.lean} & Helical basis, five facts; resonance $=$ collinearity & \tA{} & 34 \\
+\texttt{HelicalBasis.lean} & Helical basis, five facts; resonance $=$ collinearity; the closed
+form \eqref{eq:closed} and its converse & \tA{} & 57 \\
 \midrule
-\multicolumn{2}{@{}l}{\textbf{Tier A subtotal}} & & \textbf{166} \\
+\multicolumn{2}{@{}l}{\textbf{Tier A subtotal}} & & \textbf{189} \\
 \midrule
 \texttt{MillenniumReduction.lean} & Conditional reduction skeleton & \tC{} & 8 \\
  & \quad (\textsc{demoted} 2026-08-13, verdict B1) & & \\
 \midrule
-\multicolumn{2}{@{}l}{\textbf{Total kernel-compiled, no axiom outside \texttt{\{propext, Classical.choice, Quot.sound\}}}} & & \textbf{174} \\
+\multicolumn{2}{@{}l}{\textbf{Total kernel-compiled, no axiom outside \texttt{\{propext, Classical.choice, Quot.sound\}}}} & & \textbf{197} \\
 \bottomrule
 \end{tabular}
 \end{center}
