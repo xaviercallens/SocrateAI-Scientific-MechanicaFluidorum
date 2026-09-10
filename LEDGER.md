@@ -665,6 +665,48 @@ energy law (NC-N); **dropping the production term from the enstrophy balance —
 dissipates as energy does** (NC-O, the one that matters: had it passed, the balance law would hide
 the open problem rather than display it); and dropping `0 ≤ ν` from the nonpositivity (NC-P).
 
+## Audit — the "OpenAI leverage" proposal, reviewed; foreign tree NOT yet kernel-audited (2026-09-10)
+
+Submission archived verbatim: `docs/proposals/2026-09-10-dual-scale-openai-leverage-PROPOSAL.md`.
+Review: `docs/proposals/2026-09-10-dual-scale-openai-leverage-review.md`. Deep Think packet:
+`docs/briefs/2026-09-10-deep-think-packet-openai-leverage.md`.
+
+**Facts verified by direct file reads of `/home/xavkal/xdev/OpenAINavierStokesEuler`** (shell
+access to that tree is outside this session's sandbox; reads only):
+
+- the tree exists; project root `NavierStokesAndEuler/`; toolchain **`v4.34.0-rc2`** — incompatible
+  with this repo's pin, so **no olean can be shared**;
+- `navier_stokes_breakdown_R3` (Statement C shape) and `euler_breakdown_R3` /
+  `exists_compact_smooth_euler_singularity` exist **as theorems with full proof terms**;
+- their `ProblemStatement.lean` header states its `candidateStatement` is "**a proposition, not an
+  axiom or a proved theorem**", and their Euler solution file references a "reference module…
+  placeholder theorem" — the audit must map proved vs. open;
+- their BKM criterion is welded to their Euler `FiniteLifespan` structure — **not**
+  equation-agnostic as the proposal claims;
+- their force is confirmed to equal the residual of a pre-built candidate
+  (`force_eq_activated_residual`) — the proposal's characterisation of the forced result is
+  accurate.
+
+**NOT verified, and blocking any citation at any tier:** compilation, sorry-freeness, axiom
+footprint. Standing rule applies: cite the theorem with its kernel transcript, never the abstract.
+
+**Review findings in one row each** (details and evidence in the review document):
+
+| finding | consequence |
+|---|---|
+| The proposal's target — NS advected by `(I−α′Δ)^{-1}u` — **is the Leray-α model**; global regularity at fixed `α′` is classical (CHOT 2005, Tier L pending verification) | worth formalizing **under its true name**; it is *not* Statement A |
+| Every bound in the plan carries `1/α′`; **uniformity — Hypothesis U — is untouched**; the proposal never mentions O5 | the label "Statement A under the Dual-Scale metric" must not enter the paper |
+| The proposal silently swaps the spec's **sharp projection** `J_{√α′}` (our Galerkin system) for the **smooth Helmholtz filter** (Leray-α) | E-1-class definitional fork; **owner + Deep Think, packet Q1** |
+| The "3 theorems, import the rest" costing omits local well-posedness for the modified equation, a BKM re-proof, and the discrete–continuum bridge | realistic scale: months, not weeks |
+| Proposal §7.2–§7.3 rest on `𝒟(M)` and Beltrami-relaxation narratives **this ledger has refuted** | struck from any adopted version |
+| Proposal §5 (their results don't touch Statement A) is **correct and useful** | adopt as Tier L framing after the kernel audit |
+| Salvage identified: the **discrete Helmholtz weight** `w_α(k) = k_sq k/(1+α·k_sq k)` is bounded by `1/α` uniformly, so the weight-difference obstruction in `weighted_triad_sum` **saturates** — provable in-tree, no imports, exact arithmetic | proposed as WP-1c; the honest formal core of the proposal's §7.1 |
+
+**Governance flags:** SPEC §7.2b forbids `lean_src/` importing any other tree, so "leverage" means
+(a) SPEC amendment after audit, (b) an external bridge project, or (c) in-tree re-derivation —
+owner's call. The full build-and-`#print axioms` audit of the foreign tree is queued as WP-0b
+(mechanical; needs shell access to that path, which this session does not have).
+
 **Audit flags — BOTH CLOSED 2026-09-10.** F1′ by `B_witness_ne_zero` / `B_not_identically_zero`
 (rows above). F4 by `mem_ball_iff`: `k ∈ ball M ↔ k_sq k ≤ M²`. The non-obvious direction is that
 `k_sq k ≤ M²` already forces every coordinate into `[−M, M]`, because each `(kᵢ)²` is one
