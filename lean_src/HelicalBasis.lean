@@ -145,12 +145,23 @@ theorem kNorm_sq (k : Wavevector) : kNorm k * kNorm k = (k_sq k : ℝ) :=
 
 /-! ### 4. The helical vector, unnormalised -/
 
-/-- `hRaw s k = (ν(k) × k) + i s |k| ν(k)`, i.e. `|ν| |k|` times Waleffe's `h^s(k)`.
+/-- `hOf N s k = (N × k) + i s |k| N`, i.e. `|N| |k|` times Waleffe's `h^s(k)` when `N ⊥ k`.
 
-Carrying the scale factor removes every division, so no `k ≠ 0` witness is needed until step 2. -/
-noncomputable def hRaw (s : ℝ) (k : Wavevector) : Fin 3 → ℂ :=
-  fun i => ((crossZ (nuInt k) k i : ℤ) : ℂ)
-            + Complex.I * (s : ℂ) * ((kNorm k : ℝ) : ℂ) * (((nuInt k i : ℤ) : ℂ))
+Carrying the scale factor removes every division, so no `k ≠ 0` witness is needed until step 2.
+
+**Parametrised by `ν`** (2026-09-10, D-3 step 2 groundwork). The facts need only `ν ⊥ k`, so they
+are proved for an arbitrary such `ν` and specialised to `nuInt`. This is not tidiness: the closed
+form of the memo's §4 is derived in the triad's OWN planar frame, so stating it at all requires a
+basis that can be handed a different `ν` — the crucible measured a pure phase difference between
+conventions, and a statement that hard-codes one convention cannot express it. -/
+noncomputable def hOf (N : Wavevector) (s : ℝ) (k : Wavevector) : Fin 3 → ℂ :=
+  fun i => ((crossZ N k i : ℤ) : ℂ)
+            + Complex.I * (s : ℂ) * ((kNorm k : ℝ) : ℂ) * (((N i : ℤ) : ℂ))
+
+/-- The basis with this file's own canonical choice of `ν`. -/
+noncomputable def hRaw (s : ℝ) (k : Wavevector) : Fin 3 → ℂ := hOf (nuInt k) s k
+
+theorem hRaw_eq (s : ℝ) (k : Wavevector) : hRaw s k = hOf (nuInt k) s k := rfl
 
 /-- Bilinear complex dot, no conjugation — the same convention as `FourierStateZ3.fourier_dot`. -/
 noncomputable def cdot (v w : Fin 3 → ℂ) : ℂ := ∑ i : Fin 3, v i * w i
@@ -160,31 +171,39 @@ theorem cdot_expand (v w : Fin 3 → ℂ) : cdot v w = v 0 * w 0 + v 1 * w 1 + v
 
 /-! ### 5. The five facts -/
 
-/-- **H3 — transversality.** `k · hRaw = 0`, for every `s` and every `k`, no hypothesis. -/
-theorem hRaw_transverse (s : ℝ) (k : Wavevector) : fourier_dot k (hRaw s k) = 0 := by
-  have hA : dotZ k (crossZ (nuInt k) k) = 0 := dotZ_crossZ_right (nuInt k) k
-  have hN : dotZ k (nuInt k) = 0 := nuInt_orthogonal k
+/-- **H3 — transversality**, for an arbitrary `ν ⊥ k`. -/
+theorem hOf_transverse {N k : Wavevector} (hN : dotZ k N = 0) (s : ℝ) :
+    fourier_dot k (hOf N s k) = 0 := by
+  have hA : dotZ k (crossZ N k) = 0 := dotZ_crossZ_right N k
   rw [dotZ_expand] at hA hN
-  unfold fourier_dot hRaw
+  unfold fourier_dot hOf
   rw [Fin.sum_univ_three]
-  have hA' : ((k 0 : ℂ)) * ((crossZ (nuInt k) k 0 : ℤ) : ℂ)
-      + ((k 1 : ℂ)) * ((crossZ (nuInt k) k 1 : ℤ) : ℂ)
-      + ((k 2 : ℂ)) * ((crossZ (nuInt k) k 2 : ℤ) : ℂ) = 0 := by
+  have hA' : ((k 0 : ℂ)) * ((crossZ N k 0 : ℤ) : ℂ)
+      + ((k 1 : ℂ)) * ((crossZ N k 1 : ℤ) : ℂ)
+      + ((k 2 : ℂ)) * ((crossZ N k 2 : ℤ) : ℂ) = 0 := by
     exact_mod_cast congrArg (fun z : ℤ => ((z : ℂ))) hA
-  have hN' : ((k 0 : ℂ)) * ((nuInt k 0 : ℤ) : ℂ)
-      + ((k 1 : ℂ)) * ((nuInt k 1 : ℤ) : ℂ)
-      + ((k 2 : ℂ)) * ((nuInt k 2 : ℤ) : ℂ) = 0 := by
+  have hN' : ((k 0 : ℂ)) * ((N 0 : ℤ) : ℂ)
+      + ((k 1 : ℂ)) * ((N 1 : ℤ) : ℂ)
+      + ((k 2 : ℂ)) * ((N 2 : ℤ) : ℂ) = 0 := by
     exact_mod_cast congrArg (fun z : ℤ => ((z : ℂ))) hN
   linear_combination hA' + Complex.I * (s : ℂ) * ((kNorm k : ℝ) : ℂ) * hN'
 
-/-- **H5 — reality becomes chirality.** -/
-theorem hRaw_conj (s : ℝ) (k : Wavevector) (i : Fin 3) :
-    conj (hRaw s k i) = hRaw (-s) k i := by
-  unfold hRaw
+/-- **H3** for the canonical choice. -/
+theorem hRaw_transverse (s : ℝ) (k : Wavevector) : fourier_dot k (hRaw s k) = 0 :=
+  hOf_transverse (nuInt_orthogonal k) s
+
+/-- **H5 — reality becomes chirality**, for any `ν`; no orthogonality needed. -/
+theorem hOf_conj (N : Wavevector) (s : ℝ) (k : Wavevector) (i : Fin 3) :
+    conj (hOf N s k i) = hOf N (-s) k i := by
+  unfold hOf
   simp only [map_add, map_mul, Complex.conj_I, Complex.conj_ofReal, map_intCast,
     Complex.ofReal_neg, Complex.ofReal_ratCast]
   push_cast
   ring
+
+/-- **H5** for the canonical choice. -/
+theorem hRaw_conj (s : ℝ) (k : Wavevector) (i : Fin 3) :
+    conj (hRaw s k i) = hRaw (-s) k i := hOf_conj (nuInt k) s k i
 
 /-- The algebra behind H1, isolated over an arbitrary commutative ring so that the combination
 stays linear in the hypotheses. `A` is `ν × k`, `N` is `ν`, `K` is `k`, `n` is `|k|`, `S` is `s`. -/
@@ -226,7 +245,7 @@ theorem hRaw_self_null {s : ℝ} (hsq : s * s = 1) (k : Wavevector) :
     have : k_sq k = k 0 * k 0 + k 1 * k 1 + k 2 * k 2 := by
       rw [k_sq, Fin.sum_univ_three]; ring
     exact_mod_cast congrArg (fun z : ℤ => ((z : ℂ))) this
-  unfold hRaw
+  unfold hRaw hOf
   rw [cdot_expand]
   have hI : Complex.I * Complex.I = -1 := Complex.I_mul_I
   have hs : (s : ℂ) * (s : ℂ) = 1 := by exact_mod_cast congrArg (fun r : ℝ => ((r : ℂ))) hsq
@@ -274,7 +293,7 @@ theorem hRaw_norm {s : ℝ} (hsq : s * s = 1) (k : Wavevector) :
   rw [hNC]
   simp only [dotZ_expand] at hlag hAN
   simp only [hRaw_conj]
-  unfold hRaw
+  unfold hRaw hOf
   rw [cdot_expand]
   -- `((-s : ℝ) : ℂ)` must become `-(s : ℂ)` or the cross terms cannot cancel
   push_cast
@@ -307,6 +326,10 @@ theorem hRaw_norm {s : ℝ} (hsq : s * s = 1) (k : Wavevector) :
           + ((nuInt k 2 : ℤ) : ℂ) * ((nuInt k 2 : ℤ) : ℂ))) * hI
 
 /-! ### 6. H4 — the curl eigenvector property, the reason the basis exists -/
+
+/-- Cross product of two complex vectors, used to build the geometric factor `g`. -/
+noncomputable def crossRC' (v w : Fin 3 → ℂ) : Fin 3 → ℂ :=
+  ![v 1 * w 2 - v 2 * w 1, v 2 * w 0 - v 0 * w 2, v 0 * w 1 - v 1 * w 0]
 
 /-- Complex cross product with a real (integer) vector on the left. -/
 noncomputable def crossRC (a : Wavevector) (v : Fin 3 → ℂ) : Fin 3 → ℂ :=
@@ -378,7 +401,7 @@ theorem hRaw_curl_eigen {s : ℝ} (hsq : s * s = 1) (k : Wavevector) (j : Fin 3)
         + Complex.I * ((s : ℝ) : ℂ) * ((kNorm k : ℝ) : ℂ) * ((crossZ k (nuInt k) j : ℤ) : ℂ) := by
     -- unfold the definitions rather than routing through the `crossZ_apply_*` lemmas: `fin_cases`
     -- emits `⟨0, ⋯⟩`, which those literal-indexed lemmas do not match
-    fin_cases j <;> simp [crossRC, hRaw, crossZ] <;> push_cast <;> ring
+    fin_cases j <;> simp [crossRC, hRaw, hOf, crossZ] <;> push_cast <;> ring
   -- Step B: the two integer identities that make it a scalar multiplication.
   have hanti : crossZ k (nuInt k) j = -crossZ (nuInt k) k j := by
     fin_cases j <;> simp [crossZ] <;> ring
@@ -390,7 +413,7 @@ theorem hRaw_curl_eigen {s : ℝ} (hsq : s * s = 1) (k : Wavevector) (j : Fin 3)
     push_cast
     ring
   rw [hcross]
-  unfold hRaw
+  unfold hRaw hOf
   have halg := curl_eigen_algebra ((crossZ (nuInt k) k j : ℤ) : ℂ) ((nuInt k j : ℤ) : ℂ)
     ((kNorm k : ℝ) : ℂ) ((s : ℝ) : ℂ) Complex.I hs hI
   linear_combination halg
@@ -472,6 +495,82 @@ theorem resonance_witness :
   funext i
   fin_cases i <;> simp
 
+/-! ### 8. The triad's own frame, and the first non-degenerate vanishing condition
+
+D-3 step 2 needs all three members of a triad expanded in **one common** `ν`, namely the normal to
+the triad plane. On the lattice that normal is available **as an integer vector**: `p × q`. It is
+orthogonal to `p`, to `q`, and — because `k = p + q` — to `k` as well, so one `hOf` frame serves the
+whole triad with no normalisation and no division. -/
+
+/-- The triad plane's normal, integer-valued. -/
+def triadNormal (p q : Wavevector) : Wavevector := crossZ p q
+
+theorem triadNormal_orthogonal_left (p q : Wavevector) : dotZ p (triadNormal p q) = 0 :=
+  dotZ_crossZ_left p q
+
+theorem triadNormal_orthogonal_right (p q : Wavevector) : dotZ q (triadNormal p q) = 0 :=
+  dotZ_crossZ_right p q
+
+/-- **One frame for the whole triad.** The plane normal is orthogonal to `k = p + q` too. -/
+theorem triadNormal_orthogonal_sum (p q : Wavevector) : dotZ (p + q) (triadNormal p q) = 0 := by
+  have hp := triadNormal_orthogonal_left p q
+  have hq := triadNormal_orthogonal_right p q
+  rw [dotZ_expand] at hp hq ⊢
+  simp only [Pi.add_apply]
+  linarith [hp, hq]
+
+/-- The triad frame degenerates exactly on collinear triads — which, by §7, are exactly the
+resonant ones. So the frame is available precisely where the coefficient has content. -/
+theorem triadNormal_eq_zero_iff_collinear (p q : Wavevector) :
+    triadNormal p q = 0 ↔ crossZ p q = 0 := Iff.rfl
+
+/-! ### 9. The interaction coefficient, and the condition that genuinely kills it -/
+
+/-- The geometric factor `g = (h^{s_p}(p) × h^{s_q}(q)) · conj(h^{s_k}(k))`, in one common frame
+`N`. Unnormalised, so this is `|N|³|p||q||k|` times the memo's `g` — the scale is a nonzero factor
+and so is irrelevant to every vanishing statement below. -/
+noncomputable def gOf (N : Wavevector) (sk sp sq : ℝ) (k p q : Wavevector) : ℂ :=
+  cdot (crossRC' (hOf N sp p) (hOf N sq q)) (fun i => conj (hOf N sk k i))
+
+/-- **The interaction coefficient** of the memo's §3, in the same unnormalised frame:
+`C = −¼ (s_p|p| − s_q|q|) · g`. -/
+noncomputable def cOf (N : Wavevector) (sk sp sq : ℝ) (k p q : Wavevector) : ℂ :=
+  (-(1 : ℂ) / 4) * (((sp : ℝ) : ℂ) * ((kNorm p : ℝ) : ℂ)
+                    - ((sq : ℝ) : ℂ) * ((kNorm q : ℝ) : ℂ)) * gOf N sk sp sq k p q
+
+/-- **The first vanishing condition, and the only non-degenerate one that survives §7.**
+`C = 0` whenever `s_p|p| = s_q|q|`.
+
+It needs no closed form and no frame: it is immediate from the antisymmetrisation factor. Its
+content is that on the lattice it is *satisfied*, and often — every pair of modes on a common
+sphere with equal chirality has `|p| = |q|`, and lattice spheres are heavily populated. That is
+what distinguishes it from the resonance condition, which §7 shows to be empty. -/
+theorem cOf_eq_zero_of_balanced (N : Wavevector) (sk sp sq : ℝ) (k p q : Wavevector)
+    (h : sp * kNorm p = sq * kNorm q) : cOf N sk sp sq k p q = 0 := by
+  unfold cOf
+  have hz : ((sp : ℝ) : ℂ) * ((kNorm p : ℝ) : ℂ) - ((sq : ℝ) : ℂ) * ((kNorm q : ℝ) : ℂ) = 0 := by
+    have : ((sp * kNorm p : ℝ) : ℂ) = ((sq * kNorm q : ℝ) : ℂ) :=
+      congrArg (fun r : ℝ => ((r : ℂ))) h
+    push_cast at this
+    linear_combination this
+  rw [hz]
+  ring
+
+/-- Non-vacuity (SPEC §7.5): the balanced condition is satisfiable on the lattice by a genuine,
+NON-collinear triad — so `cOf_eq_zero_of_balanced` is not a restatement of §7's collinear case.
+`p = (1,0,0)` and `q = (0,1,0)` share the unit sphere, `p × q = (0,0,1) ≠ 0`. -/
+theorem balanced_witness_noncollinear :
+    kNorm (![1,0,0] : Wavevector) = kNorm (![0,1,0] : Wavevector)
+      ∧ crossZ (![1,0,0] : Wavevector) (![0,1,0] : Wavevector) ≠ 0 := by
+  constructor
+  · unfold kNorm
+    congr 1
+  · intro hc
+    have hlast := congrFun hc 2
+    simp only [crossZ_apply_two, Matrix.cons_val_zero, Matrix.cons_val_one,
+      Pi.zero_apply] at hlast
+    norm_num at hlast
+
 /-! ### Audit certificates — no axiom outside [propext, Classical.choice, Quot.sound]. -/
 #print axioms dotZ_crossZ_left
 #print axioms dotZ_crossZ_self
@@ -489,5 +588,9 @@ theorem resonance_witness :
 #print axioms crossZ_eq_zero_of_kNorm_add
 #print axioms resonance_implies_collinear
 #print axioms resonance_witness
+#print axioms hOf_transverse
+#print axioms triadNormal_orthogonal_sum
+#print axioms cOf_eq_zero_of_balanced
+#print axioms balanced_witness_noncollinear
 
 end MechanicaFluidorum.FourierZ3

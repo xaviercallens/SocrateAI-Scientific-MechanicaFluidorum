@@ -653,6 +653,29 @@ incompatible with Gate 2, which fails on any `sorry`, and with the axiom footpri
 `sorry`'d theorem still **defines its name** and pollutes every downstream `#print axioms` with
 `sorryAx`. No `sorry` was written.
 
+### D-3 step 2 groundwork: the basis parametrised by `ν`, the triad frame, and the coefficient
+
+| Claim | Theorem | Date |
+|---|---|---|
+| The basis takes `ν` as a **parameter**; the canonical choice is one instance | `hOf` (def), `hRaw_eq` | 2026-09-10 |
+| H3 and H5 for an arbitrary `ν` | `hOf_transverse`, `hOf_conj` | 2026-09-10 |
+| **The triad's own frame is an INTEGER vector**: `p × q` is orthogonal to `p`, to `q`, and — because `k = p+q` — to `k` as well. One frame serves the whole triad, with no normalisation and no division | `triadNormal_orthogonal_sum` | 2026-09-10 |
+| The frame degenerates exactly on collinear triads, i.e. by §7 exactly on the resonant ones — so it is available precisely where the coefficient has content | `triadNormal_eq_zero_iff_collinear` | 2026-09-10 |
+| The geometric factor and the coefficient, in one common frame | `gOf`, `cOf` (defs) | 2026-09-10 |
+| **`C = 0` whenever `s_p\|p\| = s_q\|q\|`** — the first vanishing condition, immediate from the antisymmetrisation factor, needing no closed form and no frame | `cOf_eq_zero_of_balanced` | 2026-09-10 |
+| **Non-vacuity, and the point of the whole section**: the balanced condition is satisfiable by a genuine **non-collinear** lattice triad (`p=(1,0,0)`, `q=(0,1,0)`, sharing the unit sphere, `p×q ≠ 0`), so it is *not* a restatement of §7's degenerate case | `balanced_witness_noncollinear` | 2026-09-10 |
+
+**Why the parametrisation was necessary rather than tidy.** The memo's closed form is derived in the
+triad's own planar frame; the crucible measured that a generic `ν` changes the coefficient by a
+phase. A basis that hard-codes one `ν` therefore *cannot state* the closed form. Parametrising is
+the precondition for step 2, and the integer triad normal is what makes the planar frame available
+on the lattice without introducing a single division.
+
+**Where the content now sits.** Of the three vanishing conditions, §7 shows the resonance one
+collapses into the degenerate one. What remains non-degenerate is exactly `s_p|p| = s_q|q|`, now
+proved with a witness showing it bites off the collinear locus — and the magnitude of `C` away from
+both, which is what the closed form of step 2 will supply.
+
 ## Tier B — the Waleffe resonance condition is EXACTLY collinearity (2026-09-10)
 
 `tests/tier_b_helical_resonance.py`, wired into Gate 1. Exact integer arithmetic, **zero floating
