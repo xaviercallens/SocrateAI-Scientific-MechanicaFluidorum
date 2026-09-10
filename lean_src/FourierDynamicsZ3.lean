@@ -43,6 +43,7 @@ import Mathlib.Tactic.FinCases
 import Mathlib.Tactic.NormNum
 import Mathlib.Tactic.Ring
 import FourierStateZ3
+import AbstractAlgebraicConservation
 
 set_option autoImplicit false
 
@@ -233,6 +234,66 @@ theorem B_not_identically_zero :
   intro h
   exact B_witness_ne_zero (by rw [h]; rfl)
 
+/-! ### 7. Task 2.2, step 1 of 5 — the `swap3`-closed index set
+
+`docs/designs/TASK22_ENERGY_IDENTITY.md` shows that Task 2.2 is not a new proof but an
+instantiation of the Tier A `AbstractAlgebraicConservation.triad_sum_zero`, whose `swap3` is
+exactly the two-element symmetry that proves the identity. The memo also identifies the one place
+the design was at risk, and orders it FIRST: the natural index set is **not** `swap3`-closed.
+
+Reindexing `(k, p) ↦ (p, q = k − p)` sends `Λ_M × Λ_M` to `{(p,q) : p ∈ Λ_M, −(p+q) ∈ Λ_M}`, in
+which `q` is unconstrained — so `swap3 (p,q) = (p, −(p+q))` can leave it. The repair is the
+Galerkin cutoff: terms with `q ∉ Λ_M` carry a factor `u_q = 0`. Restricting to the set below, in
+which **all three members of the triad** lie in the ball, is therefore free, and that set closes
+because its defining condition is a property of the *unordered* triad while `swap3` merely
+permutes it. -/
+
+/-- Ordered pairs whose entire triad `{p, q, −(p+q)}` lies in `Λ_M`. -/
+def triadSet (M : ℕ) : Finset (Wavevector × Wavevector) :=
+  ((ball M) ×ˢ (ball M)).filter (fun pq => -(pq.1 + pq.2) ∈ ball M)
+
+theorem mem_triadSet {M : ℕ} {pq : Wavevector × Wavevector} :
+    pq ∈ triadSet M ↔ pq.1 ∈ ball M ∧ pq.2 ∈ ball M ∧ -(pq.1 + pq.2) ∈ ball M := by
+  unfold triadSet
+  rw [Finset.mem_filter, Finset.mem_product]
+  tauto
+
+/-- **The closure lemma** — the step the memo flags as the design's only real trap.
+`swap3` permutes the triad `{p, q, r}` and fixes `p`; membership in `triadSet` is a condition on
+all three members at once; hence closure. -/
+theorem triadSet_swap3_closed (M : ℕ) :
+    ∀ pq ∈ triadSet M, AbstractAlgebraicConservation.swap3 pq ∈ triadSet M := by
+  intro pq h
+  rw [mem_triadSet] at h
+  obtain ⟨hp, hq, hr⟩ := h
+  rw [mem_triadSet]
+  refine ⟨hp, hr, ?_⟩
+  -- the third member of the swapped triad is the original `q`
+  have hback : -(pq.1 + -(pq.1 + pq.2)) = pq.2 := by abel
+  rw [AbstractAlgebraicConservation.swap3]
+  simpa [hback] using hq
+
+/-- Sanity witness (SPEC §7.5): the index set is inhabited, so the closure lemma is not vacuous. -/
+theorem triadSet_nonempty_two : ((k0, wq) : Wavevector × Wavevector) ∈ triadSet 2 := by
+  rw [mem_triadSet]
+  refine ⟨k0_mem_ball_two, ?_, ?_⟩
+  · rw [ball, Finset.mem_filter, Fintype.mem_piFinset]
+    refine ⟨fun i => ?_, ?_⟩
+    · rw [Finset.mem_Icc]
+      fin_cases i <;> simp [wq, Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.head_cons,
+        Matrix.cons_val_two, Matrix.tail_cons]
+    · norm_num [k_sq, wq, Fin.sum_univ_three, Matrix.cons_val_zero, Matrix.cons_val_one,
+        Matrix.head_cons, Matrix.cons_val_two, Matrix.tail_cons]
+  · rw [ball, Finset.mem_filter, Fintype.mem_piFinset]
+    refine ⟨fun i => ?_, ?_⟩
+    · rw [Finset.mem_Icc]
+      fin_cases i <;>
+        simp [k0, wq, Pi.add_apply, Pi.neg_apply, Matrix.cons_val_zero, Matrix.cons_val_one,
+          Matrix.head_cons, Matrix.cons_val_two, Matrix.tail_cons]
+    · norm_num [k_sq, k0, wq, Pi.add_apply, Pi.neg_apply, Fin.sum_univ_three,
+        Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.head_cons, Matrix.cons_val_two,
+        Matrix.tail_cons]
+
 /-! ### Audit certificates — expected on every line: no axiom outside
 [propext, Classical.choice, Quot.sound]. -/
 #print axioms k0_mem_ball_one
@@ -242,5 +303,7 @@ theorem B_not_identically_zero :
 #print axioms convective_delta
 #print axioms B_witness_ne_zero
 #print axioms B_not_identically_zero
+#print axioms triadSet_swap3_closed
+#print axioms triadSet_nonempty_two
 
 end MechanicaFluidorum.FourierZ3

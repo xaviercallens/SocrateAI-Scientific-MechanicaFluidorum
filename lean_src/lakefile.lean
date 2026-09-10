@@ -33,6 +33,9 @@ lean_lib EnstrophyProductionBound
 @[default_target]
 lean_lib MillenniumReduction
 
+/-- Also imported by `FourierDynamicsZ3` (Task 2.2): its `triad_sum_zero` is the abstract form of
+the energy identity, so the bridge in `FourierDynamicsZ3` needs the `.olean`, not just Gate 2's
+file-by-file re-elaboration. Its own imports are narrow, so this costs nothing to build. -/
 @[default_target]
 lean_lib AbstractAlgebraicConservation
 

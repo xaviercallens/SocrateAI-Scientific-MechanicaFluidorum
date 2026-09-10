@@ -443,7 +443,31 @@ load-bearing, not decorative).
 **Posed, NOT proved.** `⟨B(u,u), u⟩ = 0` is recorded as `EnergyConservationStatement (M : ℕ) : Prop`
 with its quantifier domain shown inhabited — **not** as a theorem carrying `sorry`, which would
 define the name and pollute every downstream footprint with `sorryAx`. It is certified
-computationally at `M ∈ {1,2,3}` (Tier B, fact 2) and a symbolic proof is future work.
+computationally at `M ∈ {1,2,3}` (Tier B, fact 2).
+
+**Task 2.2 UNBLOCKED, 2026-09-10** — `docs/designs/TASK22_ENERGY_IDENTITY.md`. The identity is a
+**two-element symmetry**: on the constraint set `p+q+r = 0` the factor `(u_q·u_r)` is symmetric in
+`q,r`, so averaging the two orderings replaces `(q·u_p)` by `½((q+r)·u_p) = −½(p·u_p) = 0` —
+divergence-freeness at `p`, and nothing else. **The abstract theorem is already Tier A here**
+(`AbstractAlgebraicConservation.triad_sum_zero`, whose `swap3` *is* that symmetry), so what remains
+is a bridge, not a proof. The earlier stall is explained and recorded: the Tier B harness attempted
+a **3-cycle** `(p,q,r) → (q,r,p)`, which cannot close because `p` is distinguished; the **2-swap**
+that fixes `p` closes in one line.
+
+| Claim | Theorem | Date |
+|---|---|---|
+| **Step 1 of 5 — the `swap3`-closed index set.** `triadSet M` = ordered pairs whose *entire* triad `{p, q, −(p+q)}` lies in `Λ_M`; it is closed under `swap3` because its defining condition is a property of the unordered triad, which `swap3` merely permutes | `triadSet_swap3_closed` | 2026-09-10 |
+| Non-vacuity of that index set (SPEC §7.5) | `triadSet_nonempty_two` | 2026-09-10 |
+
+**Why this step was implemented first, and its negative control.** The memo flags it as the design's
+only real trap: the *natural* index set after reindexing, `{(p,q) : p ∈ Λ_M, −(p+q) ∈ Λ_M}`, leaves
+`q` unconstrained and is **not** `swap3`-closed; the repair is that the Galerkin cutoff kills every
+term with `q ∉ Λ_M`. Negative control, run on a scratch copy and **confirmed to fail**: replacing the
+signed member `−(p+q)` by `p+q` in the definition breaks the closure proof — so the lemma depends on
+the sign it claims to depend on, and an unnoticed sign error would not have passed silently.
+
+Remaining steps 2–5 (Leray drop, reindexing bijection, out-of-ball vanishing, assembly) are
+specified in the memo's §8 with their own negative controls.
 
 **Audit flags:** F1′ — **CLOSED 2026-09-10** by `B_witness_ne_zero` / `B_not_identically_zero`
 (rows above). F4 — still open: `ball M` is cube-then-filter while `GalerkinState.cutoff` is stated
