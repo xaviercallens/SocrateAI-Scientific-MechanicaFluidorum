@@ -15,9 +15,11 @@
 > cohérentes sur le même réseau donne $\mathcal{D}$ **plat** en $M$. Voir `data/triad_frustration/`
 > et `docs/designs/TRIAD_FRUSTRATION_DM.md`.
 >
-> Les résultats de gates du §2.A sont exacts au commit `d980c18` (Gates 1, 1b, 2 : exit 0). En
-> revanche le **sujet** de `d980c18` est faux là où il dit « integrate FourierStateZ3 v2.1 » : cette
-> soumission a été **rejetée**, 16 erreurs de compilation (`docs/proposals/2026-09-09-review.md`).
+> Les résultats de gates du §2.A sont exacts (Gates 1, 1b, 2 : exit 0). Le commit d'intégration
+> portait à l'origine le sujet « integrate FourierStateZ3 v2.1 », **faux** : cette soumission a été
+> **rejetée**, 16 erreurs de compilation (`docs/proposals/2026-09-09-review.md`). Sur instruction du
+> propriétaire, ce sujet a été **corrigé par réécriture d'historique** le 2026-09-10 ; le contenu des
+> commits est inchangé (arbres identiques, vérifié).
 >
 > Analyse complète et questions ouvertes :
 > **`docs/escalations/2026-09-10-E3-MEMORY-md-unsupported-claims.md`**.

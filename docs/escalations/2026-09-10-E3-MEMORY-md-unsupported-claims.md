@@ -1,9 +1,10 @@
-# E-3 — `MEMORY.md` (committed in `d980c18`) states results that were never computed, and one that this repository's own data contradicts
+# E-3 — `MEMORY.md` (committed in the 2026-09-09 integration commit) states results that were never computed, and one that this repository's own data contradicts
 
 **Rule triggered:** E-3 (contradiction with the record) — *"This is a discovery: report it prominently,
 do not bury it."* Also SPEC §0 (honesty clause), §2.4 (narrative quarantine), §7.6 (honest difficulty
 language), and PLAN §9.4 / LL-1 (the broad-`add` race).
-**Filed by:** orchestrator, 2026-09-10. **Status:** ESCALATED — no file of another author was deleted
+**Filed by:** orchestrator, 2026-09-10. **Status:** RESOLVED 2026-09-10 (§6 carries the owner's three
+answers). At filing time no file of another author was deleted
 or rewritten; a correction banner points here.
 
 ---
@@ -11,7 +12,7 @@ or rewritten; a correction banner points here.
 ## 1. What happened, mechanically
 
 While this session was running the two gates, a concurrent process staged and committed the whole
-working tree as `d980c18`, including files this session had not finished verifying and files it did
+working tree as one commit (`d980c18` before the 2026-09-10 rewrite), including files this session had not finished verifying and files it did
 not write. This is precisely the `git add -A` race recorded in PLAN §9.4 after it happened twice on
 2026-08-12. It happened a third time.
 
@@ -81,19 +82,24 @@ chance) compounded by LL-2's (a self-report substituted for the artifact).
 line of it; `LEDGER.md` already records the 𝒟(M) findings and the v2.1 rejection at their true tiers.
 
 **NOT done, deliberately:** no deletion or rewriting of another author's file, no history rewrite of
-`d980c18`, no attempt to "fix" the commit message. Those are the owner's calls.
+that commit, no attempt to "fix" the commit message. Those were the owner's calls -- and item 3 of §6 records how the owner then decided them.
 
 ## 6. Smallest questions whose answers unblock — **ANSWERED 2026-09-10 (owner)**
 
 1. **Does `MEMORY.md` stay at the repository root?** → **Yes, it stays**, as the restart register it
    is, carrying the reading notice at its head. It remains untiered and gate-free, and says so.
 2. **Is §1.C deleted or rewritten as a plan?** → **Rewritten as a plan** (owner instruction,
-   verbatim: *"réécrit comme plan"*). Done in `3bb2d31`: §1.C now states what must be measured, the
+   verbatim: *"réécrit comme plan"*). Done in the commit "Review LeanFlow's counter-detonation results" (`46bcf6f` after the rewrite): §1.C now states what must be measured, the
    two blocking prerequisites, and the decisive control that separates the damping term from the
    T-dual metric.
-3. **How is the erroneous `d980c18` subject handled?** → **`git notes` annotation**, attached
-   2026-09-10. History is not rewritten; the note travels with the commit and names the erratum, the
-   evidence, and the PLAN §9.4 race. (`git log --notes` to see it.)
+3. **How is the erroneous `d980c18` subject handled?** → **First** a `git notes` annotation
+   (2026-09-10). **Then superseded the same day:** the owner instructed *"fais le push --force pour
+   moi, c'est l'un de mes repositories de travail"*, so the subject was **corrected by rewriting
+   history**. `d980c18` was replaced by a commit whose subject states what actually happened
+   ("Integrate FourierDynamicsZ3, the D(M) campaign, and the v2.1 rejection record"), and the five
+   later commits were replayed unchanged. **The content is byte-identical** — `git diff` between the
+   backup branch and the rewritten head is empty; only messages differ. The pre-rewrite history is
+   preserved at `backup/pre-reword-2026-09-10`.
 
 ## 7. Follow-on, same day: the source of the §1.C claims was audited
 
