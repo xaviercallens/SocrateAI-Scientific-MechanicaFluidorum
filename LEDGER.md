@@ -762,6 +762,36 @@ orientation `q × p` (NC-Q — the triple product flips sign); flipping the sign
 in I2 (NC-R — that sign is exactly what `I² = −1` supplies). Thirteen demonstrated negatives on
 `HelicalBasis.lean`.
 
+### WP-1c step 3 — the pre-registered cancellation baseline: first runs, a tripped control, and three exact facts (2026-09-10)
+
+`tests/tier_b_production_cancellation.py` (Gate 1), executing
+`HELICAL_PRODUCTION_EXPANSION.md` §4 with its recorded amendments (ℓ¹ modulus; rational circle
+points; `k_sq`-power decay; then amendments 4–5 below). Exact rationals end to end; 20 seeds;
+registered range `M = 1..3`; stop reason: range exhausted (LL-18).
+
+**The registered coherence control TRIPPED, twice, and both trips are structure, not noise:**
+
+| finding | status |
+|---|---|
+| `M = 1` is degenerate: every triad puts the zero mode in a killing slot, all 19 terms exactly `0` | exact |
+| **F1 (all-real phases): sum EXACTLY `0`** at `M = 2, 3`. Mechanism: real + conjugate-symmetric ⟹ parity-even ⟹ pairwise cancellation under global negation | **Tier A**: `production_terms_eq_zero_of_even`, proved by the negation involution; negative control NC-S (drop parity) fails |
+| **`Re(Σ t) = 0` EXACTLY for every state tested**, random-phase seeds included. Mechanism: negation sends each term to `−conj` of itself — which is also exactly why the physical production is real | promoted to a harness **integrity assertion** on every measured state |
+| **F1′ (tilted coherent, amendment 4): ALSO exactly `0`** at `M = 2, 3`, and parity does not explain it | **open**; suspect is the constant-director degeneracy of the state construction (`a_k ∝ d`, one fixed `d` ⟹ `u = ∇g × d`, quasi-planar). Amendment 5 registered: `k`-dependent directors for all families before any further run |
+
+**Interpretation quarantine, per the registration's own rules.** The F2/F3 numbers (null means
+`0.0279/0.0086` at `M = 2/3`; F3 means straddling the null) are **not interpretable as evidence
+about phase mixing in either direction** until a run under amendment 5 passes the coherence
+control. What stands is the structural lesson, learned twice in one day: **the production sum has
+a large kernel of symmetry-degenerate states, and any mixing claim must first prove its test
+states lie outside it.** This is the same lesson as Waleffe §6bis item 4, now with a Tier A
+theorem naming one stratum of the kernel.
+
+| Claim | Theorem | Date |
+|---|---|---|
+| `fourier_dot` is odd in the wavevector | `fourier_dot_neg_left` | 2026-09-10 |
+| `triadSet M` is closed under global negation | `triadSet_neg_closed` | 2026-09-10 |
+| **The production term sum vanishes identically on parity-even states** | `production_terms_eq_zero_of_even` | 2026-09-10 |
+
 ### WP-0b status note (2026-09-10)
 
 The owner-initiated `lake build` of the foreign tree was **killed by the machine's low-memory

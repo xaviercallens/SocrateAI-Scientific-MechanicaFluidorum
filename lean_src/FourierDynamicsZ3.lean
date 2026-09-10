@@ -764,6 +764,81 @@ theorem enstrophyRateZ3_eq (M : ℕ) (nu : ℝ) (s : GalerkinState M) :
   congr 1
   exact Finset.sum_congr rfl fun k _ => by ring
 
+/-! ### 11. The parity kernel of the production sum
+
+Discovered by the pre-registered measurement of `docs/designs/HELICAL_PRODUCTION_EXPANSION.md`
+§4 (the coherent family's ratio came out EXACTLY zero, and the mechanism was then identified),
+proved the same day. For **parity-even** states — `u(−k) = u(k)` — the production term sum
+vanishes identically: global negation is an involution of `triadSet M` under which the weight
+and the bilinear factor are even while the divergence contraction is odd, so the terms cancel
+pairwise.
+
+This is a *degeneracy class*, in the same family as the negation symmetry behind the retracted
+Waleffe §6bis item 4: a state inside it shows perfect cancellation that carries **no
+information about phase mixing**. Any mixing measurement must first show its test states are
+outside this kernel — which is precisely what the memo's interpretation quarantine enforces. -/
+
+theorem fourier_dot_neg_left (q : Wavevector) (v : Fin 3 → ℂ) :
+    fourier_dot (-q) v = -fourier_dot q v := by
+  unfold fourier_dot
+  rw [← Finset.sum_neg_distrib]
+  refine Finset.sum_congr rfl fun i _ => ?_
+  rw [Pi.neg_apply]
+  push_cast
+  ring
+
+/-- The negation involution preserves the triad index set. -/
+theorem triadSet_neg_closed (M : ℕ) :
+    ∀ pq ∈ triadSet M, (-(Prod.fst pq), -(Prod.snd pq)) ∈ triadSet M := by
+  intro pq h
+  rw [mem_triadSet] at h ⊢
+  obtain ⟨hp, hq, hr⟩ := h
+  refine ⟨neg_mem_ball.mpr hp, neg_mem_ball.mpr hq, ?_⟩
+  have : -(-pq.1 + -pq.2) = -(-(pq.1 + pq.2)) := by abel
+  rw [this]
+  exact neg_mem_ball.mpr hr
+
+/-- **The production sum vanishes identically on parity-even states.** -/
+theorem production_terms_eq_zero_of_even (M : ℕ) (u : Wavevector → Fin 3 → ℂ)
+    (heven : ∀ k, u (-k) = u k) :
+    ∑ pq ∈ triadSet M,
+        (ksqC (-(pq.1 + pq.2)) - ksqC pq.2)
+          * (fourier_dot pq.2 (u pq.1)
+             * AbstractAlgebraicConservation.dot (u pq.2) (u (-(pq.1 + pq.2)))) = 0 := by
+  classical
+  refine Finset.sum_involution (fun pq _ => (-pq.1, -pq.2)) ?_ ?_ ?_ ?_
+  · -- pairing: the negated term is the negative of the original
+    intro pq _
+    have h1 : -(-pq.1 + -pq.2) = pq.1 + pq.2 := by abel
+    simp only [h1]
+    have hw : ksqC (pq.1 + pq.2) = ksqC (-(pq.1 + pq.2)) := (ksqC_neg _).symm
+    have hfd : fourier_dot (-pq.2) (u (-pq.1)) = -fourier_dot pq.2 (u pq.1) := by
+      rw [heven pq.1, fourier_dot_neg_left]
+    have hbil : AbstractAlgebraicConservation.dot (u (-pq.2)) (u (pq.1 + pq.2))
+        = AbstractAlgebraicConservation.dot (u pq.2) (u (-(pq.1 + pq.2))) := by
+      rw [heven pq.2, ← heven (pq.1 + pq.2)]
+    rw [hw, show ksqC (-pq.2) = ksqC pq.2 from ksqC_neg _, hfd, hbil]
+    ring
+  · -- a nonzero term is not a fixed point
+    intro pq _ hne hfix
+    apply hne
+    have hq : -pq.2 = pq.2 := congrArg Prod.snd hfix
+    have hq0 : pq.2 = 0 := by
+      funext i
+      have h := congrFun hq i
+      rw [Pi.neg_apply] at h
+      have hz : pq.2 i = 0 := by omega
+      simpa using hz
+    rw [hq0]
+    have : fourier_dot (0 : Wavevector) (u pq.1) = 0 := by
+      unfold fourier_dot
+      simp
+    rw [this]
+    ring
+  · exact triadSet_neg_closed M
+  · intro pq _
+    simp
+
 #print axioms neg_mem_ball
 #print axioms fourier_dot_conj
 #print axioms pairing_leray_drop
@@ -772,6 +847,9 @@ theorem enstrophyRateZ3_eq (M : ℕ) (nu : ℝ) (s : GalerkinState M) :
 #print axioms sum_double_eq_sum_triadSet_weighted
 #print axioms ksqC_third
 #print axioms enstrophy_production_identity
+#print axioms fourier_dot_neg_left
+#print axioms triadSet_neg_closed
+#print axioms production_terms_eq_zero_of_even
 #print axioms pairing_self_eq_ofReal
 #print axioms pairing_galerkinRHS
 #print axioms energyRateZ3_eq

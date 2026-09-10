@@ -82,6 +82,24 @@ Structural content, stated as algebra and nothing else:
 `ρ(M) = |Σ terms| / Σ |terms|` for the production sum of `enstrophy_production_identity`, and the
 raw growth `|P(M)|`, on `M = 1 … M_max`.
 
+> **Pre-registration amendments (2026-09-10, recorded BEFORE the first run).** Three details of
+> this section as first written would have required irrational quantities, violating the Tier B
+> float ban. Amended as follows, each replacing the original for all runs:
+>
+> 1. **The modulus is `ℓ¹` on components**: `|z| := |Re z| + |Im z|`, exact rational. (The
+>    Euclidean modulus is a square root.) `ρ` is therefore the `ℓ¹` cancellation ratio; the
+>    comparison across families is unaffected, since one norm is used everywhere.
+> 2. **Random phases are rational points of the unit circle**: `e^{iθ} → ((1−t²) + 2ti)/(1+t²)`
+>    with `t` drawn from a seeded deterministic generator over rationals in `(−1, 1]` — exact
+>    unit modulus, no floats.
+> 3. **F3's spectral decay is in `k_sq`, not `|k|`**: modulus `∝ (k_sq k)^{−γ}` with
+>    `γ ∈ {0, 1, 2}` (equivalently `|k|^{−β}`, `β ∈ {0, 2, 4}`), replacing the original
+>    `β ∈ {1, 3/2, 2}` whose odd values are irrational on the lattice.
+>
+> One free integrity check is also registered: under `swap3` each production term maps to
+> **itself** (the weight difference and the divergence-free contraction each flip sign), so the
+> harness asserts `t(swap3(p,q)) = t(p,q)` termwise, exactly.
+
 **State families, fixed in advance** (all conjugate-symmetric, divergence-free, zero-mean, by the
 `u_k = k × a_k`, `a_{−k} = −conj(a_k)` construction of `tier_b_fourier_enstrophy.py`):
 
@@ -102,6 +120,54 @@ empirical support.
 **Guards.** Exact arithmetic throughout (the sum is polynomial, §1); every family deterministic
 and seeded; negative controls: a state built to defeat mixing (phases aligned along a coherent
 ray) must show `ρ` near 1, or the instrument cannot detect coherence and measures nothing.
+
+> **First-run outcome (2026-09-10) — THE INSTRUMENT CONTROL TRIPPED, and the trip is a
+> theorem.** F1's ratio came out `0.0000` at `M = 2, 3` — the coherent family shows *perfect*
+> cancellation, the opposite of coherence. Mechanism, identified and then proved: all-real
+> amplitudes combined with conjugate symmetry make the state **parity-even** (`u_{−k} = u_k`),
+> and then the production terms cancel **pairwise under global negation** — the weight and the
+> bilinear factor are even, the divergence contraction is odd. Kernel-checked the same day as
+> `FourierDynamicsZ3.production_terms_eq_zero_of_even`. This is the same negation-symmetry
+> family as the Waleffe §6bis per-class zero: a symmetry artifact, carrying no information
+> about mixing.
+>
+> **Consequences, per the registration's own rules:** (i) the F2/F3 comparisons of the first
+> run are **quarantined from interpretation** — the coherence control did not pass, so the
+> observable has not yet demonstrated it can detect coherence; (ii) **amendment 4, recorded
+> before the second run**: the coherent family is replaced by **F1′ — one fixed non-real
+> phase** `c = ((1−t²)+2ti)/(1+t²)`, `t = 1/3`, applied to every half-ball mode. `c ≠ ±1`
+> breaks the parity degeneracy while keeping all phases aligned, which is what "coherent" was
+> meant to mean. F1's original numbers remain reported.
+>
+> **Second-run outcome (2026-09-10) — F1′ is ALSO exactly zero, and two more exact facts.**
+> Checked at full precision, not off the 4-place display:
+>
+> 1. **`Re(Σ t) = 0 exactly, for every state tested — including every random-phase seed.**
+>    Mechanism, derived and then checked termwise: for ANY conjugate-symmetric state,
+>    global negation sends each term to **minus its own conjugate**
+>    (`t(−p,−q) = −conj(t(p,q))`: the weight is even, the divergence contraction picks
+>    `−conj`, the bilinear factor conjugates). So the real part cancels pairwise, always —
+>    which is also exactly *why* the physical production `2P = −i·Σt` is real. Promoted to a
+>    harness **integrity assertion** on every measured state.
+> 2. **F1′'s sum is exactly zero at `M = 2, 3`, and parity does not explain it** — the tilted
+>    phase breaks that symmetry. The suspect is a SECOND degeneracy of my construction: every
+>    amplitude uses the **same director** (`a_k ∝ d` with one fixed `d`), so `u` is a
+>    gradient-cross-director field (`u = ∇g × d`), velocity everywhere perpendicular to a
+>    fixed direction — a quasi-planar class for which the production may vanish identically.
+>    **Open**: mechanism unproved; hypothesis registered before any further run as
+>    **amendment 5** — the next run must use `k`-dependent directors
+>    (`d(k) = (1,2,3) + (k₂,k₃,k₁)`-type, with the parallel-degeneracy fallback), for ALL
+>    families, F2/F3 included, so that no family owes its behaviour to the director artifact.
+> 3. **Parity is now Tier A**: for parity-even states (`u(−k) = u(k)`), the production term
+>    sum vanishes identically — `FourierDynamicsZ3.production_terms_eq_zero_of_even`, proved
+>    by the negation involution.
+>
+> **Standing interpretation quarantine.** Until a run under amendment 5 passes the coherence
+> control, none of the F2/F3 numbers may be read as evidence about phase mixing, in either
+> direction. What the instrument HAS delivered so far is three exact structural facts about
+> the production sum, two with proofs — which is the programme working as designed, and a
+> warning received twice now: **the production sum has a large kernel of symmetry-degenerate
+> states, and any mixing claim must first show its test states are outside it.**
 
 ## 5. Implementation order
 
