@@ -1019,6 +1019,63 @@ theorem cOf_neg_no_cancellation_witness :
     rw [kNorm_e1, kNorm_e2]
     norm_num
 
+/-! ### 14. WP-1c: the frame factors of the helical production expansion
+
+Ordered by the owner's adjudication of 2026-09-10
+(`docs/designs/DECISION_2026-09-10_openai_leverage_adjudication.md`, Next Step 2); derivation and
+gauge-legitimacy argument in `docs/designs/HELICAL_PRODUCTION_EXPANSION.md`; Tier B counterpart
+`tests/tier_b_helical_production_expansion.py`.
+
+Substituted into `FourierDynamicsZ3.enstrophy_production_identity`, these two identities give the
+per-triad helical expansion of the enstrophy production. What they say:
+
+* **I1** — the `(q·u_p)` slot couples only to the chirality-*blind* amplitude combination: the
+  stretched leg's handedness is invisible to enstrophy production.
+* **I2** — the `(u_q·u_r)` slot splits into a `(q·r)`-weighted blind part and a `|q||r|`-weighted
+  chirality-*odd* part. All irrationality — hence anything genuinely Diophantine about `ℤ³` —
+  survives only in that odd channel.
+
+The frame is each triad's own `p × q`, entering and leaving within a single gauge-free term —
+the per-term use that §13's gauge separation licenses, unlike the retracted cross-triad claim. -/
+
+/-- The triple-product evaluation behind I1: `q · (N × p) = |N|²` for `N = p × q`. -/
+theorem dotZ_q_crossZ_Np (p q : Wavevector) :
+    dotZ q (crossZ (crossZ p q) p) = k_sq (crossZ p q) := by
+  simp only [dotZ, crossZ, k_sq, Fin.sum_univ_three, Matrix.cons_val_zero, Matrix.cons_val_one,
+    Matrix.head_cons, Matrix.cons_val_two, Matrix.tail_cons]
+  ring
+
+/-- **I1.** In the triad's own frame, `q · h^s(p) = |N|²` — independent of the chirality `s`.
+The imaginary part dies on `q ⊥ p × q`; no `I² = −1` is needed. -/
+theorem frame_dot_h (s : ℝ) (p q : Wavevector) :
+    fourier_dot q (hOf (crossZ p q) s p) = ((k_sq (crossZ p q) : ℤ) : ℂ) := by
+  unfold fourier_dot hOf
+  simp only [Fin.sum_univ_three, crossZ_apply_zero, crossZ_apply_one, crossZ_apply_two, k_sq]
+  push_cast
+  ring
+
+/-- **I2.** In the triad's own frame, with `r = −(p+q)`:
+`h^{s_q}(q) ·_bil h^{s_r}(r) = |N|² [ (q·r) − s_q s_r |q||r| ]`.
+
+The `I²` term is exactly the chirality-odd channel, so this one does use `I² = −1` — with the
+coefficient supplied explicitly, so the combination stays linear. -/
+theorem frame_bilinear_h (sq sr : ℝ) (p q : Wavevector) :
+    cdot (hOf (crossZ p q) sq q) (hOf (crossZ p q) sr (-(p + q)))
+      = ((k_sq (crossZ p q) : ℤ) : ℂ)
+        * (((dotZ q (-(p + q)) : ℤ) : ℂ)
+            - ((sq : ℝ) : ℂ) * ((sr : ℝ) : ℂ)
+              * ((kNorm q : ℝ) : ℂ) * ((kNorm (-(p + q)) : ℝ) : ℂ)) := by
+  unfold cdot hOf
+  simp only [Fin.sum_univ_three, crossZ_apply_zero, crossZ_apply_one, crossZ_apply_two,
+    Pi.add_apply, Pi.neg_apply, dotZ, k_sq]
+  push_cast
+  linear_combination (((sq : ℝ) : ℂ) * ((sr : ℝ) : ℂ) * ((kNorm q : ℝ) : ℂ)
+      * ((kNorm (-(p + q)) : ℝ) : ℂ)
+      * ((((p 1 : ℤ) : ℂ) * ((q 2 : ℤ) : ℂ) - ((p 2 : ℤ) : ℂ) * ((q 1 : ℤ) : ℂ)) ^ 2
+        + (((p 2 : ℤ) : ℂ) * ((q 0 : ℤ) : ℂ) - ((p 0 : ℤ) : ℂ) * ((q 2 : ℤ) : ℂ)) ^ 2
+        + (((p 0 : ℤ) : ℂ) * ((q 1 : ℤ) : ℂ) - ((p 1 : ℤ) : ℂ) * ((q 0 : ℤ) : ℂ)) ^ 2))
+    * Complex.I_sq
+
 /-! ### Audit certificates — no axiom outside [propext, Classical.choice, Quot.sound]. -/
 #print axioms dotZ_crossZ_left
 #print axioms dotZ_crossZ_self
@@ -1064,5 +1121,8 @@ theorem cOf_neg_no_cancellation_witness :
 #print axioms cOf_conj_triad_frame
 #print axioms cOf_neg_add_triad_frame
 #print axioms cOf_neg_no_cancellation_witness
+#print axioms dotZ_q_crossZ_Np
+#print axioms frame_dot_h
+#print axioms frame_bilinear_h
 
 end MechanicaFluidorum.FourierZ3

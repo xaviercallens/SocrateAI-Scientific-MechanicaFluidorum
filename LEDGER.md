@@ -747,6 +747,28 @@ distinguishes this per-term use of the frame from the retracted cross-triad clai
 measurement can be exact rational end to end.** The measurement is pre-registered in the memo
 (families F1–F3, nulls first, falsifiable failure modes named) and has NOT been run.
 
+### WP-1c step 2 — I1 and I2 at Tier A (2026-09-10)
+
+`lean_src/HelicalBasis.lean` §14, footprints exactly `[propext, Classical.choice, Quot.sound]`:
+
+| Claim | Theorem | Date |
+|---|---|---|
+| `q · (N × p) = \|N\|²` for `N = p × q` — the triple product behind I1 | `dotZ_q_crossZ_Np` | 2026-09-10 |
+| **I1**: `q · h^s(p) = \|N\|²`, independent of the chirality; no `I² = −1` needed | `frame_dot_h` | 2026-09-10 |
+| **I2**: `h^{s_q}(q) ·_bil h^{s_r}(r) = \|N\|²[(q·r) − s_q s_r\|q\|\|r\|]`; the `I²` step **is** the chirality-odd channel, coefficient supplied explicitly | `frame_bilinear_h` | 2026-09-10 |
+
+**Two Lean negative controls, both confirmed to fail:** stating I1 in the opposite frame
+orientation `q × p` (NC-Q — the triple product flips sign); flipping the sign of the odd channel
+in I2 (NC-R — that sign is exactly what `I² = −1` supplies). Thirteen demonstrated negatives on
+`HelicalBasis.lean`.
+
+### WP-0b status note (2026-09-10)
+
+The owner-initiated `lake build` of the foreign tree was **killed by the machine's low-memory
+guard at job 4669/4724** of its Mathlib phase (31 GB host, ~18 GB in use). All completed modules
+are cached in their `.lake`, so a resume loses almost nothing; the known fix on this machine is
+limited parallelism (`lake build -j2`). No transcript exists yet; the no-citation rule stands.
+
 **Audit flags — BOTH CLOSED 2026-09-10.** F1′ by `B_witness_ne_zero` / `B_not_identically_zero`
 (rows above). F4 by `mem_ball_iff`: `k ∈ ball M ↔ k_sq k ≤ M²`. The non-obvious direction is that
 `k_sq k ≤ M²` already forces every coordinate into `[−M, M]`, because each `(kᵢ)²` is one
