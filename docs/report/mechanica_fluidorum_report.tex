@@ -63,8 +63,8 @@ Revised After the External Audit of 13 August 2026}}
 \small\texttt{SocrateAI-Scientific-MechanicaFluidorum}}
 
 \date{13 August 2026 \quad$\vert$\quad revised 10 September 2026\\[0.3em]
-\small Repository state: commit \texttt{024909b} \quad$\vert$\quad All verification gates PASS (exit 0)\\[0.2em]
-\small 12 Lean files, 224 kernel-compiled theorems, zero \texttt{sorry} \quad$\vert$\quad 15 exact-arithmetic harnesses}
+\small Repository state: commit \texttt{1368cb8} \quad$\vert$\quad All verification gates PASS (exit 0)\\[0.2em]
+\small 12 Lean files, 232 kernel-compiled theorems, zero \texttt{sorry} \quad$\vert$\quad 16 exact-arithmetic harnesses}
 
 \begin{document}
 \maketitle
@@ -1543,6 +1543,67 @@ Audit verdict D1 still binds, and the scope should be stated plainly: this is th
 prerequisite for global existence \emph{of the truncated system}. It is not evidence about the
 $\alpha'\to0$ limit, about Hypothesis~U, or about Navier--Stokes.
 
+\subsection{The weighted identity: energy conservation and vortex stretching are one theorem}
+\label{sec:weighted}
+
+Energy is not what Hypothesis~U is about. The specification states it for the \emph{enstrophy}
+$\|\nabla u\|_{L^2}^2$, which on the lattice is $\sum_k|k|^2|u_k|^2$, so the quantity that matters is
+the production
+\[
+  P \;=\; \mathrm{Re}\sum_k |k|^2\,\langle u_k, B(u,u)_k\rangle ,
+\]
+the same sum as \eqref{eq:twoswap} carrying a weight. Whether the two-swap kills that too is not an
+open question --- it does not, or three-dimensional Navier--Stokes would be easy. The useful
+question is \emph{how} it fails, and that has an exact answer.
+
+\paragraph{The pair identity (\tA{}).}
+Write $r=-(p+q)$, and let $w$ be \emph{any} weight, attached to the third member since $k=-r$. The
+two orderings of a triad differ in the weight and in nothing else: $\mathrm{dot}(u_q,u_r)$ is
+symmetric, and divergence-freeness at $p$ gives $\mathrm{dot}(k_r,u_p)=-\mathrm{dot}(k_q,u_p)$.
+Hence
+\begin{equation}
+  w(r)\,(k_q\!\cdot\! u_p)(u_q\!\cdot\! u_r) \;+\; w(q)\,(k_r\!\cdot\! u_p)(u_r\!\cdot\! u_q)
+    \;=\; \bigl(w(r)-w(q)\bigr)(k_q\!\cdot\! u_p)(u_q\!\cdot\! u_r).
+  \label{eq:weighted}
+\end{equation}
+Divergence-freeness is used exactly once, and the whole reduction turns on it; a control that
+removes it breaks the proof.
+
+\paragraph{What \eqref{eq:weighted} says.}
+Constant $w$ makes the right side vanish, so \emph{energy conservation is the constant-weight case}
+--- and that is machine-checked rather than asserted, since the energy corollary is derived
+\emph{from} \eqref{eq:weighted} using nothing about the value of the constant. The obstruction is
+carried entirely by the weight difference across the swap: not by the triad's geometry, not by
+chirality, not by the lattice, because every other factor is common to the two orderings. With
+$w=|\cdot|^2$, instantiated for the concrete truncated operator,
+\begin{equation}
+  2\sum_k|k|^2\langle u_k,B(u,u)_k\rangle
+    \;=\; -i\sum_{\text{triads}}\bigl(|r|^2-|q|^2\bigr)(q\!\cdot\! u_p)(u_q\!\cdot\! u_r).
+  \label{eq:enstrophy}
+\end{equation}
+This is vortex stretching in closed algebraic form: a triad transfers enstrophy in proportion to how
+\emph{unequal in wavenumber} its two swapped members are, and a triad whose two swapped members
+share a sphere transfers none. Set \eqref{eq:enstrophy} beside \eqref{eq:twoswap}, which is the same
+computation with the weight removed and whose right side is therefore zero, and the entire
+difference between the two conservation questions is one factor. The negative control that matters
+replaces that factor by zero --- asserting enstrophy conserves as energy does --- and fails.
+
+\paragraph{What it is not, which is the important half.}
+It is an \emph{identity, not a bound}: it gives no estimate on $P$. It says nothing about uniformity
+in the truncation, which is the entire content of Hypothesis~U, and obstruction~O5 stands untouched
+--- at fixed truncation the system is regular by an elementary argument, so a result that does not
+use the limit uniformly proves nothing about the limit, and this one does not use the limit at all.
+Nor is it new mathematics; the enstrophy production of the Fourier--Galerkin system is classical.
+What is new is only that it is kernel-checked in the same abstract form as the energy identity, so
+the two are visibly one theorem. It unblocks nothing: the roadmap's remaining items stay blocked on
+definitions that have not been authored.
+
+A procedural note belongs with it. Unlike the energy identity, whose design memo was written by the
+programme owner and executed here, the memo behind \eqref{eq:weighted} is self-authored. Its proofs
+are machine-checked and its arithmetic is exact, but whether the \emph{statement} is the one the
+programme wants is a human judgement, and it is precisely the judgement neither gate can make. It is
+carried as a draft pending that audit.
+
 \subsection{A ``frustration index'' that measures its own null model (\tC{}, refuted as posed)}
 \label{sec:frustration}
 
@@ -1850,21 +1911,21 @@ LL-8 & \textbf{The verification gate itself had a false positive.} A lemma prove
  & \quad and its energy conservation (\textsc{draft}) & & \\
 \texttt{EnstrophyProduction.lean} & Exact enstrophy-production identity & \tA{} & 11 \\
 \texttt{EnstrophyProductionBound.lean} & Local bound $S_N^2\le2\Omega_N^3$ & \tA{} & 15 \\
-\texttt{AbstractAlgebraicConservation.lean} & Abstract triad conservation + transversality & \tA{} & 5 \\
+\texttt{AbstractAlgebraicConservation.lean} & Abstract triad conservation; the weighted identity \eqref{eq:weighted} & \tA{} & 9 \\
 \texttt{TriadTorus.lean} & Triad 2-section on a torus: $A=6(J{-}I)-2P$, spectrum & \tA{} & 12 \\
 \texttt{DyadicRiccati.lean} & The $\alpha=1/2$ threshold as an integrability threshold & \tA{} & 14 \\
 \texttt{FourierStateZ3.lean} & 3-D Fourier state space, Leray projector (\textsc{draft}) & \tA{} & 24 \\
 \texttt{FourierDynamicsZ3.lean} & The operator $B$ of \eqref{eq:Bop}; $B\neq0$ witness; $F1$, $F4$
-closed; \textbf{energy conservation} & \tA{} & 27 \\
+closed; \textbf{energy conservation}; \textbf{enstrophy production} \eqref{eq:enstrophy} & \tA{} & 31 \\
 \texttt{HelicalBasis.lean} & Helical basis, five facts; resonance $=$ collinearity; the closed
 form \eqref{eq:closed}, its converse, and the gauge separation & \tA{} & 75 \\
 \midrule
-\multicolumn{2}{@{}l}{\textbf{Tier A subtotal}} & & \textbf{216} \\
+\multicolumn{2}{@{}l}{\textbf{Tier A subtotal}} & & \textbf{224} \\
 \midrule
 \texttt{MillenniumReduction.lean} & Conditional reduction skeleton & \tC{} & 8 \\
  & \quad (\textsc{demoted} 2026-08-13, verdict B1) & & \\
 \midrule
-\multicolumn{2}{@{}l}{\textbf{Total kernel-compiled, no axiom outside \texttt{\{propext, Classical.choice, Quot.sound\}}}} & & \textbf{224} \\
+\multicolumn{2}{@{}l}{\textbf{Total kernel-compiled, no axiom outside \texttt{\{propext, Classical.choice, Quot.sound\}}}} & & \textbf{232} \\
 \bottomrule
 \end{tabular}
 \end{center}

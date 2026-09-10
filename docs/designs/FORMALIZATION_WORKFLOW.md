@@ -64,10 +64,13 @@ before any dependent code existed.
 
 ## 4. The current queue
 
+*Revised 2026-09-10.*
+
 | item | state | next action |
 |---|---|---|
-| **Task 2.2** energy identity | memo written; **step 1 of 5 done** (`triadSet_swap3_closed`, negative-controlled) | steps 2–5 of `TASK22_ENERGY_IDENTITY.md` §8: the Leray drop, the reindexing bijection, the out-of-ball vanishing, the assembly |
-| **F4** `ball` vs `GalerkinState.cutoff` | open | prove `k ∈ ball M ↔ k_sq k ≤ M²`; the forward direction is `mem_filter`, the reverse needs `k_sq k ≤ M² → |kᵢ| ≤ M` |
+| **Task 2.2** energy identity | **CLOSED** — `energy_conservation`, all five steps, three negative controls fail as required | — |
+| **F4** `ball` vs `GalerkinState.cutoff` | **CLOSED** — `mem_ball_iff` | — |
+| **weighted triad identity** (`WEIGHTED_TRIAD_IDENTITY.md`) | Lean + Tier B done; **memo is SELF-AUTHORED and awaits the owner's statement-adequacy audit** | owner to accept, amend or reject the statement. The proofs are machine-checked; whether the statement is the one the programme wants is not |
 | **Task 2.3** sweeping cancellation | **blocked, E-1** | the memorandum states a bound "∝ \|p\|" with no definition of the object bounded. A definition must be authored and audited before any Lean |
 | **Task 3.1/3.2** confinement ⇒ Hypothesis U | **blocked, E-1 and O5** | "invariant region" and "confinement guarantees U" are Tier C conjectures. Also: at fixed `α′` the truncated system is regular by an elementary argument, so a proof that does not use `α′ → 0` uniformly proves nothing (SPEC obstruction O5) |
 
@@ -75,3 +78,9 @@ before any dependent code existed.
 forbids inventing them. That is the correct state for them to be in, and it is where the
 programme's honesty lives: the queue above is short because most of the roadmap's later items are
 not yet mathematics.
+
+**On what closing Task 2.2 did and did not buy.** It proved the truncated system conserves energy —
+a prerequisite for global existence *of that system*, which obstruction O5 says was never in doubt.
+The follow-on work reached the object Hypothesis U is actually about, the enstrophy production, and
+put it in exact closed form. That localises the three-dimensional difficulty to a single factor and
+**is not a bound**. No row above moved from blocked to open as a result.
