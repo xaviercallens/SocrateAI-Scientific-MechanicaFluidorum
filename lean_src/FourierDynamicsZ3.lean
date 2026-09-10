@@ -29,8 +29,12 @@ Audit flags — BOTH CLOSED 2026-09-10:
   F4  — `ball M` is cube-then-filter while `GalerkinState.cutoff` is stated with
         `M² < k_sq k`. Closed by `mem_ball_iff`: the cube is IMPLIED, since each
         `(k_i)²` is one non-negative term of `k_sq k`.
-Still owed on this file: steps 2–5 of Task 2.2 (the Leray drop, the reindexing
-bijection, the out-of-ball vanishing, and the assembly).
+Task 2.2 CLOSED 2026-09-10: `energy_conservation` proves
+`EnergyConservationStatement M` for every `M`, zero `sorry`, clean footprint.
+Steps 2–5 (the Leray drop, the reindexing bijection, the out-of-ball vanishing,
+and the assembly) are §8. The three negative controls that
+`docs/designs/TASK22_ENERGY_IDENTITY.md` §8 mandates were run on scratch copies
+and each FAILS as required.
 =============================================================================
 -/
 
@@ -335,6 +339,228 @@ theorem triadSet_nonempty_two : ((k0, wq) : Wavevector × Wavevector) ∈ triadS
 #print axioms B_witness_ne_zero
 #print axioms B_not_identically_zero
 #print axioms triadSet_swap3_closed
+/-! ### 8. Task 2.2 steps 2–5: the bridge to `triad_sum_zero`
+
+`docs/designs/TASK22_ENERGY_IDENTITY.md` establishes that the mathematics of energy conservation is
+already Tier A here, as `AbstractAlgebraicConservation.triad_sum_zero`, and that what remains is an
+*instantiation*. Step 4 of its implementation order, the closure lemma, is `triadSet_swap3_closed`
+above. This section supplies the rest. -/
+
+/-- The ball is closed under negation — `k_sq` does not see the sign. Needed by the reindexing,
+because the third member of the triad is `−(p+q)`. -/
+theorem neg_mem_ball {M : ℕ} {k : Wavevector} : -k ∈ ball M ↔ k ∈ ball M := by
+  rw [mem_ball_iff, mem_ball_iff, k_sq_neg]
+
+/-- Conjugation passes through `fourier_dot`, because the wavevector entries are integers and so
+are fixed by it. -/
+theorem fourier_dot_conj (k : Wavevector) (v : Fin 3 → ℂ) :
+    fourier_dot k (fun i => conj (v i)) = conj (fourier_dot k v) := by
+  unfold fourier_dot
+  rw [map_sum]
+  exact Finset.sum_congr rfl fun i _ => by rw [map_mul, map_intCast]
+
+/-- **Step A — the Leray projector drops out of the outer pairing.**
+
+`⟨u, P(k)x⟩ = ⟨u, x⟩` whenever `u` is divergence-free at `k`. The projector is real symmetric,
+hence self-adjoint for this pairing, so it moves onto the left argument; and `conj u` is
+divergence-free at `k` exactly when `u` is, so the projector fixes it.
+
+The memo routes this through the conjugate-symmetry `conj(u_k) = u_{−k}`. That is not needed: the
+integer wavevector is fixed by conjugation, so divergence-freeness transfers to `conj u` directly,
+and the proof holds for **any** divergence-free `u`, not only for a `FourierState`. -/
+theorem pairing_leray_drop {k : Wavevector} {u : Fin 3 → ℂ}
+    (hu : fourier_dot k u = 0) (x : Fin 3 → ℂ) :
+    pairing u (applyLeray k x) = pairing u x := by
+  have hconj : fourier_dot k (fun i => conj (u i)) = 0 := by
+    rw [fourier_dot_conj, hu, map_zero]
+  have hfix : applyLeray k (fun i => conj (u i)) = fun i => conj (u i) :=
+    applyLeray_eq_self hconj
+  unfold pairing applyLeray at *
+  calc ∑ i : Fin 3, conj (u i) * ∑ j : Fin 3, LerayProjector k i j * x j
+      = ∑ i : Fin 3, ∑ j : Fin 3, conj (u i) * LerayProjector k i j * x j := by
+        refine Finset.sum_congr rfl fun i _ => ?_
+        rw [Finset.mul_sum]
+        exact Finset.sum_congr rfl fun j _ => by ring
+    _ = ∑ j : Fin 3, ∑ i : Fin 3, conj (u i) * LerayProjector k i j * x j := Finset.sum_comm
+    _ = ∑ j : Fin 3, (∑ i : Fin 3, LerayProjector k j i * conj (u i)) * x j := by
+        refine Finset.sum_congr rfl fun j _ => ?_
+        rw [Finset.sum_mul]
+        refine Finset.sum_congr rfl fun i _ => ?_
+        rw [leray_symm k i j]
+        ring
+    _ = ∑ j : Fin 3, conj (u j) * x j := by
+        exact Finset.sum_congr rfl fun j _ => by rw [congrFun hfix j]
+
+/-- The wavevector map of `triad_sum_zero`, as a complex-valued field on the lattice. -/
+noncomputable def kmap (a : Wavevector) : Fin 3 → ℂ := fun i => ((a i : ℤ) : ℂ)
+
+theorem dot_kmap (q : Wavevector) (v : Fin 3 → ℂ) :
+    AbstractAlgebraicConservation.dot (kmap q) v = fourier_dot q v := rfl
+
+/-- `hkadd` of `triad_sum_zero`: the wavevector map is additive, because `Int.cast` is. -/
+theorem kmap_add (a b : Wavevector) (i : Fin 3) : kmap (a + b) i = kmap a i + kmap b i := by
+  unfold kmap
+  rw [Pi.add_apply]
+  push_cast
+  ring
+
+/-- **Step C — the out-of-ball terms vanish.** The Galerkin cutoff kills `u q`, and the summand
+carries `u q` as a factor. This is what lets the sum be restricted from the reindexed set, which is
+*not* `swap3`-closed, to `triadSet M`, which is. -/
+theorem summand_eq_zero_of_notMem_ball {M : ℕ} (s : GalerkinState M)
+    {pq : Wavevector × Wavevector} (h : pq.2 ∉ ball M) :
+    AbstractAlgebraicConservation.summand kmap s.toFourierState.u pq = 0 := by
+  unfold AbstractAlgebraicConservation.summand AbstractAlgebraicConservation.dot
+  rw [s.eq_zero_of_notMem_ball h]
+  simp
+
+/-- **Step B — the reindexing.** `(k, p) ↦ (p, k − p)` carries the double sum over the ball onto
+`triadSet M`, once the terms whose middle member leaves the ball have been discarded by step C.
+
+The inverse is `(p, q) ↦ (p + q, p)`; it lands back in the ball because `triadSet` constrains
+`−(p+q)`, and the ball is negation-closed. -/
+theorem sum_double_eq_sum_triadSet {M : ℕ} (s : GalerkinState M) :
+    ∑ k ∈ ball M, ∑ p ∈ ball M,
+        AbstractAlgebraicConservation.summand kmap s.toFourierState.u (p, k - p)
+      = ∑ pq ∈ triadSet M, AbstractAlgebraicConservation.summand kmap s.toFourierState.u pq := by
+  classical
+  set u := s.toFourierState.u with hudef
+  set F : Wavevector × Wavevector → ℂ :=
+    fun kp => AbstractAlgebraicConservation.summand kmap u (kp.2, kp.1 - kp.2) with hF
+  have hprod : ∑ k ∈ ball M, ∑ p ∈ ball M,
+      AbstractAlgebraicConservation.summand kmap u (p, k - p)
+        = ∑ kp ∈ (ball M) ×ˢ (ball M), F kp := by
+    rw [Finset.sum_product]
+  rw [hprod]
+  -- discard the pairs whose middle member has left the ball
+  set T : Finset (Wavevector × Wavevector) :=
+    ((ball M) ×ˢ (ball M)).filter (fun kp => kp.1 - kp.2 ∈ ball M) with hT
+  have hsub : T ⊆ (ball M) ×ˢ (ball M) := Finset.filter_subset _ _
+  have hdrop : ∀ kp ∈ (ball M) ×ˢ (ball M), kp ∉ T → F kp = 0 := by
+    intro kp hmem hnot
+    have : kp.1 - kp.2 ∉ ball M := by
+      intro hc
+      exact hnot (Finset.mem_filter.mpr ⟨hmem, hc⟩)
+    exact summand_eq_zero_of_notMem_ball s this
+  rw [← Finset.sum_subset hsub hdrop]
+  -- and reindex what is left
+  refine Finset.sum_nbij' (i := fun kp => (kp.2, kp.1 - kp.2))
+    (j := fun pq => (pq.1 + pq.2, pq.1)) ?_ ?_ ?_ ?_ ?_
+  · intro kp hkp
+    rw [hT, Finset.mem_filter, Finset.mem_product] at hkp
+    obtain ⟨⟨hk, hp⟩, hq⟩ := hkp
+    rw [mem_triadSet]
+    refine ⟨hp, hq, ?_⟩
+    have : -(kp.2 + (kp.1 - kp.2)) = -kp.1 := by abel
+    rw [this]
+    exact neg_mem_ball.mpr hk
+  · intro pq hpq
+    rw [mem_triadSet] at hpq
+    obtain ⟨hp, hq, hr⟩ := hpq
+    rw [hT, Finset.mem_filter, Finset.mem_product]
+    refine ⟨⟨?_, hp⟩, ?_⟩
+    · exact neg_mem_ball.mp (by simpa using hr)
+    · simpa using hq
+  · intro kp _
+    have : kp.2 + (kp.1 - kp.2) = kp.1 := by abel
+    simp [this]
+  · intro pq _
+    have : pq.1 + pq.2 - pq.1 = pq.2 := by abel
+    simp [this]
+  · intro kp _
+    rfl
+
+/-- The outer pairing against the convective term, written as a sum of `summand`s. This is where
+the conjugate symmetry `conj(u_k) = u_{−k}` is used, and the only place it is needed: it turns the
+Hermitian outer pairing into the **bilinear** `dot` that `triad_sum_zero` is stated for. -/
+theorem pairing_convective_expand {M : ℕ} (s : GalerkinState M) (k : Wavevector) :
+    pairing (s.toFourierState.u k) (convective M s.toFourierState.u s.toFourierState.u k)
+      = ∑ p ∈ ball M, (-Complex.I) *
+          AbstractAlgebraicConservation.summand kmap s.toFourierState.u (p, k - p) := by
+  classical
+  set u := s.toFourierState.u with hudef
+  have hcs : ∀ (a : Wavevector) (i : Fin 3), u (-a) i = conj (u a i) :=
+    s.toFourierState.conj_sym
+  have hneg : ∀ p : Wavevector, -(p + (k - p)) = -k := fun p => by abel
+  unfold pairing convective AbstractAlgebraicConservation.summand
+    AbstractAlgebraicConservation.dot
+  calc ∑ i : Fin 3, conj (u k i) * ∑ p ∈ ball M,
+          (-Complex.I) * fourier_dot (k - p) (u p) * u (k - p) i
+      = ∑ i : Fin 3, ∑ p ∈ ball M,
+          conj (u k i) * ((-Complex.I) * fourier_dot (k - p) (u p) * u (k - p) i) :=
+        Finset.sum_congr rfl fun i _ => Finset.mul_sum _ _ _
+    _ = ∑ p ∈ ball M, ∑ i : Fin 3,
+          conj (u k i) * ((-Complex.I) * fourier_dot (k - p) (u p) * u (k - p) i) :=
+        Finset.sum_comm
+    _ = ∑ p ∈ ball M, (-Complex.I) *
+          (fourier_dot (k - p) (u p) * ∑ i : Fin 3, u (k - p) i * u (-(p + (k - p))) i) := by
+        refine Finset.sum_congr rfl fun p _ => ?_
+        rw [hneg p]
+        have hR : (-Complex.I) *
+            (fourier_dot (k - p) (u p) * ∑ i : Fin 3, u (k - p) i * u (-k) i)
+              = ∑ i : Fin 3,
+                  (-Complex.I) * fourier_dot (k - p) (u p) * (u (k - p) i * u (-k) i) := by
+          rw [← mul_assoc, Finset.mul_sum]
+        rw [hR]
+        refine Finset.sum_congr rfl fun i _ => ?_
+        rw [hcs k i]
+        ring
+
+/-- **Task 2.2 — energy conservation for the Galerkin-truncated nonlinearity.**
+
+`Re Σ_{k ∈ Λ_M} ⟨u_k, B(u,u)_k⟩ = 0` for every Galerkin state, every `M`, with no smallness, no
+genericity, and no hypothesis beyond the `GalerkinState` structure.
+
+The mathematics is the two-element symmetry proved abstractly in
+`AbstractAlgebraicConservation.triad_sum_zero`, which had been Tier A here since 2026-08-13. All
+this proof does is instantiate it: drop the projector, reindex, discard the terms the cutoff kills,
+and apply the theorem.
+
+**Scope, and audit verdict D1 still binds.** This is the *finite-dimensional* identity: the Galerkin
+ODE conserves energy exactly. It is a prerequisite for global existence of the truncated system. It
+is not evidence about the `α′ → 0` limit, about Hypothesis U, or about Navier–Stokes. A truncation
+is a truncation. -/
+theorem energy_conservation (M : ℕ) : EnergyConservationStatement M := by
+  intro s
+  have h2 : ∀ x : ℂ, 2 * x = 0 → x = 0 := by
+    intro x hx
+    rcases mul_eq_zero.mp hx with h | h
+    · exact absurd h (by norm_num)
+    · exact h
+  have hdiv : ∀ pq ∈ triadSet M,
+      AbstractAlgebraicConservation.dot (kmap pq.1) (s.toFourierState.u pq.1) = 0 :=
+    fun pq _ => s.toFourierState.div_free pq.1
+  have key : ∑ k ∈ ball M, pairing (s.toFourierState.u k)
+      (B M s.toFourierState.u s.toFourierState.u k) = 0 := by
+    have hA : ∀ k ∈ ball M, pairing (s.toFourierState.u k)
+        (B M s.toFourierState.u s.toFourierState.u k)
+          = ∑ p ∈ ball M, (-Complex.I) *
+              AbstractAlgebraicConservation.summand kmap s.toFourierState.u (p, k - p) := by
+      intro k _
+      rw [B, pairing_leray_drop (s.toFourierState.div_free k), pairing_convective_expand]
+    rw [Finset.sum_congr rfl hA]
+    have hpull : ∑ k ∈ ball M, ∑ p ∈ ball M, (-Complex.I) *
+        AbstractAlgebraicConservation.summand kmap s.toFourierState.u (p, k - p)
+          = (-Complex.I) * ∑ k ∈ ball M, ∑ p ∈ ball M,
+              AbstractAlgebraicConservation.summand kmap s.toFourierState.u (p, k - p) := by
+      rw [Finset.mul_sum]
+      exact Finset.sum_congr rfl fun k _ => (Finset.mul_sum _ _ _).symm
+    rw [hpull, sum_double_eq_sum_triadSet s,
+      AbstractAlgebraicConservation.triad_sum_zero kmap s.toFourierState.u (triadSet M)
+        h2 kmap_add (triadSet_swap3_closed M) hdiv]
+    ring
+  rw [key]
+  simp
+
+#print axioms neg_mem_ball
+#print axioms fourier_dot_conj
+#print axioms pairing_leray_drop
+#print axioms pairing_convective_expand
+#print axioms energy_conservation
+#print axioms kmap_add
+#print axioms summand_eq_zero_of_notMem_ball
+#print axioms sum_double_eq_sum_triadSet
+
 #print axioms triadSet_nonempty_two
 #print axioms mem_ball_iff
 #print axioms GalerkinState.eq_zero_of_notMem_ball

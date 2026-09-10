@@ -440,10 +440,11 @@ both run on scratch copies and both confirmed to fail as required: perturbing th
 existence at `M = 0`, where `k₀` leaves the ball, breaks it too (the `p₀ ∈ ball M` hypothesis is
 load-bearing, not decorative).
 
-**Posed, NOT proved.** `⟨B(u,u), u⟩ = 0` is recorded as `EnergyConservationStatement (M : ℕ) : Prop`
-with its quantifier domain shown inhabited — **not** as a theorem carrying `sorry`, which would
-define the name and pollute every downstream footprint with `sorryAx`. It is certified
-computationally at `M ∈ {1,2,3}` (Tier B, fact 2).
+**Posed, NOT proved** *(superseded 2026-09-10 — see "Task 2.2 CLOSED" below; it is now proved)*.
+`⟨B(u,u), u⟩ = 0` was recorded as `EnergyConservationStatement (M : ℕ) : Prop` with its quantifier
+domain shown inhabited — **not** as a theorem carrying `sorry`, which would define the name and
+pollute every downstream footprint with `sorryAx`. It was certified computationally at
+`M ∈ {1,2,3}` (Tier B, fact 2).
 
 **Task 2.2 UNBLOCKED, 2026-09-10** — `docs/designs/TASK22_ENERGY_IDENTITY.md`. The identity is a
 **two-element symmetry**: on the constraint set `p+q+r = 0` the factor `(u_q·u_r)` is symmetric in
@@ -466,8 +467,44 @@ term with `q ∉ Λ_M`. Negative control, run on a scratch copy and **confirmed 
 signed member `−(p+q)` by `p+q` in the definition breaks the closure proof — so the lemma depends on
 the sign it claims to depend on, and an unnoticed sign error would not have passed silently.
 
-Remaining steps 2–5 (Leray drop, reindexing bijection, out-of-ball vanishing, assembly) are
-specified in the memo's §8 with their own negative controls.
+### Task 2.2 CLOSED — `EnergyConservationStatement` is now a theorem (2026-09-10)
+
+Steps 2–5 executed, `lean_src/FourierDynamicsZ3.lean` §8. **The row above that reads "Posed, NOT
+proved" is superseded**: it is proved, for every `M`, zero `sorry`, footprint exactly
+`[propext, Classical.choice, Quot.sound]`.
+
+| Claim | Theorem | Date |
+|---|---|---|
+| The ball is negation-closed — `k_sq` does not see the sign | `neg_mem_ball` | 2026-09-10 |
+| Conjugation passes through `fourier_dot` (integer wavevectors are fixed by it) | `fourier_dot_conj` | 2026-09-10 |
+| **Step 2 — the Leray projector drops out of the outer pairing** | `pairing_leray_drop` | 2026-09-10 |
+| The wavevector map is additive — `hkadd` of `triad_sum_zero` | `kmap_add` | 2026-09-10 |
+| **Step 4 — the out-of-ball terms vanish**, by the Galerkin cutoff | `summand_eq_zero_of_notMem_ball` | 2026-09-10 |
+| **Step 3 — the reindexing** `(k,p) ↦ (p, k−p)` onto `triadSet M` | `sum_double_eq_sum_triadSet` | 2026-09-10 |
+| The outer pairing against the convective term, as a sum of `summand`s | `pairing_convective_expand` | 2026-09-10 |
+| **Step 5 — `EnergyConservationStatement M` HOLDS, for every `M`** | `energy_conservation` | 2026-09-10 |
+
+**One deviation from the memo, and it simplifies the proof.** The memo's §3 routes the Leray drop
+through the conjugate symmetry `conj(u_k) = u_{−k}`. That is not needed: the wavevector entries are
+integers and so are fixed by conjugation, which transfers divergence-freeness to `conj u` directly.
+So `pairing_leray_drop` holds for **any** divergence-free field, not only for a `FourierState`.
+Conjugate symmetry is still used, but once and elsewhere — in `pairing_convective_expand`, to turn
+the Hermitian outer pairing into the **bilinear** `dot` that `triad_sum_zero` is stated for.
+
+**The three negative controls the memo mandates, all run on scratch copies and all confirmed to
+fail, each for the predicted reason:**
+
+- **NC-G** — supply divergence-freeness at the *wrong* index of the pair. Does not typecheck. This
+  is the sharpest of the three: it is exactly what a 3-cycle argument would have needed, and its
+  failure is the formal counterpart of why the earlier attempt stalled.
+- **NC-H** — replace the signed member `−(p+q)` by `p+q` in `triadSet`. The closure lemma fails, and
+  so do three downstream proofs.
+- **NC-I** — drop the cutoff from step 4. The goal left standing is precisely "one of the two
+  factors is zero", which nothing then supplies.
+
+**Scope, and audit verdict D1 still binds.** This is the *finite-dimensional* identity: the Galerkin
+ODE conserves energy exactly, which is a prerequisite for global existence **of the truncated
+system**. It is not evidence about the `α′ → 0` limit, about Hypothesis U, or about Navier–Stokes.
 
 **Audit flags — BOTH CLOSED 2026-09-10.** F1′ by `B_witness_ne_zero` / `B_not_identically_zero`
 (rows above). F4 by `mem_ball_iff`: `k ∈ ball M ↔ k_sq k ≤ M²`. The non-obvious direction is that

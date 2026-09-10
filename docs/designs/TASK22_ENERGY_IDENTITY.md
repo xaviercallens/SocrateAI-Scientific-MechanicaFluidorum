@@ -1,6 +1,21 @@
 # Design memo — Task 2.2: proving `EnergyConservationStatement`, and why it is already 90 % done
 
-**Status:** `[top]`-authored derivation, hand-checked before any Lean is written (LL-5).
+**Status: EXECUTED AND CLOSED, 2026-09-10.** `FourierDynamicsZ3.energy_conservation` proves
+`EnergyConservationStatement M` for every `M`, zero `sorry`, footprint exactly
+`[propext, Classical.choice, Quot.sound]`. All five implementation steps below are in
+`FourierDynamicsZ3.lean` §8 (step 4 was already in §7). All three mandated negative controls were
+run on scratch copies and each fails as required.
+
+**One deviation from this memo, and it simplifies the proof.** §3 routes the Leray drop through the
+conjugate symmetry `conj(u_k) = u_{−k}`. That is not needed. The wavevector entries are integers and
+so are fixed by conjugation, which transfers divergence-freeness to `conj u` directly, and
+`pairing_leray_drop` therefore holds for **any** divergence-free field, not only for a
+`FourierState`. Conjugate symmetry is still used, but only once and elsewhere — in
+`pairing_convective_expand`, to convert the Hermitian outer pairing into the bilinear `dot` that
+`triad_sum_zero` is stated for.
+
+**Original status line:** `[top]`-authored derivation, hand-checked before any Lean is written
+(LL-5).
 **Author:** orchestrator. **Date:** 2026-09-10.
 **Target:** turn `FourierDynamicsZ3.EnergyConservationStatement (M : ℕ) : Prop` into a theorem
 with zero `sorry`.
