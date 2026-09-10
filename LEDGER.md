@@ -593,6 +593,47 @@ of the roadmap that is *algebra*: the helical coefficient is a determinate funct
 wavevectors and three signs, so every claim about it is checkable without any analytic input, any
 limit, or any new definition. That is precisely the property the two blocked tracks lack.
 
+### `lean_src/HelicalBasis.lean` — D-3 step 1: the helical basis and its five facts (Tier A, 2026-09-10)
+
+Owner approved the D-3 memo and cleared step 1 of its §7. **Scope: the basis and nothing else** —
+no interaction coefficient, no dynamics, no bound, no Hypothesis U.
+
+**The design decision that made it tractable, and it is the memo's own §1 obstruction resolved.**
+`|k| = √(k_sq k)` is irrational at almost every lattice point, so a *normalised* basis drags a square
+root and a division through every proof, and the division's side condition must be witnessed or
+Lean's `x/0 = 0` proves the wrong theorem silently. The file therefore works with the **unnormalised**
+`hRaw = |ν| |k| · h^s`, which removes every division: the square root survives only inside H2 and H4,
+and only through `(√(k_sq k))² = k_sq k`. The normalisation is deferred to step 2, where the
+coefficient's `1/|k|` appears anyway and the witness is needed once, in one place.
+
+| Claim | Theorem | Date |
+|---|---|---|
+| The arbitrary choice of `ν`, made **total**: `k × x̂`, falling back to `k × ŷ` on the one line where that degenerates | `nuInt` (def) | 2026-09-10 |
+| `ν(k) ⊥ k`, unconditionally | `nuInt_orthogonal` | 2026-09-10 |
+| Totality's real content: the choice never degenerates on a nonzero lattice point | `nuInt_ne_zero` | 2026-09-10 |
+| Lagrange's identity in integers, the algebraic fact H1 rests on | `dotZ_crossZ_self` | 2026-09-10 |
+| The triple product `k × (ν × k) = \|k\|² ν` for `k ⊥ ν`, in integers — what turns the curl into a multiplication | `crossZ_triple_zero/one/two` | 2026-09-10 |
+| **H1** self-null: `hRaw · hRaw = 0` | `hRaw_self_null` | 2026-09-10 |
+| **H2** normalisation: `hRaw · conj hRaw = 2\|ν\|²\|k\|²` | `hRaw_norm` | 2026-09-10 |
+| **H3** transversality: `k · hRaw = 0`, no hypothesis | `hRaw_transverse` | 2026-09-10 |
+| **H4 — THE CURL EIGENVECTOR PROPERTY**: `i (k × hRaw) = s\|k\| · hRaw`. In this basis the curl, and with it vortex stretching, stops being a differential operator and becomes multiplication by the **signed** wavenumber | `hRaw_curl_eigen` | 2026-09-10 |
+| **H5** reality ↔ chirality: `conj (hRaw s k) = hRaw (−s) k` | `hRaw_conj` | 2026-09-10 |
+
+**Negative controls, run on scratch copies and both confirmed to FAIL as required.** Flipping the
+sign inside the curl eigen-equation breaks it (the eigenvalue is `+s|k|`, not `−`); and dropping the
+`k ≠ 0` hypothesis from `nuInt_ne_zero` breaks it, so that hypothesis is load-bearing rather than
+decorative.
+
+**Two Lean gotchas paid for here and worth reusing.** `fin_cases` emits indices as `⟨0, ⋯⟩`, which
+literal-indexed simp lemmas do not match — unfold the definitions instead, or route through
+`simpa using <literal-index lemma>`. And `((−s : ℝ) : ℂ)` must be `push_cast`-normalised to `−(s : ℂ)`
+or the cross terms in H2 cannot cancel.
+
+**Not done, deliberately.** The instruction to "isolate a tarpit in a lemma with `sorry`" is
+incompatible with Gate 2, which fails on any `sorry`, and with the axiom footprint, because a
+`sorry`'d theorem still **defines its name** and pollutes every downstream `#print axioms` with
+`sorryAx`. No `sorry` was written.
+
 ## Tier B — the Waleffe resonance condition is EXACTLY collinearity (2026-09-10)
 
 `tests/tier_b_helical_resonance.py`, wired into Gate 1. Exact integer arithmetic, **zero floating

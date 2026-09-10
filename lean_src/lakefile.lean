@@ -55,3 +55,7 @@ lean_lib FourierStateZ3
 statement. Imports `FourierStateZ3`. -/
 @[default_target]
 lean_lib FourierDynamicsZ3
+
+/-- D-3 step 1: Waleffe's helical basis and its five facts. Imports `FourierStateZ3`. -/
+@[default_target]
+lean_lib HelicalBasis
