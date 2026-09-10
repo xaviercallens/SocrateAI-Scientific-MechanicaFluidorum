@@ -590,6 +590,47 @@ O5 stands**: at fixed truncation the system is regular by an elementary argument
 does not use the limit uniformly proves nothing about the limit — and this one does not use the
 limit at all.
 
+### Non-vacuity closed on a genuine Galerkin state, and the chain checked end to end (2026-09-10)
+
+`tests/tier_b_fourier_enstrophy.py`, wired into Gate 1. **Not** to be confused with
+`tests/tier_b_enstrophy_production.py`, which is the dyadic shell model's identity.
+
+**The gap this closes, and it was a real one.** `enstrophy_production_identity` is an equation, and
+an equation can be true of nothing. Non-vacuity had been argued from `tier_b_weighted_triad.py`,
+which imposes divergence-freeness but **not** conjugate symmetry `u(−k) = conj(u(k))` or the zero
+mean. A `GalerkinState` carries all three, so that argument established non-vacuity for a strictly
+**larger** class than the theorem quantifies over. The difference is exactly the reality condition
+on the velocity field, and reality conditions are precisely the kind of constraint that can
+collapse a sum.
+
+The construction makes all three hold **exactly**, not approximately: `u_k := k × a_k` is orthogonal
+to `k` for any `a_k`; setting `a_{−k} := −conj(a_k)` forces `u_{−k} = conj(u_k)` because `k` is a
+real integer vector; and `u_0 = 0 × a_0 = 0`. Amplitudes are Gaussian rationals and the Leray
+projector is rational, so every quantity is exact.
+
+On a state with 10 of 33 modes populated at `M = 2`:
+
+| quantity | value |
+|---|---|
+| energy production `Σ_k ⟨u_k, B_k⟩` | **exactly 0** — Task 2.2 confirmed on a concrete state |
+| enstrophy production `Σ_k \|k\|²⟨u_k, B_k⟩` | **−18**, nonzero, and real |
+| `2 ×` production vs the closed form | **−36 = −36** |
+
+The energy row is an independent end-to-end check of the whole Task 2.2 chain — the Leray drop, the
+reindexing, the cutoff — against a brute-force evaluation that reuses none of the Lean proofs'
+structure. The enstrophy row closes the non-vacuity gap.
+
+**Three negative controls, all confirmed to fail:** the sum of the weights rather than the
+difference (N1); asserting enstrophy conserves as energy does (N2); and breaking divergence-freeness
+at one mode **while preserving conjugate symmetry**, so that only the load-bearing hypothesis is
+lost (N3).
+
+**One result deliberately NOT read as evidence.** A state seeded only on the unit sphere has
+production exactly zero, which looks like confirmation of the same-sphere criterion. It is not:
+three vectors drawn from `±{e₁,e₂,e₃}` cannot sum to zero, so that support admits **no
+non-degenerate triad at all** and every term dies for want of a triad, not for want of a weight
+difference. Recorded in the harness with that explanation attached.
+
 **Audit flags — BOTH CLOSED 2026-09-10.** F1′ by `B_witness_ne_zero` / `B_not_identically_zero`
 (rows above). F4 by `mem_ball_iff`: `k ∈ ball M ↔ k_sq k ≤ M²`. The non-obvious direction is that
 `k_sq k ≤ M²` already forces every coordinate into `[−M, M]`, because each `(kᵢ)²` is one
