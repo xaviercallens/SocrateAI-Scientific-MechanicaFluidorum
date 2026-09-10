@@ -593,6 +593,46 @@ of the roadmap that is *algebra*: the helical coefficient is a determinate funct
 wavevectors and three signs, so every claim about it is checkable without any analytic input, any
 limit, or any new definition. That is precisely the property the two blocked tracks lack.
 
+## Tier B — the Waleffe resonance condition is EXACTLY collinearity (2026-09-10)
+
+`tests/tier_b_helical_resonance.py`, wired into Gate 1. Exact integer arithmetic, **zero floating
+point** — which is possible only because the condition, on a lattice, is *diophantine*.
+
+**Theorem (proved, and not special to `ℤ³`).** For a triad `p + q = k` of nonzero real vectors, the
+Waleffe resonance condition `s_k|k| + s_p|p| + s_q|q| = 0` holds for some choice of signs **iff the
+triad is collinear.**
+
+*Proof.* The three magnitudes are positive, so the signs cannot all agree; exactly one differs, and
+the condition reads `|k| = |p| + |q|`, or `|p| = |k| + |q|`, or `|q| = |k| + |p|`. Each is **equality
+in the triangle inequality** for `k = p + q` (rewritten as `p = k − q` or `q = k − p`), which holds
+exactly when the two vectors on the right are parallel and like-directed. Hence all three are
+collinear; the converse is immediate. ∎
+
+| M | ordered triads | resonant (R) | fraction | **(R) and NOT collinear** |
+|---|---|---|---|---|
+| 2 | 426 | 18 | 0.0423 | **0** |
+| 3 | 6 642 | 90 | 0.0136 | **0** |
+| 4 | 30 360 | 168 | 0.0055 | **0** |
+| 5 | 122 472 | 456 | 0.0037 | **0** |
+| 6 | 398 190 | 774 | 0.0019 | **0** |
+
+**CONSEQUENCE, and it is negative for the chirality-selection reading.** Condition (R) *implies*
+condition (G) (`S_pq = 0`), so **(R) contributes nothing** beyond the degenerate triads that already
+carry no transfer for want of a plane. The inert set is not enriched by chirality; it *is* the
+collinear set.
+
+**And note what the proof does not use: `ℤ³`.** The programme's recurring appeal to "the arithmetic
+rigidity of the lattice" plays no part — the statement holds for real vectors. Any argument resting
+on the lattice making helical resonances rare is resting on nothing. This is the third independent
+deflation of Chantier 1 of the narrative memorandum, after the 𝒟(M) null-model result and the
+underflow finding.
+
+**Controls, all demonstrated.** Two *independent* decision procedures — an integer perfect-square
+test, and a squarefree-kernel characterisation derived separately — agree on **all 558 090 triads
+swept, zero disagreements**. A known resonant triad is accepted, a known non-resonant one rejected,
+and the perturbed test (offset the square by one) demonstrably flips verdicts, so the negative
+control is not inert.
+
 ## Tier C — D-3: the helical triad coefficient, and the resolution of the §6.4 collision (2026-09-10)
 
 Memo: `docs/designs/WALEFFE_HELICAL_MEMO.md`. Tests: `exploration/waleffe_triad_crucible.py`

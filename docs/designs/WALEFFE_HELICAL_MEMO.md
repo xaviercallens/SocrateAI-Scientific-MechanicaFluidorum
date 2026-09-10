@@ -154,6 +154,40 @@ enters only through two scalar factors built from the **signed helical wavenumbe
 The second line is the one with content, and it is now in its textbook form: a triad is inert
 exactly when the **signed** helical wavenumbers sum to zero.
 
+### 4bis. …and that second line collapses into the third — the resonance condition IS collinearity
+
+**Established 2026-09-10, Tier B** (`tests/tier_b_helical_resonance.py`, in Gate 1).
+
+> **Theorem.** For a triad `p + q = k` of nonzero real vectors, `s_k|k| + s_p|p| + s_q|q| = 0` holds
+> for some choice of signs **iff the triad is collinear.**
+>
+> *Proof.* The magnitudes are positive, so the signs cannot all agree; exactly one differs and the
+> condition reads `|k| = |p| + |q|` or `|p| = |k| + |q|` or `|q| = |k| + |p|`. Each is **equality in
+> the triangle inequality** for `k = p + q`, which holds exactly when the two vectors on the right
+> are parallel and like-directed. ∎
+
+Verified exhaustively on the lattice, in exact integers, by two independent decision procedures that
+agree on all **558 090** triads swept: **zero** resonant triads that are not collinear.
+
+**So condition (R) implies condition (G), and adds nothing.** The inert set is not enriched by
+chirality — it *is* the collinear set, which carries no transfer anyway for want of a plane.
+
+**Two things this costs the programme, and they should be stated plainly.**
+
+1. **The "instability assumption" reading of §4 is empty here.** There is no non-degenerate family
+   of chirality-balanced, inert triads to exploit. Whatever selection the helical basis performs, it
+   is not through (R).
+2. **`ℤ³` plays no role.** The proof never mentions the lattice; it is the triangle inequality. The
+   programme's recurring appeal to "the arithmetic rigidity of `ℤ³`" makes no contribution to this
+   result, and any argument resting on the lattice making helical resonances rare is resting on
+   nothing. That is the third independent deflation of the narrative memorandum's Chantier 1, after
+   the 𝒟(M) null-model result and the ultraviolet underflow.
+
+**What survives, and is where any remaining content must live:** the *other* two factors. `C = 0`
+when `s_p|p| = s_q|q|` — a genuine, non-degenerate condition, satisfied on every pair of lattice
+modes sharing a sphere with equal chirality, and lattice spheres are heavily populated. And the
+magnitude of `C` away from those loci, which the closed form now gives exactly.
+
 **Non-vacuity, because a vanishing theorem about nothing is worthless (LL-11).** The balance
 condition is satisfiable on `ℤ³`: any triad with `|p| = |q|` and `s_p = +`, `s_q = −` has
 `s_p|p| + s_q|q| = 0`, so it is inert for the class `s_k = +` precisely when `|k| = 0` — excluded —
