@@ -430,16 +430,24 @@ certified in exact arithmetic by `tests/tier_b_nse_triad_convolution.py`. The re
 | **Transversality of the nonlinearity**: `k · B(u,v)_k = 0` for every `k`, `u`, `v` — Fact 1 of the Tier B harness, now a theorem | `B_div_free` | 2026-09-09 |
 | **Triad support**: if every pair `p+q=k` has `u_p = 0` or `v_q = 0` then `B(u,v)_k = 0` — this is exactly the `htriad` hypothesis of `sublattice_invariance` | `B_triad` | 2026-09-09 |
 | **Sublattice invariance for a CONCRETE operator** (first half of audit flag F1: the theorem is no longer conditional on a hypothetical `B`) | `B_sublattice_invariance` | 2026-09-09 |
+| **Single-mode collapse**: on `δ`-supported inputs the convolution reduces to its one surviving triad, `convective M (δ_{p₀}a) (δ_{q₀}b) (p₀+q₀) = −i(q₀·a)·b` | `convective_delta` | 2026-09-10 |
+| **F1′ — THE NON-VACUITY WITNESS**: `B 2 (δ_{k₀}a) (δ_{q₀}b) (k₀+q₀) 0 = −i/2 ≠ 0`, with `k₀=(1,0,0)`, `q₀=(0,1,0)`, `a=(0,1,0)`, `b=(1,0,0)` | `B_witness_ne_zero` | 2026-09-10 |
+| **⟹ `B` is not the zero map**, so `sublattice_invariance` constrains an operator that genuinely moves amplitude between modes — **audit flag F1 is CLOSED** | `B_not_identically_zero` | 2026-09-10 |
+
+**Negative controls on the witness** (SPEC §7.3 — a theorem that cannot fail proves nothing either),
+both run on scratch copies and both confirmed to fail as required: perturbing the computed value
+`−i/2 → −i/3` breaks the proof (the arithmetic is real, not vacuous); and asserting the same
+existence at `M = 0`, where `k₀` leaves the ball, breaks it too (the `p₀ ∈ ball M` hypothesis is
+load-bearing, not decorative).
 
 **Posed, NOT proved.** `⟨B(u,u), u⟩ = 0` is recorded as `EnergyConservationStatement (M : ℕ) : Prop`
 with its quantifier domain shown inhabited — **not** as a theorem carrying `sorry`, which would
 define the name and pollute every downstream footprint with `sorryAx`. It is certified
 computationally at `M ∈ {1,2,3}` (Tier B, fact 2) and a symbolic proof is future work.
 
-**Audit flags carried forward:** F1′ — a witness `B M u v k ≠ 0` is still owed (a hand computation
-is recorded in the file); until it exists, `B_sublattice_invariance` could still be vacuous on the
-non-trivial side. F4 — `ball M` is cube-then-filter while `GalerkinState.cutoff` is stated with
-`M² < k_sq k`; the two agree but the equivalence is not proved.
+**Audit flags:** F1′ — **CLOSED 2026-09-10** by `B_witness_ne_zero` / `B_not_identically_zero`
+(rows above). F4 — still open: `ball M` is cube-then-filter while `GalerkinState.cutoff` is stated
+with `M² < k_sq k`; the two agree but the equivalence is not proved.
 
 **Import change to `FourierStateZ3.lean`, 2026-09-09, recorded because it touches a Tier A file:**
 its umbrella `import Mathlib` was replaced by the eleven narrow modules it actually uses. Reason:

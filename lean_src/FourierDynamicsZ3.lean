@@ -142,11 +142,96 @@ def EnergyConservationStatement (M : ℕ) : Prop :=
 /-- The quantifier domain of the statement is inhabited (no vacuous universal). -/
 noncomputable example : GalerkinState 1 := pairGalerkin
 
-/-! F1' — STILL OWED: a witness `u, v, k` with `B M u v k ≠ 0`. Hand computation (to be
-formalised): with `u` the pair state at `k₀ = (1,0,0)` with amplitude `(0,1,0)` and `v` the pair
-state at `(0,1,0)` with amplitude `(1,0,0)`, the term `p = k₀, q = (0,1,0)` gives
-`(q·u_p) = 1` and `v_q = (1,0,0)`, so `convective` at `k = (1,1,0)` is `−i(1,0,0)` plus the
-mirror term, and `P(k)` maps `(1,0,0)` to `(½,−½,0) ≠ 0`. Not proved here. -/
+/-! ### 6. Non-vacuity of `B` — audit flag F1′, now CLOSED
+
+`sublattice_invariance` is conditional on `htriad`, which the zero map satisfies trivially, so the
+theorem is true but possibly empty until some `B` both satisfies `htriad` and is *not* identically
+zero. `B_triad` supplied the first half. This section supplies the second: an explicit `u`, `v`, `k`
+with `B M u v k ≠ 0`. That is the LL-11 discipline applied to a theorem rather than to a
+measurement — an invariance statement about nothing is not an invariance statement. -/
+
+/-- A field supported on the single mode `p₀`, with amplitude `a`. -/
+noncomputable def deltaField (p₀ : Wavevector) (a : Fin 3 → ℂ) : Wavevector → Fin 3 → ℂ :=
+  fun p => if p = p₀ then a else 0
+
+/-- On single-mode inputs the convolution collapses to its one surviving triad `p₀ + q₀ = k`. -/
+theorem convective_delta {M : ℕ} (p₀ q₀ : Wavevector) (a b : Fin 3 → ℂ)
+    (hp₀ : p₀ ∈ ball M) (i : Fin 3) :
+    convective M (deltaField p₀ a) (deltaField q₀ b) (p₀ + q₀) i
+      = (-Complex.I) * fourier_dot q₀ a * b i := by
+  have hsub : p₀ + q₀ - p₀ = q₀ := by abel
+  unfold convective
+  rw [Finset.sum_eq_single p₀]
+  · rw [hsub]
+    unfold deltaField
+    rw [if_pos rfl, if_pos rfl]
+  · intro p _ hp
+    unfold deltaField
+    rw [if_neg hp]
+    simp [fourier_dot]
+  · intro hmem
+    exact absurd hp₀ hmem
+
+/-- The witness modes: `p₀ = (1,0,0)`, `q₀ = (0,1,0)`, so `k = p₀ + q₀ = (1,1,0)`. -/
+def wq : Wavevector := ![0, 1, 0]
+
+/-- Amplitude carried by `u` at `p₀`; chosen so that `q₀ · a = 1`. -/
+noncomputable def wa : Fin 3 → ℂ := ![0, 1, 0]
+
+/-- Amplitude carried by `v` at `q₀`; chosen transverse to neither `k` nor its complement, so the
+Leray projection does not annihilate it. -/
+noncomputable def wb : Fin 3 → ℂ := ![1, 0, 0]
+
+theorem fourier_dot_wq_wa : fourier_dot wq wa = 1 := by
+  norm_num [fourier_dot, wq, wa, Fin.sum_univ_three, Matrix.cons_val_zero, Matrix.cons_val_one,
+    Matrix.head_cons, Matrix.cons_val_two, Matrix.tail_cons]
+
+theorem k_sq_witness : k_sq (k0 + wq) = 2 := by
+  norm_num [k_sq, k0, wq, Fin.sum_univ_three, Matrix.cons_val_zero, Matrix.cons_val_one,
+    Matrix.head_cons, Matrix.cons_val_two, Matrix.tail_cons]
+
+theorem k0_mem_ball_two : k0 ∈ ball 2 := by
+  rw [ball, Finset.mem_filter, Fintype.mem_piFinset]
+  refine ⟨fun i => ?_, by rw [k_sq_k0]; norm_num⟩
+  rw [Finset.mem_Icc]
+  fin_cases i <;> simp [k0, Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.head_cons,
+    Matrix.cons_val_two, Matrix.tail_cons]
+
+/-- **F1′ — the non-vacuity witness.** `B` is not the zero map: at `k = (1,1,0)`, on single-mode
+inputs, its first component is `−i/2`. Concretely `convective` returns `−i·(q₀·a)·b = −i·(1,0,0)`
+and `P(k)` sends `(1,0,0)` to `(½,−½,0)`. -/
+theorem B_witness_ne_zero :
+    B 2 (deltaField k0 wa) (deltaField wq wb) (k0 + wq) 0 ≠ 0 := by
+  have hval : B 2 (deltaField k0 wa) (deltaField wq wb) (k0 + wq) 0
+      = -Complex.I / 2 := by
+    unfold B applyLeray
+    have hconv : ∀ j : Fin 3,
+        convective 2 (deltaField k0 wa) (deltaField wq wb) (k0 + wq) j
+          = (-Complex.I) * wb j := by
+      intro j
+      rw [convective_delta k0 wq wa wb k0_mem_ball_two j, fourier_dot_wq_wa, mul_one]
+    rw [Finset.sum_congr rfl (fun j _ => by rw [hconv j])]
+    unfold LerayProjector
+    -- `k_sq (k0+wq)` sits under the `∑ j` binder, so rewrite it by simp (not `rw`), after which
+    -- the guard `(2 : ℤ) = 0` is decidably false and the `if` collapses.
+    simp only [k_sq_witness]
+    norm_num [wb, k0, wq, Pi.add_apply, Fin.sum_univ_three, Matrix.cons_val_zero,
+      Matrix.cons_val_one, Matrix.head_cons, Matrix.cons_val_two, Matrix.tail_cons]
+    ring
+  rw [hval]
+  intro h
+  rw [div_eq_zero_iff] at h
+  rcases h with h | h
+  · exact Complex.I_ne_zero (neg_eq_zero.mp h)
+  · norm_num at h
+
+/-- Therefore `sublattice_invariance` is **not** vacuous: it constrains an operator that genuinely
+moves amplitude between modes. -/
+theorem B_not_identically_zero :
+    ∃ (M : ℕ) (u v : Wavevector → Fin 3 → ℂ) (k : Wavevector), B M u v k ≠ 0 := by
+  refine ⟨2, deltaField k0 wa, deltaField wq wb, k0 + wq, ?_⟩
+  intro h
+  exact B_witness_ne_zero (by rw [h]; rfl)
 
 /-! ### Audit certificates — expected on every line: no axiom outside
 [propext, Classical.choice, Quot.sound]. -/
@@ -154,5 +239,8 @@ mirror term, and `P(k)` maps `(1,0,0)` to `(½,−½,0) ≠ 0`. Not proved here.
 #print axioms B_div_free
 #print axioms B_triad
 #print axioms B_sublattice_invariance
+#print axioms convective_delta
+#print axioms B_witness_ne_zero
+#print axioms B_not_identically_zero
 
 end MechanicaFluidorum.FourierZ3
