@@ -593,6 +593,45 @@ of the roadmap that is *algebra*: the helical coefficient is a determinate funct
 wavevectors and three signs, so every claim about it is checkable without any analytic input, any
 limit, or any new definition. That is precisely the property the two blocked tracks lack.
 
+## Tier C — D-3: the helical triad coefficient, and the resolution of the §6.4 collision (2026-09-10)
+
+Memo: `docs/designs/WALEFFE_HELICAL_MEMO.md`. Tests: `exploration/waleffe_triad_crucible.py`
+(one triad, term by term) and `exploration/waleffe_gauge_probe.py` (convention independence).
+**Floating point ⇒ Tier C. No Lean written — the formalisation is frozen pending owner approval.**
+
+**The verified closed form.** For a triad `p + q = k`, with `S_pq = (κ_p × κ_q)·n̂` and `n̂` the
+triad-plane normal:
+
+```
+    C^{s_k s_p s_q}  =  + ( i S_pq / 4|k| ) · ( s_p|p| + s_q|q| + s_k|k| ) · ( s_p|p| − s_q|q| )
+```
+
+Agreement with a brute-force construction (explicit Leray matrix, explicit `h^±`, explicit
+projection) on the owner-specified triad `k=(1,1,0), p=(0,−1,1), q=(1,2,−1)`: **all eight chirality
+classes, worst relative deviation `2.1e−16`**. Controls H1–H5 and the Leray fixed-point check hold
+to `1e−12`; the demonstrated negative control (sign-flipped vector must fail the curl eigen-equation)
+fires at `1.15`.
+
+**Vanishing conditions**, read off: `s_p|p| = s_q|q|`; the **Waleffe resonance condition**
+`s_k|k| + s_p|p| + s_q|q| = 0`; and `S_pq = 0` (collinear triads, all eight classes at once).
+
+### §6.4 collision — RESOLVED: the mathematics was wrong, the enumerator was right
+
+| step | finding |
+|---|---|
+| **The error** | the memo's first closed form carried `− s_k\|k\|` where brute force carries `+ s_k\|k\|`. Diagnosed immediately from the shape of the disagreement: all eight magnitudes matched but were **permuted**, the signature of a sign inside a factor rather than of a wrong formula |
+| **Root cause** | the `p+q+r=0` versus `p+q=k` convention gap, propagated into the reduced signed areas — exactly the risk the memo itself had ranked first |
+| **Self-authenticating** | the corrected balance factor is the sum of *all three* signed helical wavenumbers, i.e. the **classical Waleffe resonance condition**. The erroneous version did not reproduce it; the corrected one does, without having been aimed at it |
+| **The parity argument was about the wrong involution** | the memo analysed `p ↔ q`; that pairing genuinely does **not** cancel (`C(k;p,q) + C(k;q,p) ≠ 0` in every class, measured). It was sound and irrelevant |
+| **A gauge hypothesis, raised and REFUTED** | `h^s` depends on an arbitrary `ν(k)`, so `\|C\|` is invariant and `arg(C)` is not — if the signed sum inherited that, it would be meaningless. Tested at `M = 3` under two `ν` constructions: `Σ\|C\|` identical to `0.0e+00` relative, and the signed sum vanishes under **both** (`~1e−14` against `Σ\|C\| ~ 1e3`). The zero is **robust and convention-independent** |
+| **Mechanism** | `C(−k,−p,−q) = conj(C(k,p,q))`, verified; in a triad's own planar frame `C` is **purely imaginary**, so each triad is cancelled exactly by its negation, and the lattice is negation-symmetric |
+| **Still open, stated not glossed** | the planar frame is chosen *per triad*, so evaluating the sum triad-by-triad in each triad's own frame is *observed* legitimate but not proved. Small, well-posed, and **not on the critical path** |
+
+**The consequence that matters is negative.** The per-class zero is a symmetry of a
+negation-symmetric lattice, not a cancellation of physical transfer. It carries **no information
+about turbulence**, and it confirms — now for a precise reason rather than an empirical one — the
+earlier finding that this reading of the frustration index was vacuous.
+
 ## Tier C — review of LeanFlow's "Counter-Detonation" results (owner request, 2026-09-10)
 
 Full review: `docs/proposals/2026-09-10-leanflow-counterdetonation-review.md`. Source audited:

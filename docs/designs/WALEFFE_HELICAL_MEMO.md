@@ -112,14 +112,32 @@ Now use the triad relation itself. From `|k|κ_k = −|p|κ_p − |q|κ_q`, cros
 collapses onto one geometric scalar**:
 
 > ```
->     g^{s_k s_p s_q}  =  ( i S_pq / |k| ) · ( s_p|p| + s_q|q| − s_k|k| )
+>     C^{s_k s_p s_q}  =  + ( i S_pq / 4|k| ) · ( s_p|p| + s_q|q| + s_k|k| ) · ( s_p|p| − s_q|q| )
 > ```
 >
-> and therefore
->
-> ```
->     C^{s_k s_p s_q}  =  −( i S_pq / 4|k| ) · ( s_p|p| + s_q|q| − s_k|k| ) · ( s_p|p| − s_q|q| ) .
-> ```
+> **VERIFIED 2026-09-10** against a brute-force construction on the owner's triad
+> `k=(1,1,0), p=(0,−1,1), q=(1,2,−1)`: exact agreement in **all eight** chirality classes, worst
+> relative deviation `2.1e−16` (`exploration/waleffe_triad_crucible.py`).
+
+**This corrects a sign the first draft of this memo got wrong**, at exactly the place §6 flagged as
+the risk. The original had `− s_k|k|` and an overall minus. **Root cause:** the reduction of the
+signed areas used `|k|κ_k = −|p|κ_p − |q|κ_q`, which is the relation for a triad written
+`p+q+r = 0`. In the `p+q = k` convention actually in force, it is `|k|κ_k = +|p|κ_p + |q|κ_q`, so
+**both** reduced areas flip:
+
+```
+    S_kp = −(|q|/|k|) S_pq            S_kq = +(|p|/|k|) S_pq        [corrected]
+```
+
+**The correction is self-authenticating.** The balance factor becomes the sum of *all three* signed
+helical wavenumbers, so the vanishing condition is
+
+```
+    s_k|k| + s_p|p| + s_q|q| = 0 ,
+```
+
+which is the **classical Waleffe resonance condition**. The erroneous version did not reproduce it;
+the corrected one does, without having been aimed at it.
 
 **This is the algebraic structure D-3 asks for, and it is exact.** Every dependence on the triad's
 shape is carried by the single factor `S_pq`, common to all eight chirality classes; the chirality
@@ -130,13 +148,11 @@ enters only through two scalar factors built from the **signed helical wavenumbe
 | condition | consequence |
 |---|---|
 | `s_p\|p\| = s_q\|q\|` | `C = 0` — the antisymmetrisation factor dies |
-| `s_p\|p\| + s_q\|q\| = s_k\|k\|` | `C = 0` — the geometric factor `g` itself dies |
+| `s_k\|k\| + s_p\|p\| + s_q\|q\| = 0` | `C = 0` — **the Waleffe resonance condition**; the geometric factor dies |
 | `S_pq = 0` (collinear triad) | `C = 0` for **all eight classes** at once |
 
-The second line is the one with content. It says a triad is inert exactly when the signed helical
-wavenumbers **balance**, and it is the precise form of what Waleffe calls the instability
-assumption: the class with the largest `|s|k||` in the "wrong" position is the one that drives
-transfer, and the balanced classes carry none.
+The second line is the one with content, and it is now in its textbook form: a triad is inert
+exactly when the **signed** helical wavenumbers sum to zero.
 
 **Non-vacuity, because a vanishing theorem about nothing is worthless (LL-11).** The balance
 condition is satisfiable on `ℤ³`: any triad with `|p| = |q|` and `s_p = +`, `s_q = −` has
@@ -188,13 +204,49 @@ its own weak points.
    the `k` slot and writes `p+q = k`. The two differ by relabelling `k → −k` and **H5**; the
    translation must be written down explicitly, or the numerical check in item 1 will compare two
    different objects and appear to disagree.
-4. **The per-class numerical zero, now explainable.** The enumerator found the signed sum over
-   triads to be zero *in every chirality class* to `10⁻¹⁷`. The closed form makes this checkable:
-   under the relabelling `(k,p,q) → (k,q,p)` the factor `S_pq` changes sign while
-   `(s_p|p| + s_q|q| − s_k|k|)` is symmetric and `(s_p|p| − s_q|q|)` antisymmetric — a product of one
-   sign-flip and one antisymmetric factor, hence **even**, which does *not* cancel. **So the closed
-   form does not yet explain the measurement, and one of the two is wrong.** That contradiction is
-   the single most informative open item here and must be resolved before any Lean is written.
+4. ~~**The per-class numerical zero.**~~ **RESOLVED 2026-09-10 — see §6bis.**
+
+## 6bis. Resolution of the §6.4 collision
+
+Executed as the owner directed: no global sums, one triad, brute force against closed form, term by
+term (`exploration/waleffe_triad_crucible.py`, then `exploration/waleffe_gauge_probe.py`).
+
+**The verdict is that the MATH was wrong and the enumerator was right.** Specifically:
+
+1. **The closed form had a sign error**, found immediately: all eight magnitudes matched between the
+   two computations but were **permuted**, which is the signature of a sign flip inside a factor
+   rather than of an unrelated formula. Brute force carries `+ s_k|k|` where the memo carried
+   `− s_k|k|`. Root cause: the `p+q+r=0` versus `p+q=k` convention gap of item 3 above, propagated
+   into the reduced signed areas — precisely the failure item 1 predicted. Corrected in §4; the
+   corrected form now agrees to `2.1e−16` in all eight classes.
+
+2. **The memo's parity argument examined the wrong involution.** It analysed `p ↔ q`. The crucible
+   confirms that pairing does **not** cancel — `C(k;p,q) + C(k;q,p) ≠ 0` in every class — so the
+   argument was sound about `p ↔ q` and irrelevant to the measurement.
+
+3. **A gauge hypothesis was raised and REFUTED, which matters.** `h^s(k)` depends on the arbitrary
+   choice of `ν(k)`; rotating it multiplies `h^s` by a phase, so `|C|` is invariant and `arg(C)` is
+   not. If the per-class signed sum inherited that arbitrariness it would be meaningless. Tested on
+   the ball `M = 3` under two independent `ν` constructions (from `ẑ` and from `x̂`):
+   `Σ|C|` identical to `0.0e+00` relative, and the **signed sum vanishes under both**
+   (`~10⁻¹⁴` against `Σ|C| ~ 10³`). So the zero is **robust and convention-independent**, not an
+   artifact of how the basis was fixed.
+
+4. **The mechanism, verified as far as it goes.** `C(−k,−p,−q) = conj(C(k,p,q))` — checked
+   numerically in both conventions. In a triad's own planar frame (`ν = n̂`) the coefficient is
+   **purely imaginary**, so `conj(C) = −C` and each triad is cancelled exactly by its negation;
+   the lattice is symmetric under negation, hence the sum vanishes.
+
+**What is still not derived, and is stated as open rather than glossed.** The planar frame is chosen
+*per triad*, so it is not a global gauge, and the step "the signed sum may be evaluated triad by
+triad in each triad's own frame" is *observed* to be legitimate (item 3) but not proved. Closing
+that is a small, well-posed piece of work, and it is not on the critical path: nothing downstream
+depends on it.
+
+**The consequence that does matter, and it is a negative one.** The per-class zero is a symmetry of
+a negation-symmetric lattice, not a cancellation of physical transfer. It carries **no information
+about turbulence**, and confirms — now for a precise reason rather than an empirical one — the
+earlier finding that this reading of the frustration index was vacuous.
 
 ## 7. Proposed Lean order, riskiest first (for approval, not for execution)
 
