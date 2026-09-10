@@ -118,6 +118,18 @@ collapses onto one geometric scalar**:
 > **VERIFIED 2026-09-10** against a brute-force construction on the owner's triad
 > `k=(1,1,0), p=(0,−1,1), q=(1,2,−1)`: exact agreement in **all eight** chirality classes, worst
 > relative deviation `2.1e−16` (`exploration/waleffe_triad_crucible.py`).
+>
+> **PROMOTED TO TIER A AND TIER B, 2026-09-10.** The float check above has been superseded twice
+> over. `HelicalBasis.gOf_closed_form` and `cOf_closed_form` are kernel-compiled with a clean axiom
+> footprint, and `tests/tier_b_helical_closed_form.py` re-derives the identity from the definition
+> in **exact integers** over 5 256 triad × chirality-class checks, treating `|p|`, `|q|`, `|k|` as
+> formal symbols — so the identity is confirmed *in the magnitudes*, not just at particular values.
+> Three negative controls fail as required, including one that flips the frame orientation to
+> `q × p` and so pins the sign convention.
+>
+> **And the converse now holds too** (`HelicalBasis.cOf_eq_zero_iff`): because `ℂ` has no zero
+> divisors, the three factors are the **only** places `C` vanishes. The table below is therefore not
+> just a list of sufficient conditions — it is the complete inventory.
 
 **This corrects a sign the first draft of this memo got wrong**, at exactly the place §6 flagged as
 the risk. The original had `− s_k|k|` and an overall minus. **Root cause:** the reduction of the

@@ -701,6 +701,150 @@ theorem cOf_eq_zero_of_resonance_full {p q k : Wavevector} {sk sp sq : ℝ}
   cOf_eq_zero_of_collinear sk sp sq k p q
     (resonance_implies_collinear_full hsk hsp hsq hpq hkpos hppos hqpos h)
 
+/-! ### 12. D-3 step 2: the closed form, and the converse
+
+Everything so far has been *sufficient* conditions for the coefficient to vanish, proved one locus
+at a time. This section proves the identity the memo's §4 derives, from which all three drop out at
+once — and, because `ℂ` has no zero divisors, so does the **converse**: those three loci are the
+*only* places the coefficient vanishes.
+
+In the triad's own frame `N = p × q` the memo's `S_pq` and `|N|²` are the same integer, so the
+memo's `(i S_pq / 4|k|)` becomes `(i/4)·(k_sq (p × q))²` in this file's unnormalised scaling. The
+scale is a positive factor on non-collinear triads and so changes no vanishing statement.
+
+The derivation needs three unconditional vector identities and two that hold because `p × q` is
+orthogonal to both `p` and `q` — automatic here, since the frame *is* `p × q`. -/
+
+/-- `(N × p) × (N × q) = (N · (p × q)) N`, for all `N, p, q`. This is what makes the leading,
+chirality-free term drop out: it is parallel to `N`, while `N × k` is orthogonal to `N`. -/
+theorem crossZ_crossZ_crossZ (N p q : Wavevector) :
+    crossZ (crossZ N p) (crossZ N q) = fun i => dotZ N (crossZ p q) * N i := by
+  funext i
+  fin_cases i <;> simp [crossZ, dotZ, Fin.sum_univ_three] <;> ring
+
+/-- The back-cab identity `N × (N × p) = (N · p) N − |N|² p`. With `N ⊥ p` it is the rotation by a
+quarter turn in the plane that the whole collapse turns on. -/
+theorem crossZ_crossZ_self (N p : Wavevector) :
+    crossZ N (crossZ N p) = fun i => dotZ N p * N i - k_sq N * p i := by
+  funext i
+  fin_cases i <;> simp [crossZ, dotZ, k_sq, Fin.sum_univ_three] <;> ring
+
+/-- **The closed form (memo §4), in the triad's own frame.**
+
+`g = − i · (k_sq (p × q))² · (s_p|p| + s_q|q| + s_k|k|)`
+
+Every dependence on the *shape* of the triad is carried by the single integer `k_sq (p × q)`, common
+to all eight chirality classes; the chirality enters only through the sum of the **signed helical
+wavenumbers**. That is the algebraic structure D-3 asked for.
+
+The proof needs no `I² = −1`: the terms quadratic in `I` are each a triple product of the form
+`(N × x) · N`, identically zero, so `I` survives only linearly. -/
+theorem gOf_closed_form {p q k : Wavevector} (hpq : p + q = k) (sk sp sq : ℝ) :
+    gOf (triadNormal p q) sk sp sq k p q
+      = -Complex.I * ((k_sq (crossZ p q) : ℤ) : ℂ) ^ 2
+        * (((sp : ℝ) : ℂ) * ((kNorm p : ℝ) : ℂ) + ((sq : ℝ) : ℂ) * ((kNorm q : ℝ) : ℂ)
+            + ((sk : ℝ) : ℂ) * ((kNorm k : ℝ) : ℂ)) := by
+  subst hpq
+  simp only [gOf, cdot, crossRC', hOf, triadNormal, k_sq, Fin.sum_univ_three,
+    map_add, map_mul, Complex.conj_I, Complex.conj_ofReal, map_intCast,
+    Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.head_cons,
+    Matrix.cons_val_two, Matrix.tail_cons, Pi.add_apply,
+    crossZ_apply_zero, crossZ_apply_one, crossZ_apply_two]
+  push_cast
+  ring
+
+/-- **The closed form for the coefficient itself** — the memo's boxed equation. Three factors, and
+each is one of the memo's three vanishing conditions. -/
+theorem cOf_closed_form {p q k : Wavevector} (hpq : p + q = k) (sk sp sq : ℝ) :
+    cOf (triadNormal p q) sk sp sq k p q
+      = (Complex.I / 4) * ((k_sq (crossZ p q) : ℤ) : ℂ) ^ 2
+        * (((sp : ℝ) : ℂ) * ((kNorm p : ℝ) : ℂ) + ((sq : ℝ) : ℂ) * ((kNorm q : ℝ) : ℂ)
+            + ((sk : ℝ) : ℂ) * ((kNorm k : ℝ) : ℂ))
+        * (((sp : ℝ) : ℂ) * ((kNorm p : ℝ) : ℂ) - ((sq : ℝ) : ℂ) * ((kNorm q : ℝ) : ℂ)) := by
+  unfold cOf
+  rw [gOf_closed_form hpq]
+  ring
+
+/-- The same identity with each real factor packed into a single cast, which is the form the
+converse needs. -/
+theorem cOf_closed_form_packed {p q k : Wavevector} (hpq : p + q = k) (sk sp sq : ℝ) :
+    cOf (triadNormal p q) sk sp sq k p q
+      = (Complex.I / 4) * ((k_sq (crossZ p q) : ℤ) : ℂ) ^ 2
+        * ((sp * kNorm p + sq * kNorm q + sk * kNorm k : ℝ) : ℂ)
+        * ((sp * kNorm p - sq * kNorm q : ℝ) : ℂ) := by
+  rw [cOf_closed_form hpq]
+  push_cast
+  ring
+
+/-- **THE CONVERSE — and this is what the closed form buys that the vanishing theorems could not.**
+
+Every result up to §11 was one-directional: *these* conditions kill the coefficient. None of them
+excluded a fourth, unnoticed vanishing locus, and a programme looking for inert triads would have
+had no way to know when it had found them all. Because `ℂ` has no zero divisors, the closed form
+settles it: the coefficient vanishes **exactly** on the three loci and nowhere else.
+
+For a triad `p + q = k`, `C = 0` if and only if one of
+
+* `p × q = 0` — the triad is collinear and has no plane to transfer in;
+* `s_p|p| + s_q|q| + s_k|k| = 0` — the Waleffe resonance condition, which §11 proves is the first
+  condition again;
+* `s_p|p| = s_q|q|` — the balance condition, the only non-degenerate one, with a non-collinear
+  lattice witness in `balanced_witness_noncollinear`.
+
+Read with §11, the inventory of inert triads is now **complete and consists of two items**, one of
+which is empty of content. -/
+theorem cOf_eq_zero_iff {p q k : Wavevector} (hpq : p + q = k) (sk sp sq : ℝ) :
+    cOf (triadNormal p q) sk sp sq k p q = 0
+      ↔ crossZ p q = 0
+        ∨ sp * kNorm p + sq * kNorm q + sk * kNorm k = 0
+        ∨ sp * kNorm p = sq * kNorm q := by
+  rw [cOf_closed_form_packed hpq]
+  have hI : (Complex.I / 4) ≠ 0 := div_ne_zero Complex.I_ne_zero (by norm_num)
+  constructor
+  · intro h
+    rcases mul_eq_zero.mp h with h1 | h2
+    · rcases mul_eq_zero.mp h1 with h3 | h4
+      · rcases mul_eq_zero.mp h3 with h5 | h6
+        · exact absurd h5 hI
+        · refine Or.inl ((k_sq_eq_zero_iff _).mp ?_)
+          exact_mod_cast sq_eq_zero_iff.mp h6
+      · exact Or.inr (Or.inl (Complex.ofReal_eq_zero.mp h4))
+    · exact Or.inr (Or.inr (sub_eq_zero.mp (Complex.ofReal_eq_zero.mp h2)))
+  · rintro (h | h | h)
+    · rw [(k_sq_eq_zero_iff _).mpr h]
+      push_cast
+      ring
+    · rw [h]
+      push_cast
+      ring
+    · rw [sub_eq_zero.mpr h]
+      push_cast
+      ring
+
+/-! #### The closed form re-derives §10 and §11 — an independent check on its signs
+
+The three vanishing theorems above were proved *geometrically*, by degenerating the frame. The
+closed form is an *algebraic* derivation that never mentions a degenerate frame. Re-deriving the
+same three statements from it is therefore a genuine cross-check, and one with teeth: had the
+balance factor come out as `s_p|p| + s_q|q|`, or the geometric factor with any sign flipped, the
+resonance corollary below would not close. This is precisely the check the memo's first draft
+failed. -/
+
+theorem cOf_eq_zero_of_collinear' {p q k : Wavevector} (hpq : p + q = k) (sk sp sq : ℝ)
+    (h : crossZ p q = 0) : cOf (triadNormal p q) sk sp sq k p q = 0 :=
+  (cOf_eq_zero_iff hpq sk sp sq).mpr (Or.inl h)
+
+theorem cOf_eq_zero_of_balanced' {p q k : Wavevector} (hpq : p + q = k) (sk sp sq : ℝ)
+    (h : sp * kNorm p = sq * kNorm q) : cOf (triadNormal p q) sk sp sq k p q = 0 :=
+  (cOf_eq_zero_iff hpq sk sp sq).mpr (Or.inr (Or.inr h))
+
+/-- The resonance condition, straight off the closed form, with **no appeal to §11's geometry**.
+Two independent derivations of the same theorem. -/
+theorem cOf_eq_zero_of_resonance_algebraic {p q k : Wavevector} (hpq : p + q = k) (sk sp sq : ℝ)
+    (hres : sk * kNorm k + sp * kNorm p + sq * kNorm q = 0) :
+    cOf (triadNormal p q) sk sp sq k p q = 0 :=
+  (cOf_eq_zero_iff hpq sk sp sq).mpr (Or.inr (Or.inl (by linarith)))
+
 /-! ### Audit certificates — no axiom outside [propext, Classical.choice, Quot.sound]. -/
 #print axioms dotZ_crossZ_left
 #print axioms dotZ_crossZ_self
@@ -729,5 +873,11 @@ theorem cOf_eq_zero_of_resonance_full {p q k : Wavevector} {sk sp sq : ℝ}
 #print axioms resonance_pattern_q
 #print axioms resonance_implies_collinear_full
 #print axioms cOf_eq_zero_of_resonance_full
+#print axioms crossZ_crossZ_crossZ
+#print axioms crossZ_crossZ_self
+#print axioms gOf_closed_form
+#print axioms cOf_closed_form
+#print axioms cOf_eq_zero_iff
+#print axioms cOf_eq_zero_of_resonance_algebraic
 
 end MechanicaFluidorum.FourierZ3

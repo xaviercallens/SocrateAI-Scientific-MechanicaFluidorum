@@ -721,6 +721,75 @@ is why it appears as a hypothesis and not as a convenience.
 
 Axiom footprints: all four exactly `[propext, Classical.choice, Quot.sound]`.
 
+## Tier A — D-3 step 2: the closed form, and the CONVERSE (2026-09-10)
+
+`lean_src/HelicalBasis.lean` §12. This is the identity `docs/designs/WALEFFE_HELICAL_MEMO.md` §4
+derives on paper, now kernel-checked, in the triad's own frame `N = p × q`:
+
+> `g = − i · (k_sq (p × q))² · (s_p|p| + s_q|q| + s_k|k|)`
+>
+> `C = (i/4) · (k_sq (p × q))² · (s_p|p| + s_q|q| + s_k|k|) · (s_p|p| − s_q|q|)`
+
+In this file's unnormalised scaling the memo's `S_pq` and `|N|²` are the same integer, so the memo's
+`(i S_pq / 4|k|)` appears as `(i/4)(k_sq (p × q))²`. The scale is a positive factor on non-collinear
+triads and changes no vanishing statement.
+
+| Claim | Theorem | Date |
+|---|---|---|
+| `(N × p) × (N × q) = (N · (p × q)) N`, unconditionally | `crossZ_crossZ_crossZ` | 2026-09-10 |
+| Back-cab: `N × (N × p) = (N · p) N − \|N\|² p` | `crossZ_crossZ_self` | 2026-09-10 |
+| **The closed form for the geometric factor** | `gOf_closed_form` | 2026-09-10 |
+| **The closed form for the coefficient** — the memo's boxed equation | `cOf_closed_form` | 2026-09-10 |
+| **THE CONVERSE: `C = 0` if and ONLY if the triad is collinear, or resonant, or balanced** | `cOf_eq_zero_iff` | 2026-09-10 |
+| The resonance corollary re-derived algebraically, with no appeal to §11's geometry | `cOf_eq_zero_of_resonance_algebraic` | 2026-09-10 |
+
+**Why the converse is the result that matters.** Everything through §11 was one-directional: *these*
+conditions kill the coefficient. Nothing excluded a fourth, unnoticed vanishing locus, so the
+programme had no way to know when its inventory of inert triads was complete. `ℂ` has no zero
+divisors, so the closed form settles it. **The inventory is now closed, and it has two members** —
+collinearity (which §11 shows the resonance condition reduces to) and the balance condition
+`s_p|p| = s_q|q|`, the only non-degenerate one, whose witness `p = (1,0,0)`, `q = (0,1,0)` is
+explicitly non-collinear.
+
+**The proof needs no `I² = −1`.** Every term quadratic in `I` is a triple product of the form
+`(N × x) · N`, identically zero, so `I` survives only linearly and plain `ring` closes a degree-9
+polynomial identity in six integer variables.
+
+**An internal cross-check with teeth.** §10 and §11 proved the vanishing theorems *geometrically*,
+by degenerating the frame. §12 re-derives all three *algebraically*, from an identity that never
+mentions a degenerate frame. Had the balance factor come out as `s_p|p| + s_q|q|`, or any sign
+flipped, `cOf_eq_zero_of_resonance_algebraic` would not close. **This is exactly the check the
+memo's first draft failed**, and it is now run by the kernel on every build.
+
+**Two Lean negative controls, both confirmed to fail:** flipping the sign of the `s_k|k|` term in
+the statement (NC-C), and stating the identity in the opposite frame orientation `q × p` while
+leaving the right-hand side alone (NC-D). Nine demonstrated negatives on this file.
+
+## Tier B — the closed form, independently transcribed and checked exactly (2026-09-10)
+
+`tests/tier_b_helical_closed_form.py`, wired into Gate 1. **The Lean kernel certifies the proof, not
+the statement**; a mis-transcribed sign would be proved just as happily, and the memo's first draft
+carried exactly such an error. This harness computes `g` by brute force from the definition and
+compares against the closed form, over 5 256 triad × chirality-class checks.
+
+**It is exact, with no floats, and this is not a workaround but a stronger check.** `|p|`, `|q|`,
+`|k|` are square roots of integers, so a numerical check would need floating point. But the closed
+form is linear in them and the brute force at worst quadratic, so both sides are **polynomials** in
+three formal symbols with integer coefficients, and polynomial equality is integer equality. The
+identity is therefore verified *as an identity in the magnitudes*, for every triad swept — not
+merely at the magnitudes those triads happen to have. The sweep includes the owner's crucible triad
+`k=(1,1,0), p=(0,−1,1), q=(1,2,−1)` and deliberately includes collinear triads, since the identity
+is unconditional.
+
+**Three negative controls, all confirmed to fail:** flipping the sign of `s_k|k|` (N1), flipping the
+sign of `s_q|q|` (N2), and building the frame with the opposite orientation `q × p` (N3). N3 is the
+sharper one: `k_sq` is blind to the orientation flip but `g` is not, so it pins the theorem to the
+frame `p × q` specifically.
+
+**This supersedes the Tier C crucible** (`exploration/waleffe_triad_crucible.py`), which checked one
+triad in floating point at `2.1e−16` relative deviation. The same claim is now Tier B on 5 256
+checks in exact integers, and Tier A in the kernel.
+
 ## Tier B — the Waleffe resonance condition is EXACTLY collinearity (2026-09-10)
 
 `tests/tier_b_helical_resonance.py`, wired into Gate 1. Exact integer arithmetic, **zero floating
