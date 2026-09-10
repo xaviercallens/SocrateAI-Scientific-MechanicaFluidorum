@@ -571,6 +571,52 @@ theorem balanced_witness_noncollinear :
       Pi.zero_apply] at hlast
     norm_num at hlast
 
+/-! ### 10. Closing the chain: resonance ⟹ collinear ⟹ the coefficient vanishes
+
+§7 proved that the resonance condition is exactly collinearity. §8 observed that the triad frame is
+`p × q`, which is *zero* exactly on collinear triads. This section joins them: in the triad's own
+frame a collinear triad has no frame at all, every helical vector degenerates, and the coefficient
+vanishes for the second time — for a reason that has nothing to do with chirality.
+
+The chain is what D-3 step 3 asked for, and its conclusion is the negative one: the resonance
+condition kills the coefficient, but only by way of a degeneracy that kills it anyway. -/
+
+theorem crossZ_zero_left (k : Wavevector) : crossZ 0 k = 0 := by
+  funext i
+  fin_cases i <;> simp [crossZ]
+
+/-- With a degenerate frame every helical vector collapses. -/
+theorem hOf_zero_normal (s : ℝ) (k : Wavevector) : hOf 0 s k = 0 := by
+  funext i
+  unfold hOf
+  rw [crossZ_zero_left k]
+  simp
+
+/-- Hence the geometric factor vanishes. -/
+theorem gOf_eq_zero_of_normal_zero (sk sp sq : ℝ) (k p q : Wavevector) :
+    gOf 0 sk sp sq k p q = 0 := by
+  unfold gOf
+  rw [hOf_zero_normal sp p, hOf_zero_normal sq q]
+  simp [crossRC', cdot, Fin.sum_univ_three]
+
+/-- **A collinear triad carries no interaction**, in its own frame — the third vanishing locus of
+the memo's §4, and the one the resonance condition turns out to reduce to. -/
+theorem cOf_eq_zero_of_collinear (sk sp sq : ℝ) (k p q : Wavevector)
+    (h : crossZ p q = 0) : cOf (triadNormal p q) sk sp sq k p q = 0 := by
+  unfold cOf
+  have hN : triadNormal p q = 0 := h
+  rw [hN, gOf_eq_zero_of_normal_zero]
+  ring
+
+/-- **The chain, closed.** For a triad `p + q = k`, the Waleffe resonance condition implies that
+the interaction coefficient vanishes — but by way of collinearity, so it selects nothing that the
+degeneracy did not already select. This is the formal counterpart of the exact-arithmetic sweep
+that found zero non-collinear resonant triads among 558 090. -/
+theorem cOf_eq_zero_of_resonance (sk sp sq : ℝ) {k p q : Wavevector} (hpq : p + q = k)
+    (hres : -kNorm k + kNorm p + kNorm q = 0) :
+    cOf (triadNormal p q) sk sp sq k p q = 0 :=
+  cOf_eq_zero_of_collinear sk sp sq k p q (resonance_implies_collinear hpq hres)
+
 /-! ### Audit certificates — no axiom outside [propext, Classical.choice, Quot.sound]. -/
 #print axioms dotZ_crossZ_left
 #print axioms dotZ_crossZ_self
@@ -592,5 +638,8 @@ theorem balanced_witness_noncollinear :
 #print axioms triadNormal_orthogonal_sum
 #print axioms cOf_eq_zero_of_balanced
 #print axioms balanced_witness_noncollinear
+#print axioms hOf_zero_normal
+#print axioms cOf_eq_zero_of_collinear
+#print axioms cOf_eq_zero_of_resonance
 
 end MechanicaFluidorum.FourierZ3

@@ -676,6 +676,19 @@ collapses into the degenerate one. What remains non-degenerate is exactly `s_p|p
 proved with a witness showing it bites off the collinear locus — and the magnitude of `C` away from
 both, which is what the closed form of step 2 will supply.
 
+**D-3 step 3 completed: the chain resonance ⟹ collinear ⟹ `C = 0` is closed in Lean.**
+
+| Claim | Theorem | Date |
+|---|---|---|
+| A degenerate frame collapses every helical vector | `hOf_zero_normal` | 2026-09-10 |
+| Hence the geometric factor vanishes | `gOf_eq_zero_of_normal_zero` | 2026-09-10 |
+| **A collinear triad carries no interaction, in its own frame** — the third vanishing locus | `cOf_eq_zero_of_collinear` | 2026-09-10 |
+| **THE CHAIN CLOSED**: for `p + q = k`, the resonance condition implies `C = 0` — but *by way of collinearity*, so it selects nothing the degeneracy had not already selected | `cOf_eq_zero_of_resonance` | 2026-09-10 |
+
+This is the formal counterpart of the exact sweep that found **zero** non-collinear resonant triads
+among 558 090. Negative control, **confirmed to fail**: dropping the collinearity hypothesis from
+`cOf_eq_zero_of_collinear` breaks the proof.
+
 ## Tier B — the Waleffe resonance condition is EXACTLY collinearity (2026-09-10)
 
 `tests/tier_b_helical_resonance.py`, wired into Gate 1. Exact integer arithmetic, **zero floating
