@@ -395,6 +395,83 @@ theorem hRaw_curl_eigen {s : ℝ} (hsq : s * s = 1) (k : Wavevector) (j : Fin 3)
     ((kNorm k : ℝ) : ℂ) ((s : ℝ) : ℂ) Complex.I hs hI
   linear_combination halg
 
+/-! ### 7. The resonance condition, and why it carries no content
+
+`docs/designs/WALEFFE_HELICAL_MEMO.md` §4bis. The closed form's middle vanishing condition is the
+**Waleffe resonance condition** `s_k|k| + s_p|p| + s_q|q| = 0`. Established here at Tier A, having
+first been established in exact integers over 558 090 lattice triads
+(`tests/tier_b_helical_resonance.py`), is that it collapses into the *third* condition: it holds
+**exactly when the triad is collinear**, and collinear triads carry no transfer anyway.
+
+**This part is deliberately basis-free.** It mentions no `ν`, so it is immune to the phase ambiguity
+that makes the closed form itself frame-dependent — the reason step 2 of the memo's §7 needs the
+basis parametrised by `ν` before it can be stated, and the reason this part could be done first. -/
+
+/-- A vector with vanishing self-dot is zero. Over `ℤ` this is the sum-of-three-squares argument. -/
+theorem eq_zero_of_dotZ_self_eq_zero {v : Wavevector} (h : dotZ v v = 0) : v = 0 := by
+  rw [dotZ_expand] at h
+  have h0 : v 0 * v 0 = 0 := by
+    nlinarith [mul_self_nonneg (v 0), mul_self_nonneg (v 1), mul_self_nonneg (v 2)]
+  have h1 : v 1 * v 1 = 0 := by
+    nlinarith [mul_self_nonneg (v 0), mul_self_nonneg (v 1), mul_self_nonneg (v 2)]
+  have h2 : v 2 * v 2 = 0 := by
+    nlinarith [mul_self_nonneg (v 0), mul_self_nonneg (v 1), mul_self_nonneg (v 2)]
+  funext i
+  fin_cases i
+  · simpa using mul_self_eq_zero.mp h0
+  · simpa using mul_self_eq_zero.mp h1
+  · simpa using mul_self_eq_zero.mp h2
+
+/-- `|p+q|² = |p|² + 2 p·q + |q|²`, in integers. -/
+theorem k_sq_add (p q : Wavevector) : k_sq (p + q) = k_sq p + 2 * dotZ p q + k_sq q := by
+  simp only [k_sq, dotZ_expand, Fin.sum_univ_three, Pi.add_apply]
+  ring
+
+/-- **Equality in the triangle inequality forces collinearity** — the whole content of the
+resonance condition, in the form the lattice needs.
+
+Given `p + q = k` and `|k| = |p| + |q|`, the two vectors are parallel: `p × q = 0`.
+The proof is Cauchy–Schwarz through Lagrange's identity, and every step after the single squaring
+is integer arithmetic. -/
+theorem crossZ_eq_zero_of_kNorm_add {p q k : Wavevector} (hpq : p + q = k)
+    (h : kNorm k = kNorm p + kNorm q) : crossZ p q = 0 := by
+  -- square the hypothesis: |k|² = |p|² + 2|p||q| + |q|²
+  have hsq : (k_sq k : ℝ) = (k_sq p : ℝ) + 2 * (kNorm p * kNorm q) + (k_sq q : ℝ) := by
+    have hk := kNorm_sq k
+    rw [h] at hk
+    nlinarith [kNorm_sq p, kNorm_sq q, hk]
+  -- but also |k|² = |p|² + 2 p·q + |q|², so p·q = |p||q|
+  have hdot : ((dotZ p q : ℤ) : ℝ) = kNorm p * kNorm q := by
+    have hk : k_sq k = k_sq p + 2 * dotZ p q + k_sq q := by rw [← hpq]; exact k_sq_add p q
+    have hkR : (k_sq k : ℝ) = (k_sq p : ℝ) + 2 * ((dotZ p q : ℤ) : ℝ) + (k_sq q : ℝ) := by
+      exact_mod_cast congrArg (fun z : ℤ => ((z : ℝ))) hk
+    linarith [hsq, hkR]
+  -- squaring that gives (p·q)² = |p|²|q|², i.e. Lagrange's identity has a zero left-hand side
+  have hsquare : ((dotZ p q : ℤ) : ℝ) * ((dotZ p q : ℤ) : ℝ) = (k_sq p : ℝ) * (k_sq q : ℝ) := by
+    rw [hdot]
+    have := kNorm_sq p
+    have := kNorm_sq q
+    nlinarith [kNorm_sq p, kNorm_sq q]
+  have hsquareZ : dotZ p q * dotZ p q = k_sq p * k_sq q := by exact_mod_cast hsquare
+  have hlag : dotZ (crossZ p q) (crossZ p q) = 0 := by
+    rw [dotZ_crossZ_self, dotZ_self_eq_k_sq, dotZ_self_eq_k_sq, hsquareZ]
+    ring
+  exact eq_zero_of_dotZ_self_eq_zero hlag
+
+/-- **The resonance condition implies collinearity.** Stated for the sign pattern in which the
+odd-one-out is `k`; the other two patterns are the same statement after relabelling, since
+`p + q = k` may be rewritten as `p = k − q` or `q = k − p`. -/
+theorem resonance_implies_collinear {p q k : Wavevector} (hpq : p + q = k)
+    (h : -kNorm k + kNorm p + kNorm q = 0) : crossZ p q = 0 :=
+  crossZ_eq_zero_of_kNorm_add hpq (by linarith)
+
+/-- Non-vacuity (SPEC §7.5): a genuine lattice triad on which the hypothesis holds, so the theorem
+above is not a statement about the empty set. `p = q = (1,0,0)`, `k = (2,0,0)`, `2 = 1 + 1`. -/
+theorem resonance_witness :
+    (![1,0,0] : Wavevector) + (![1,0,0] : Wavevector) = (![2,0,0] : Wavevector) := by
+  funext i
+  fin_cases i <;> simp
+
 /-! ### Audit certificates — no axiom outside [propext, Classical.choice, Quot.sound]. -/
 #print axioms dotZ_crossZ_left
 #print axioms dotZ_crossZ_self
@@ -407,5 +484,10 @@ theorem hRaw_curl_eigen {s : ℝ} (hsq : s * s = 1) (k : Wavevector) (j : Fin 3)
 #print axioms hRaw_norm
 #print axioms crossZ_triple_zero
 #print axioms hRaw_curl_eigen
+#print axioms eq_zero_of_dotZ_self_eq_zero
+#print axioms k_sq_add
+#print axioms crossZ_eq_zero_of_kNorm_add
+#print axioms resonance_implies_collinear
+#print axioms resonance_witness
 
 end MechanicaFluidorum.FourierZ3

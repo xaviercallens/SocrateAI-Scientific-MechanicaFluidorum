@@ -619,10 +619,29 @@ coefficient's `1/|k|` appears anyway and the witness is needed once, in one plac
 | **H4 — THE CURL EIGENVECTOR PROPERTY**: `i (k × hRaw) = s\|k\| · hRaw`. In this basis the curl, and with it vortex stretching, stops being a differential operator and becomes multiplication by the **signed** wavenumber | `hRaw_curl_eigen` | 2026-09-10 |
 | **H5** reality ↔ chirality: `conj (hRaw s k) = hRaw (−s) k` | `hRaw_conj` | 2026-09-10 |
 
-**Negative controls, run on scratch copies and both confirmed to FAIL as required.** Flipping the
-sign inside the curl eigen-equation breaks it (the eigenvalue is `+s|k|`, not `−`); and dropping the
+**Negative controls, run on scratch copies and all three confirmed to FAIL as required.** Flipping
+the sign inside the curl eigen-equation breaks it (the eigenvalue is `+s|k|`, not `−`); dropping the
 `k ≠ 0` hypothesis from `nuInt_ne_zero` breaks it, so that hypothesis is load-bearing rather than
-decorative.
+decorative; and replacing `|k| = |p| + |q|` by `|k| = |p| − |q|` in the triangle-equality theorem
+breaks it, so the theorem depends on the *sum* it claims to depend on.
+
+### D-3 step 3 done ahead of step 2, and why — the resonance condition is now Tier A
+
+| Claim | Theorem | Date |
+|---|---|---|
+| A vector with vanishing self-dot is zero (sum of three integer squares) | `eq_zero_of_dotZ_self_eq_zero` | 2026-09-10 |
+| `\|p+q\|² = \|p\|² + 2 p·q + \|q\|²`, in integers | `k_sq_add` | 2026-09-10 |
+| **Equality in the triangle inequality forces collinearity**: `p + q = k` and `\|k\| = \|p\| + \|q\|` give `p × q = 0`. Cauchy–Schwarz through Lagrange's identity; every step after one squaring is integer arithmetic | `crossZ_eq_zero_of_kNorm_add` | 2026-09-10 |
+| **⟹ the Waleffe resonance condition implies collinearity** — so it collapses into the degenerate condition and carries no content | `resonance_implies_collinear` | 2026-09-10 |
+| Non-vacuity witness: a genuine lattice triad satisfying the hypothesis | `resonance_witness` | 2026-09-10 |
+
+**Why this was done before step 2, which the memo ranks first.** Step 2 is the closed form, and the
+closed form is **frame-dependent**: it was derived with `ν = n̂` for all three triad members, while
+the Lean basis fixes `ν` by a global rule. The crucible measured exactly this — under a generic `ν`
+the coefficient differs by a phase. Stating step 2 therefore requires first parametrising the basis
+by `ν`, a refactor. Step 3's resonance theorem mentions **no `ν` at all**, so it is immune to the
+ambiguity and could be proved immediately. **The order was changed on evidence, and the evidence is
+recorded rather than the change being silent.**
 
 **Two Lean gotchas paid for here and worth reusing.** `fin_cases` emits indices as `⟨0, ⋯⟩`, which
 literal-indexed simp lemmas do not match — unfold the definitions instead, or route through
