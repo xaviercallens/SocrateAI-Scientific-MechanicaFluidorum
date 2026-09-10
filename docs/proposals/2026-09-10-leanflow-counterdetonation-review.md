@@ -22,7 +22,43 @@ re-implementation that matches, which is worth having.
 
 ---
 
-## Finding 1 — The Beltrami attractor is imposed by hand, not emergent
+## ⚠ CORRECTION TO FINDING 1, after the decisive control was run (2026-09-10, same day)
+
+**The control partly refutes my own Finding 1, and that is reported here rather than quietly
+amended.** The owner ordered the decoupling run; `exploration/beltrami_decoupling_control.py`
+executes it as a 2×2 factorial (metric on/off × damping on/off), because the instruction as given
+("damping = 16, alpha_prime = 0") cannot be run literally — in the reviewed source the damping is
+*derived from* `alpha`, so zeroing `alpha` also zeroes the damping.
+
+| run | metric | damping | terminal alignment | max Ω/Ω₀ | outcome |
+|---|---|---|---|---|---|
+| A | `k_eff` | on | 0.9888 | 14.9 | bounded |
+| B | bare `k` | on | — | 8.9e31 | **DIVERGED — inadmissible** |
+| C | `k_eff` | **off** | 0.9805 | 15.0 | bounded |
+| D | bare `k` | off | — | 4.1e10 | **DIVERGED — inadmissible** |
+
+**What this changes.** Finding 1 said the Beltrami state is produced by the damping term. That is
+**wrong about boundedness**: the metric alone (run C) keeps the run bounded and reaches alignment
+0.9805, while the damping alone (run B) **diverges**. Boundedness is supplied by `k_eff`, not by
+the hand-added damping. The damping contributes `+0.0084` of alignment on top of the metric.
+
+**What survives, and is now sharper.** The alignment observable was never far from 1 to begin with:
+the initial condition sets `u⁻ = 0.15 u⁺`, so it starts at **0.9560** by construction. The claimed
+"topological conversion of kinetic energy into a Beltrami flow" is a move of **+0.0329**. A
+statement that the flow *becomes* Beltrami, from a state that is already 95.6 % Beltrami by choice
+of `epsilon_cross`, is not supported by that delta — and the Lamb-norm decay, being a function of
+the same alignment, adds no independent evidence. Findings 2, 3, 4, 5 and 6 of this review are
+untouched by the control.
+
+**A defect in my own control, caught by the control itself and recorded (LL-19).** The first run
+printed a conclusion from run B, which had diverged; and its N2 negative control read exactly
+`0.00e+00` because the perturbation indexed the same shell on both branches, making it inert. Both
+are fixed: diverged cells are now marked inadmissible and refuse interpretation (LL-18), and the
+perturbation now mis-indexes the influx wavenumber and fires at `4.85e-01`.
+
+---
+
+## Finding 1 (as originally written, 2026-09-10 morning) — superseded in part by the correction above
 
 `euler_counterdetonation.rs` adds a term that exists only when the shield is on:
 

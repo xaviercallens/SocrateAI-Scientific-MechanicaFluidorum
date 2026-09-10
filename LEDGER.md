@@ -586,16 +586,53 @@ evidence in any case (LL-2).
 
 | finding | why it voids the claim | lesson it repeats |
 |---|---|---|
-| **The Beltrami attractor is imposed, not emergent.** A term `− wall_factor · u⁻` (strength up to 16) damps the negative-helicity amplitudes whenever `α′ > 0`; the reported alignment `\|Σκ(u₊²−u₋²)\|/Σκ(u₊²+u₋²)` tends to 1 identically as `u⁻ → 0`. The Lamb norm is then *derived from* that alignment, not from `u × ω` | the conclusion is an input | LL-11 (no null model) |
+| ~~**The Beltrami attractor is imposed, not emergent.**~~ **PARTLY REFUTED by the decisive control the same day — see the row below.** The damping term `− wall_factor · u⁻` is real and the alignment observable is a monotone function of `u⁻ → 0`, but the damping is **not** what produces the bounded state | — | superseded |
 | **`𝒟` diverges as 0/0.** `compute_frustration_index_from_transfers` returns `INFINITY` when `\|Σ T\| < 1e-12` **without testing `Σ\|T\|`**; a frozen flow therefore scores maximal frustration | "explosion of 𝒟 at the wall" is satisfiable by the flow stopping | LL-19 / LL-18 — this session hit the identical artifact and added a liveness guard |
 | **The "blow-up" is a cascade into a truncation.** 20 shells, `κ_N = 2¹⁹`, so enstrophy obeys `Ω ≤ κ_N²·E ≈ 2.7e11·E`; the `×1e6` threshold is crossed with no singularity. No shell profile and no cutoff flux `F_N` recorded (the D6 memo requires both) | detector cannot separate physics from grid exhaustion | LL-18, D5/D6 |
 | **The `α′ = 0` run does not conserve energy.** Homochiral transfers telescope correctly, but the added cross term contributes `Σ cross_n(u_n⁻ − u_n⁺) ≠ 0` | an unforced inviscid model with an energy source is not an Euler surrogate | — |
 | **Internal inconsistency:** the test asserts `t* < 0.3`; the register reported `t ≈ 0.38–0.40` | both cannot describe the same passing run | — |
-| **Two different "T-dual metrics" in one crate:** `r_eff = max(R, α/R)` (**matches our Tier A `Reff` exactly** — adopted as an independent cross-check) versus `k_eff = k/(1+α′k²)`, which is *not* the Fourier image of `Reff` (that would be `min(k, 1/(α′k))`) | no `Reff` theorem transfers to `k_eff` without proof | SPEC §1.2 (OP-1 is open) |
+| **Two different "T-dual metrics" in one crate:** `r_eff = max(R, α/R)` (**matches our Tier A `Reff` exactly** — adopted as an independent cross-check) versus the metric "k_eff = k/(1+α′k²)", which is *not* the Fourier image of `Reff` (that would be `min(k, 1/(α′k))`) | no `Reff` theorem transfers to  the `k_eff` metric without proof | SPEC §1.2 (OP-1 is open) |
 
 **Disposition:** integrated as a **review**, not as results. `MEMORY.md` §1.C rewritten as a plan
-(owner decision). The decisive control is named there: rerun with the damping term active but
-`k_eff → k`; if alignment still exceeds 0.98, the Beltrami result belongs to the damping.
+(owner decision).
+
+## Tier C — the decisive decoupling control, and a partial refutation of our own review (2026-09-10)
+
+Owner-ordered. `exploration/beltrami_decoupling_control.py`. The instruction *"damping = 16,
+alpha_prime = 0"* **cannot be run literally**: in the reviewed source the damping is *derived from*
+`alpha`, so zeroing alpha zeroes the damping too and the run collapses back to the calibration
+case. Reported rather than silently reinterpreted, and replaced by the 2×2 factorial that actually
+separates the two causes.
+
+| run | metric | damping | alignment at T | max Ω/Ω₀ | outcome |
+|---|---|---|---|---|---|
+| A | k_eff metric | on | 0.9888 | 14.9 | bounded |
+| B | bare `k` | on | — | 8.9e31 | **DIVERGED — inadmissible** |
+| C | k_eff metric | off | 0.9805 | 15.0 | bounded |
+| D | bare `k` | off | — | 4.1e10 | **DIVERGED — inadmissible** |
+
+**Finding 1 of our own review is partly wrong, and this is the correction.** Boundedness is
+supplied by the **metric**, not by the hand-added damping: the metric alone (run C) stays bounded and
+reaches 0.9805, while the damping alone (B) diverges. The damping adds `+0.0084` of alignment on
+top of the metric.
+
+**What the control establishes instead, and it is sharper than the original finding.** The initial
+condition is **already 0.9560 aligned by construction** (`epsilon_cross = 0.15` sets `u⁻ = 0.15u⁺`).
+The claimed "topological conversion of kinetic energy into a Beltrami flow" is a move of
+**+0.0329** from a state chosen to be 95.6 % Beltrami. The Lamb-norm decay is a function of that
+same alignment and supplies no independent evidence.
+
+**Two defects in this control, caught by the control itself and fixed (LL-18, LL-19).** Its first
+run interpreted a **diverged** cell — diverged cells now refuse interpretation. And its N2
+perturbation read exactly `0.00e+00` because it indexed the same shell on both branches, i.e. it
+was **inert**; the corrected mis-indexing fires at `4.85e-01`. Positive control P1 (the `u⁺` sector
+telescopes, drift `3.07e-15`) and N1 (the cross term genuinely breaks total energy conservation,
+drift `1.98e-04`, confirming the review's finding 4 on our own transcription) both hold.
+
+**Directive D-2 instrument, first use.** The run also reports net helicity transferred into three
+shell bands, replacing the global scalar ratio. Under the metric the UV band receives **exactly
+zero** while the IR band takes `9.0`; without it the UV band takes `3.5e40` (in a diverged cell, so
+that number is a magnitude of overflow, not a flux).
 **Not reviewed:** the ETD-RK4/Leray CFD core, the JHTDB benchmarks, the enterprise/GPU claims.
 
 ## Tier C — the triadic "frustration index" 𝒟(M), three readings vs the null model (2026-09-09)
