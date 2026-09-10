@@ -549,6 +549,33 @@ must find the shifted weights, testing that it tracks weights rather than patter
 constant vector), and the real negative control breaks the index structure instead
 (`u_n u_{n+2}`), returning dim 0 as required.
 
+## OWNER VERDICTS AND STANDING DIRECTIVES — issued 2026-09-10
+
+Recorded verbatim in substance, because they change what may be claimed and how the repository is
+operated. Verdicts are the human owner's alone (PLAN §2).
+
+**Accepted.**
+
+1. **The 𝒟(M) index is refuted as posed** — its growth is a random-phase artifact. Accepted.
+2. **The forced Beltrami attractor is falsified** as an emergent phenomenon. Accepted.
+3. **The finite 2-swap argument for the energy identity is VALIDATED** for formalisation in Lean 4.
+   Task 2.2 may proceed through steps 2–5 of `docs/designs/TASK22_ENERGY_IDENTITY.md`.
+
+**Standing directives.**
+
+| # | Directive | Status |
+|---|---|---|
+| D-1 | **No history rewriting. Corrective commits are appended, never force-pushed.** | **In force from 2026-09-10.** Recorded honestly: one rewrite had *already* been executed and pushed by the owner before this directive was issued (`d980c18` → `9e62d19`, content byte-identical, messages only). It is not undone, because undoing it would itself require the force-push this directive forbids. The pre-rewrite history remains on the local branch `backup/pre-reword-2026-09-10` |
+| D-2 | **Abandon global scalar ratios** of the `𝒟(M)` kind. Empirical tracking moves to **local directional fluxes** — net helicity transfer into specific shell bands | adopted; `𝒟(M)` is frozen as a recorded negative result and is not to be extended |
+| D-3 | **OP-6b re-targets to Waleffe's helical decomposition.** Project onto the `h^±` chiral eigenvectors and prove the algebraic structure of the triad coefficient `C^{s_k s_p s_q}_{k,p,q}`: which chirality combinations vanish identically, and which strictly oppose, under Leray transversality | adopted; design memo required before Lean (SPEC §7.3 / repo practice) |
+| D-4 | **Hypothesis U stays a pure conditional parameter.** Only algebraically exact content is formalised | adopted; this is the existing rule (SPEC §7.1) restated, and it keeps `EnergyConservationStatement`'s sibling statements honest |
+| D-5 | **Sweeping cancellation and confinement remain blocked** — the repository may not invent the missing definitions | unchanged; E-1 stands |
+
+**Why D-3 is the right remaining target, stated so the choice is auditable.** It is the only branch
+of the roadmap that is *algebra*: the helical coefficient is a determinate function of three
+wavevectors and three signs, so every claim about it is checkable without any analytic input, any
+limit, or any new definition. That is precisely the property the two blocked tracks lack.
+
 ## Tier C — review of LeanFlow's "Counter-Detonation" results (owner request, 2026-09-10)
 
 Full review: `docs/proposals/2026-09-10-leanflow-counterdetonation-review.md`. Source audited:
