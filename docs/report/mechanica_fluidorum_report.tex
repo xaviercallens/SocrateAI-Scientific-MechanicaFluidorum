@@ -63,8 +63,8 @@ Revised After the External Audit of 13 August 2026}}
 \small\texttt{SocrateAI-Scientific-MechanicaFluidorum}}
 
 \date{13 August 2026 \quad$\vert$\quad revised 10 September 2026\\[0.3em]
-\small Repository state: commit \texttt{1368cb8} \quad$\vert$\quad All verification gates PASS (exit 0)\\[0.2em]
-\small 12 Lean files, 232 kernel-compiled theorems, zero \texttt{sorry} \quad$\vert$\quad 16 exact-arithmetic harnesses}
+\small Repository state: commit \texttt{af2c96e} \quad$\vert$\quad All verification gates PASS (exit 0)\\[0.2em]
+\small 12 Lean files, 238 kernel-compiled theorems, zero \texttt{sorry} \quad$\vert$\quad 17 exact-arithmetic harnesses}
 
 \begin{document}
 \maketitle
@@ -1604,6 +1604,41 @@ are machine-checked and its arithmetic is exact, but whether the \emph{statement
 programme wants is a human judgement, and it is precisely the judgement neither gate can make. It is
 carried as a draft pending that audit.
 
+\subsection{The regularized system is the truncated system, and its balance laws close}
+\label{sec:balance}
+
+A framing fact deserves its own subsection, because it connects everything in this section to the
+programme's title. The specification identifies the T-dual regularization at the PDE level with the
+frequency projection onto $|k|\le1/\sqrt{\alpha'}$. \emph{So the Galerkin system formalised above
+is already the $\alpha'$-regularized system}, under the correspondence $M\leftrightarrow
+1/\sqrt{\alpha'}$, and Hypothesis~U is exactly the statement that the enstrophy bound is uniform in
+that correspondence --- nothing else. No separate ``regularized operator'' remains to be defined,
+which matters under the programme's rule that definitions may not be invented downstream.
+
+With that identification, the fixed-truncation bookkeeping is now complete in the kernel
+(\tA{}). Writing $F_k=-\nu|k|^2u_k+B(u,u)_k$ for the right-hand side of the regularized system,
+in the same algebraic-rate sense as the dyadic laboratory --- the rate is the pairing of the state
+against the right-hand side, with no time variable and no ODE:
+\begin{align}
+  \mathrm{Re}\sum_k\langle u_k,F_k\rangle
+    &= -\nu\sum_k|k|^2\|u_k\|^2 \;\le\;0 \quad(\nu\ge0),
+  \label{eq:energybalance}\\
+  \mathrm{Re}\sum_k|k|^2\langle u_k,F_k\rangle
+    &= -\nu\sum_k|k|^4\|u_k\|^2 \;+\; \mathrm{Re}\sum_k|k|^2\langle u_k,B(u,u)_k\rangle .
+  \label{eq:enstrophybalance}
+\end{align}
+In \eqref{eq:energybalance} the nonlinearity contributes nothing, by the energy identity, so the
+energy of the regularized system can only fall. In \eqref{eq:enstrophybalance} the production term
+is the vortex-stretching sum of \eqref{eq:enstrophy}, exhibited nonzero on a genuine Galerkin
+state. \textbf{Nothing bounds that term against the dissipation uniformly in $M$; that absence is
+precisely Hypothesis~U.} The negative control that matters here drops the production term from
+\eqref{eq:enstrophybalance} --- asserting that enstrophy dissipates as energy does --- and fails,
+so the balance law displays the open problem rather than hiding it.
+
+This is where the formal programme now stands: everything at fixed truncation that the roadmap
+asked for is kernel-checked, and every further step is either classical PDE consolidation on
+paper or the uniformity mechanism itself, which is mathematics that does not yet exist.
+
 \subsection{A ``frustration index'' that measures its own null model (\tC{}, refuted as posed)}
 \label{sec:frustration}
 
@@ -1916,16 +1951,16 @@ LL-8 & \textbf{The verification gate itself had a false positive.} A lemma prove
 \texttt{DyadicRiccati.lean} & The $\alpha=1/2$ threshold as an integrability threshold & \tA{} & 14 \\
 \texttt{FourierStateZ3.lean} & 3-D Fourier state space, Leray projector (\textsc{draft}) & \tA{} & 24 \\
 \texttt{FourierDynamicsZ3.lean} & The operator $B$ of \eqref{eq:Bop}; $B\neq0$ witness; $F1$, $F4$
-closed; \textbf{energy conservation}; \textbf{enstrophy production} \eqref{eq:enstrophy} & \tA{} & 31 \\
+closed; \textbf{energy conservation}; \textbf{enstrophy production} \eqref{eq:enstrophy}; the balance laws \eqref{eq:energybalance}--\eqref{eq:enstrophybalance} & \tA{} & 37 \\
 \texttt{HelicalBasis.lean} & Helical basis, five facts; resonance $=$ collinearity; the closed
 form \eqref{eq:closed}, its converse, and the gauge separation & \tA{} & 75 \\
 \midrule
-\multicolumn{2}{@{}l}{\textbf{Tier A subtotal}} & & \textbf{224} \\
+\multicolumn{2}{@{}l}{\textbf{Tier A subtotal}} & & \textbf{230} \\
 \midrule
 \texttt{MillenniumReduction.lean} & Conditional reduction skeleton & \tC{} & 8 \\
  & \quad (\textsc{demoted} 2026-08-13, verdict B1) & & \\
 \midrule
-\multicolumn{2}{@{}l}{\textbf{Total kernel-compiled, no axiom outside \texttt{\{propext, Classical.choice, Quot.sound\}}}} & & \textbf{232} \\
+\multicolumn{2}{@{}l}{\textbf{Total kernel-compiled, no axiom outside \texttt{\{propext, Classical.choice, Quot.sound\}}}} & & \textbf{238} \\
 \bottomrule
 \end{tabular}
 \end{center}
