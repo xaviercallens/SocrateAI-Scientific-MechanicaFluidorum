@@ -43,6 +43,7 @@ import Mathlib.Algebra.BigOperators.Ring.Finset
 import Mathlib.Algebra.Order.BigOperators.Group.Finset
 import Mathlib.Algebra.Group.Subgroup.Basic
 import Mathlib.Data.Complex.Basic
+import Mathlib.Data.Complex.BigOperators
 import Mathlib.Data.Fin.VecNotation
 import Mathlib.Data.Fintype.Pi
 import Mathlib.Data.Int.Interval
@@ -651,6 +652,118 @@ theorem enstrophy_production_identity (M : ℕ) (s : GalerkinState M) :
     AbstractAlgebraicConservation.weighted_triad_sum kmap s.toFourierState.u ksqC (triadSet M)
       kmap_add (triadSet_swap3_closed M) hdiv]
 
+/-! ### 10. The viscous balance laws (WP-1 of `docs/designs/DUAL_SCALE_WORKFLOW.md`)
+
+`docs/HYPOTHESIS_U_SPECIFICATION.md` §3.1 identifies the T-dual regularization at the PDE level
+with the frequency projection onto `|k| ≤ 1/√α′` — so the truncated system below **is** the
+α′-regularized system, under `M ↔ 1/√α′`. Its right-hand side is the dissipation of the spec's
+Definition 1.1 plus the Task 2.1 operator, and the two balance laws are corollaries of
+`energy_conservation` and `enstrophy_production_identity`. The pattern mirrors
+`DyadicShells.energyRate`, Tier A for the shell model since August.
+
+These are algebraic rate identities — no time variable, no ODE, exactly as in the dyadic
+precedent. The rate is the pairing of the state against the right-hand side; when a trajectory
+formalism exists it becomes `d/dt` of the energy along solutions, and not before. -/
+
+theorem pairing_self_eq_ofReal (a : Fin 3 → ℂ) :
+    pairing a a = ((∑ i : Fin 3, Complex.normSq (a i) : ℝ) : ℂ) := by
+  unfold pairing
+  rw [Complex.ofReal_sum]
+  exact Finset.sum_congr rfl fun i _ => by rw [mul_comm, Complex.mul_conj]
+
+/-- **The right-hand side of the regularized (truncated) Navier–Stokes system**:
+`F_k = −ν|k|² u_k + B(u,u)_k`. -/
+noncomputable def galerkinRHS (M : ℕ) (nu : ℝ) (u : Wavevector → Fin 3 → ℂ)
+    (k : Wavevector) : Fin 3 → ℂ :=
+  fun i => -(nu : ℂ) * ksqC k * u k i + B M u u k i
+
+/-- The energy rate `Re Σ_k ⟨u_k, F_k⟩` — the dyadic `energyRate`, on `ℤ³`. -/
+noncomputable def energyRateZ3 (M : ℕ) (nu : ℝ) (u : Wavevector → Fin 3 → ℂ) : ℝ :=
+  (∑ k ∈ ball M, pairing (u k) (galerkinRHS M nu u k)).re
+
+/-- The enstrophy rate `Re Σ_k |k|² ⟨u_k, F_k⟩`. -/
+noncomputable def enstrophyRateZ3 (M : ℕ) (nu : ℝ) (u : Wavevector → Fin 3 → ℂ) : ℝ :=
+  (∑ k ∈ ball M, ksqC k * pairing (u k) (galerkinRHS M nu u k)).re
+
+/-- The pairing splits over the right-hand side, and the dissipation term is a real multiple. -/
+theorem pairing_galerkinRHS (M : ℕ) (nu : ℝ) (u : Wavevector → Fin 3 → ℂ) (k : Wavevector) :
+    pairing (u k) (galerkinRHS M nu u k)
+      = -(nu : ℂ) * ksqC k * pairing (u k) (u k) + pairing (u k) (B M u u k) := by
+  unfold galerkinRHS pairing
+  rw [Finset.mul_sum, ← Finset.sum_add_distrib]
+  exact Finset.sum_congr rfl fun i _ => by ring
+
+/-- Each dissipation term is the cast of an explicit real number. -/
+theorem dissipation_term_ofReal (nu : ℝ) (u : Wavevector → Fin 3 → ℂ) (k : Wavevector) :
+    -(nu : ℂ) * ksqC k * pairing (u k) (u k)
+      = ((-nu * (k_sq k : ℝ) * ∑ i : Fin 3, Complex.normSq (u k i) : ℝ) : ℂ) := by
+  rw [pairing_self_eq_ofReal]
+  unfold ksqC
+  push_cast
+  ring
+
+/-- **Energy dissipation.** `Re Σ_k ⟨u_k, F_k⟩ = −ν Σ_k |k|² ‖u_k‖²`: by `energy_conservation`
+the nonlinearity contributes nothing, so the energy of the regularized system moves only by
+viscosity. -/
+theorem energyRateZ3_eq (M : ℕ) (nu : ℝ) (s : GalerkinState M) :
+    energyRateZ3 M nu s.toFourierState.u
+      = -nu * ∑ k ∈ ball M,
+          (k_sq k : ℝ) * ∑ i : Fin 3, Complex.normSq (s.toFourierState.u k i) := by
+  unfold energyRateZ3
+  rw [Finset.sum_congr rfl fun k _ => pairing_galerkinRHS M nu s.toFourierState.u k,
+    Finset.sum_add_distrib, Complex.add_re, energy_conservation M s, add_zero,
+    Finset.sum_congr rfl fun k _ => dissipation_term_ofReal nu s.toFourierState.u k,
+    ← Complex.ofReal_sum, Complex.ofReal_re, Finset.mul_sum]
+  exact Finset.sum_congr rfl fun k _ => by ring
+
+/-- **The energy of the regularized system cannot rise** (`ν ≥ 0`). With `energy_conservation`
+this is global-in-time boundedness of the energy at each fixed `M` — and `SPEC` obstruction O5
+is the standing reminder that fixed-`M` regularity was never in doubt. -/
+theorem energyRateZ3_nonpos (M : ℕ) {nu : ℝ} (hnu : 0 ≤ nu) (s : GalerkinState M) :
+    energyRateZ3 M nu s.toFourierState.u ≤ 0 := by
+  rw [energyRateZ3_eq]
+  have hS : (0 : ℝ) ≤ ∑ k ∈ ball M,
+      (k_sq k : ℝ) * ∑ i : Fin 3, Complex.normSq (s.toFourierState.u k i) :=
+    Finset.sum_nonneg fun k _ =>
+      mul_nonneg (by exact_mod_cast k_sq_nonneg k)
+        (Finset.sum_nonneg fun i _ => Complex.normSq_nonneg _)
+  rw [neg_mul, neg_nonpos]
+  exact mul_nonneg hnu hS
+
+/-- **The enstrophy balance: dissipation against production, and NOTHING bounds the production.**
+
+`Re Σ_k |k|²⟨u_k, F_k⟩ = −ν Σ_k |k|⁴ ‖u_k‖² + Re Σ_k |k|²⟨u_k, B_k⟩`.
+
+The first term is nonpositive; the second is the vortex-stretching term of
+`enstrophy_production_identity`, exhibited nonzero on a genuine Galerkin state
+(`tests/tier_b_fourier_enstrophy.py`, value `−18` there — the sign is state-dependent). **The
+absence of any bound on the second term against the first, uniformly in `M`, is precisely
+Hypothesis U, and nothing in this file addresses it.** This theorem closes the fixed-`M`
+bookkeeping; the open problem starts on its right-hand side. -/
+theorem enstrophyRateZ3_eq (M : ℕ) (nu : ℝ) (s : GalerkinState M) :
+    enstrophyRateZ3 M nu s.toFourierState.u
+      = -nu * (∑ k ∈ ball M,
+          ((k_sq k : ℝ)) ^ 2 * ∑ i : Fin 3, Complex.normSq (s.toFourierState.u k i))
+        + (enstrophyProduction M s.toFourierState.u).re := by
+  unfold enstrophyRateZ3 enstrophyProduction
+  have hterm : ∀ k ∈ ball M, ksqC k * pairing (s.toFourierState.u k)
+      (galerkinRHS M nu s.toFourierState.u k)
+        = ((-nu * (k_sq k : ℝ) ^ 2 * ∑ i : Fin 3,
+              Complex.normSq (s.toFourierState.u k i) : ℝ) : ℂ)
+          + ksqC k * pairing (s.toFourierState.u k)
+              (B M s.toFourierState.u s.toFourierState.u k) := by
+    intro k _
+    rw [pairing_galerkinRHS, mul_add]
+    congr 1
+    rw [pairing_self_eq_ofReal]
+    unfold ksqC
+    push_cast
+    ring
+  rw [Finset.sum_congr rfl hterm, Finset.sum_add_distrib, Complex.add_re,
+    ← Complex.ofReal_sum, Complex.ofReal_re, Finset.mul_sum]
+  congr 1
+  exact Finset.sum_congr rfl fun k _ => by ring
+
 #print axioms neg_mem_ball
 #print axioms fourier_dot_conj
 #print axioms pairing_leray_drop
@@ -659,6 +772,11 @@ theorem enstrophy_production_identity (M : ℕ) (s : GalerkinState M) :
 #print axioms sum_double_eq_sum_triadSet_weighted
 #print axioms ksqC_third
 #print axioms enstrophy_production_identity
+#print axioms pairing_self_eq_ofReal
+#print axioms pairing_galerkinRHS
+#print axioms energyRateZ3_eq
+#print axioms energyRateZ3_nonpos
+#print axioms enstrophyRateZ3_eq
 #print axioms kmap_add
 #print axioms summand_eq_zero_of_notMem_ball
 #print axioms sum_double_eq_sum_triadSet

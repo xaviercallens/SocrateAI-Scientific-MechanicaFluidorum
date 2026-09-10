@@ -631,6 +631,40 @@ three vectors drawn from `±{e₁,e₂,e₃}` cannot sum to zero, so that suppor
 non-degenerate triad at all** and every term dies for want of a triad, not for want of a weight
 difference. Recorded in the harness with that explanation attached.
 
+## Tier A — WP-1: the viscous balance laws of the regularized system (2026-09-10)
+
+`lean_src/FourierDynamicsZ3.lean` §10. Workflow context and derivation:
+`docs/designs/DUAL_SCALE_WORKFLOW.md` (**a PROPOSAL awaiting the owner's approval**, like the
+weighted-identity memo before it — the definitions below mirror the owner-accepted
+`DyadicShells.energyRate` pattern but are formally new under E-1).
+
+**The framing fact, from the spec itself.** `HYPOTHESIS_U_SPECIFICATION.md` §3.1 identifies the
+T-dual regularization at PDE level with the frequency projection onto `|k| ≤ 1/√α′`. So the
+truncated system already formalised here **is** the α′-regularized system, `M ↔ 1/√α′`, and
+Hypothesis U is uniformity in that correspondence — nothing else.
+
+| Claim | Theorem | Date |
+|---|---|---|
+| `⟨u,u⟩` is the cast of `Σ normSq` — real, nonnegative | `pairing_self_eq_ofReal` | 2026-09-10 |
+| The pairing splits over `F_k = −ν\|k\|²u_k + B_k` | `pairing_galerkinRHS` | 2026-09-10 |
+| **Energy dissipation**: `Re Σ⟨u_k,F_k⟩ = −ν Σ\|k\|²‖u_k‖²` | `energyRateZ3_eq` | 2026-09-10 |
+| **The energy of the regularized system cannot rise** (`ν ≥ 0`) | `energyRateZ3_nonpos` | 2026-09-10 |
+| **The enstrophy balance**: dissipation against production | `enstrophyRateZ3_eq` | 2026-09-10 |
+
+These are algebraic rate identities in the dyadic precedent's sense — no time variable, no ODE;
+the rate is the pairing of the state against the right-hand side.
+
+**What the balance law displays, in its own docstring.** `Re Σ|k|²⟨u_k,F_k⟩ = −ν Σ|k|⁴‖u_k‖² +`
+(the vortex-stretching production of `enstrophy_production_identity`). **Nothing bounds the second
+term against the first uniformly in `M`. That absence is precisely Hypothesis U**, and the theorem
+closes the fixed-`M` bookkeeping while the open problem starts on its right-hand side. O5 remains
+the standing guard: fixed-`M` regularity was never in doubt.
+
+**Three Lean negative controls, all confirmed to fail:** flipping the dissipation sign in the
+energy law (NC-N); **dropping the production term from the enstrophy balance — asserting enstrophy
+dissipates as energy does** (NC-O, the one that matters: had it passed, the balance law would hide
+the open problem rather than display it); and dropping `0 ≤ ν` from the nonpositivity (NC-P).
+
 **Audit flags — BOTH CLOSED 2026-09-10.** F1′ by `B_witness_ne_zero` / `B_not_identically_zero`
 (rows above). F4 by `mem_ball_iff`: `k ∈ ball M ↔ k_sq k ≤ M²`. The non-obvious direction is that
 `k_sq k ≤ M²` already forces every coordinate into `[−M, M]`, because each `(kᵢ)²` is one
