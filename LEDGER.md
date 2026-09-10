@@ -513,6 +513,28 @@ must find the shifted weights, testing that it tracks weights rather than patter
 constant vector), and the real negative control breaks the index structure instead
 (`u_n u_{n+2}`), returning dim 0 as required.
 
+## Tier C — review of LeanFlow's "Counter-Detonation" results (owner request, 2026-09-10)
+
+Full review: `docs/proposals/2026-09-10-leanflow-counterdetonation-review.md`. Source audited:
+`SocrateAI-Numeric-DualScale-Solver/.../crates/leanflow-solver/src/euler_counterdetonation.rs`
+and `crates/leanflow-core/src/lib.rs`. **The test suite could not be executed from this session**
+(shell confined to this repository); every finding is read off the source, which is the stronger
+evidence in any case (LL-2).
+
+| finding | why it voids the claim | lesson it repeats |
+|---|---|---|
+| **The Beltrami attractor is imposed, not emergent.** A term `− wall_factor · u⁻` (strength up to 16) damps the negative-helicity amplitudes whenever `α′ > 0`; the reported alignment `\|Σκ(u₊²−u₋²)\|/Σκ(u₊²+u₋²)` tends to 1 identically as `u⁻ → 0`. The Lamb norm is then *derived from* that alignment, not from `u × ω` | the conclusion is an input | LL-11 (no null model) |
+| **`𝒟` diverges as 0/0.** `compute_frustration_index_from_transfers` returns `INFINITY` when `\|Σ T\| < 1e-12` **without testing `Σ\|T\|`**; a frozen flow therefore scores maximal frustration | "explosion of 𝒟 at the wall" is satisfiable by the flow stopping | LL-19 / LL-18 — this session hit the identical artifact and added a liveness guard |
+| **The "blow-up" is a cascade into a truncation.** 20 shells, `κ_N = 2¹⁹`, so enstrophy is bounded by `κ_N²·2E ≈ 2.7e11·E`; the `×1e6` threshold is crossed with no singularity. No shell profile and no cutoff flux `F_N` recorded (the D6 memo requires both) | detector cannot separate physics from grid exhaustion | LL-18, D5/D6 |
+| **The `α′ = 0` run does not conserve energy.** Homochiral transfers telescope correctly, but the added cross term contributes `Σ cross_n(u_n⁻ − u_n⁺) ≠ 0` | an unforced inviscid model with an energy source is not an Euler surrogate | — |
+| **Internal inconsistency:** the test asserts `t* < 0.3`; the register reported `t ≈ 0.38–0.40` | both cannot describe the same passing run | — |
+| **Two different "T-dual metrics" in one crate:** `r_eff = max(R, α/R)` (**matches our Tier A `Reff` exactly** — adopted as an independent cross-check) versus `k_eff = k/(1+α′k²)`, which is *not* the Fourier image of `Reff` (that would be `min(k, 1/(α′k))`) | no `Reff` theorem transfers to `k_eff` without proof | SPEC §1.2 (OP-1 is open) |
+
+**Disposition:** integrated as a **review**, not as results. `MEMORY.md` §1.C rewritten as a plan
+(owner decision). The decisive control is named there: rerun with the damping term active but
+`k_eff → k`; if alignment still exceeds 0.98, the Beltrami result belongs to the damping.
+**Not reviewed:** the ETD-RK4/Leray CFD core, the JHTDB benchmarks, the enterprise/GPU claims.
+
 ## Tier C — the triadic "frustration index" 𝒟(M), three readings vs the null model (2026-09-09)
 
 Design memo and pre-registration: `docs/designs/TRIAD_FRUSTRATION_DM.md`. Computation:

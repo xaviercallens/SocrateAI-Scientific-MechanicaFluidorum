@@ -1,22 +1,27 @@
-> ## ⚠ CORRECTION NOTICE — READ BEFORE USING THIS FILE (added 2026-09-10, orchestrator)
+> ## ⚠ NOTICE DE LECTURE — mise à jour 2026-09-10 (orchestrateur)
 >
-> This file is **not tiered** and is **not** covered by any gate. Parts of §1.C report results that
-> **were never computed in this repository** — there is no Euler solver here and none was run, so the
-> "calibration blow-up at t ≈ 0.38–0.40", the velocity/vorticity alignment, the Lamb-term
-> annihilation and the Beltrami attractor are **not measurements**. §1.C's label "Rust Tier B" is
-> also a category error: SPEC §2 bars floating point from Tier B in any language.
+> Ce fichier **n'est pas tiéré** et **aucune gate ne le couvre**. Il sert de registre de redémarrage :
+> ce qu'il affirme doit pouvoir être re-vérifié avant d'être réutilisé.
 >
-> One claim is **contradicted by data committed alongside it**: the growth of 𝒟(M) is a property of
-> the *random phases* used as the null model, not of ℤ³ — a phase-coherent field on the same lattice
-> gives 𝒟 **flat** in M. See `data/triad_frustration/` and `docs/designs/TRIAD_FRUSTRATION_DM.md`.
+> **§1.C a été réécrit en PLAN** (décision du propriétaire, 2026-09-10). Sa version antérieure
+> présentait comme mesurés un blow-up de calibration à $t \approx 0{,}38-0{,}40$, un alignement
+> vitesse-vorticité tendant vers 1, l'annihilation du terme de Lamb et un attracteur de Beltrami.
+> L'audit du code source qui les produit
+> (`docs/proposals/2026-09-10-leanflow-counterdetonation-review.md`) établit que l'instrument ne peut
+> pas, en l'état, soutenir ces conclusions. Les correctifs et le contrôle décisif sont dans §1.C.
 >
-> The gate results in §2.A are accurate as of `d980c18` (verified: Gates 1, 1b, 2 exit 0). The commit
-> subject of `d980c18` is **wrong** where it says "integrate FourierStateZ3 v2.1": that submission was
-> **rejected** with 16 compile errors (`docs/proposals/2026-09-09-review.md`).
+> **Une affirmation reste contredite par les données commitées ici** : la croissance de $\mathcal{D}(M)$
+> est une propriété des *phases aléatoires* du modèle nul, pas de $\mathbb{Z}^3$ — un champ à phases
+> cohérentes sur le même réseau donne $\mathcal{D}$ **plat** en $M$. Voir `data/triad_frustration/`
+> et `docs/designs/TRIAD_FRUSTRATION_DM.md`.
 >
-> Full analysis, and the three questions this raises for the owner:
+> Les résultats de gates du §2.A sont exacts au commit `d980c18` (Gates 1, 1b, 2 : exit 0). En
+> revanche le **sujet** de `d980c18` est faux là où il dit « integrate FourierStateZ3 v2.1 » : cette
+> soumission a été **rejetée**, 16 erreurs de compilation (`docs/proposals/2026-09-09-review.md`).
+>
+> Analyse complète et questions ouvertes :
 > **`docs/escalations/2026-09-10-E3-MEMORY-md-unsupported-claims.md`**.
-> No other line of this file has been altered by the orchestrator.
+> Hors §1.C et cette notice, aucune ligne de ce fichier n'a été modifiée par l'orchestrateur.
 
 # SOCRATEAI DUAL-SCALE PROGRAM MEMORY & FAST RESTART REGISTER
 
@@ -43,13 +48,48 @@ Le résultat d'OpenAI (`https://github.com/openai/NavierStokesAndEuler`) prouvan
    - Condition initiale : $\mathbf{u}_0(x) = \mathbf{u}_{\text{parent}}(x) + \sum_{j=1}^\infty \mathbf{v}_j(\kappa_j x)$, paquets dyadiques hélicoïdaux sur fond de déformation de Taylor-Green.
    - Temps d'explosion critique : $T^* \in (0, 1]$. Critère BKM saturé en temps fini.
 
-### C. Validation de la Contre-Détonation Empirique (Rust Tier B)
-- **Tir de Calibration ($\alpha' = 0$) :** Divergence violente (blow-up) répliquée fidèlement à $t \approx 0.38 - 0.40$ ($T^* \le 0.5$).
-- **Activation du Bouclier T-Dual ($\alpha' > 0$) :**
-  - Explosion de l'Indice de Frustration Triadique $\mathcal{D}(M)$.
-  - Alignement Vitesse/Vorticité : $\cos(\mathbf{u}, \boldsymbol{\omega}) \to 1.0$.
-  - Annihilation du terme de Lamb : $\|\mathbf{u} \times \boldsymbol{\omega}\| \to 0$.
-  - Extinction du terme convectif $(\mathbf{u} \cdot \nabla)\mathbf{u} \to \frac{1}{2}\nabla |\mathbf{u}|^2$, formation d'un flot de Beltrami stationnaire et régulier pour tout $t \ge T^*$.
+### C. Contre-Détonation Empirique — **PLAN D'EXPÉRIENCE, PAS DES RÉSULTATS** (Tier C par construction)
+
+> **Réécrit en plan le 2026-09-10 sur décision du propriétaire.** La version précédente présentait
+> les quatre lignes ci-dessous comme des mesures acquises. Elles ne le sont pas. L'audit du code
+> source de LeanFlow (`docs/proposals/2026-09-10-leanflow-counterdetonation-review.md`) montre que
+> l'instrument, en l'état, **ne peut pas** produire ces conclusions : l'attracteur de Beltrami est
+> imposé par un terme d'amortissement explicite sur $u^-$, l'indice $\mathcal{D}$ diverge en $0/0$
+> faute de garde de vivacité, et le seuil d'enstrophie $\times 10^6$ est franchi par une cascade
+> ordinaire dans une troncature à 20 coquilles. Toute mesure en virgule flottante est **Tier C**,
+> quel que soit le langage (SPEC §2).
+
+**Ce que l'expérience doit mesurer, et ce qui doit être vrai pour qu'elle compte :**
+
+1. **Tir de calibration ($\alpha' = 0$).** Objectif : établir que le moteur reproduit une cascade
+   inertielle sans source parasite.
+   - *Pré-requis bloquant :* le terme croisé doit conserver l'énergie. Il ne la conserve pas
+     actuellement ($\sum \text{cross}_n (u_n^- - u_n^+) \neq 0$), donc le run $\alpha'=0$ n'est pas
+     un substitut d'Euler non visqueux.
+   - *Pré-requis bloquant :* profil de population des coquilles et flux à la coupure $F_N$ rapportés
+     à chaque run (mémo D6). Sans eux, « blow-up » et « la cascade a atteint la troncature » sont
+     indiscernables (LL-18).
+   - *Interdit :* décrire ce run comme reproduisant le résultat d'OpenAI sur $\mathbb{R}^3$. Le
+     verdict d'audit externe D1 (2026-08-13) a tué l'équivalence modèle dyadique ↔ équations 3-D.
+
+2. **Activation du bouclier ($\alpha' > 0$).** Objectif : distinguer ce qui vient de la métrique de
+   ce qui vient de l'amortissement ajouté.
+   - *Contrôle décisif, à faire en premier :* relancer avec le terme `wall_factor` **actif** mais
+     $k_{\text{eff}} \to k$ (bouclier « éteint »). Si l'alignement dépasse encore 0,98, le résultat
+     appartient à l'amortissement, pas à la T-dualité.
+   - *Correctif requis :* garde de vivacité sur $\mathcal{D}$ (`sum_abs > \varepsilon`), sinon un
+     écoulement figé marque une frustration maximale.
+   - *Observable indépendante requise :* $\|\mathbf{u} \times \boldsymbol{\omega}\|$ calculée
+     directement, et non dérivée de l'alignement — aujourd'hui les deux quantités sont la même
+     information écrite deux fois.
+
+3. **Distinction de nomenclature à trancher.** `r_eff(α,R) = max(R, α/R)` coïncide exactement avec
+   le `Reff` Tier A de ce dépôt. `k_eff(k,α') = k/(1+α'k²)` est un **autre objet** (l'image de Fourier
+   de `Reff` serait $\min(k, 1/(\alpha' k))$). Aucun théorème sur `Reff` ne se transporte à `k_eff`
+   sans démonstration.
+
+**Aucune conclusion sur Navier-Stokes, Euler ou l'Hypothèse U ne découlera de cette expérience,
+quel que soit son résultat.** Elle porte sur un modèle de coquilles, pas sur les équations.
 
 ---
 
