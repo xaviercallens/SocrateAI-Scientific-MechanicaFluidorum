@@ -689,6 +689,38 @@ This is the formal counterpart of the exact sweep that found **zero** non-collin
 among 558 090. Negative control, **confirmed to fail**: dropping the collinearity hypothesis from
 `cOf_eq_zero_of_collinear` breaks the proof.
 
+### The chain, closed for all three sign patterns (2026-09-10)
+
+**A gap in the row above, found and closed the same day.** `cOf_eq_zero_of_resonance` assumed
+`−|k| + |p| + |q| = 0`: one sign pattern, the one in which `k` is the odd one out. The resonance
+condition admits **three**, according to which member carries the dissenting sign. The Tier B
+harness had quantified over all three from the start (`resonant_by_integer_test` loops over the
+three relabellings); the Lean had not. The two tiers were asserting different propositions, and the
+weaker one was the machine-checked one.
+
+| Claim | Theorem | Date |
+|---|---|---|
+| Pattern 2: `\|p\| = \|k\| + \|q\|` ⟹ collinear — via `k + (−q) = p` | `resonance_pattern_p` | 2026-09-10 |
+| Pattern 3: `\|q\| = \|k\| + \|p\|` ⟹ collinear — via `k + (−p) = q` | `resonance_pattern_q` | 2026-09-10 |
+| **Resonance ⟹ collinearity, in full generality**: for `s_k, s_p, s_q ∈ {±1}` and all three magnitudes strictly positive, `s_k\|k\| + s_p\|p\| + s_q\|q\| = 0` forces `p × q = 0` | `resonance_implies_collinear_full` | 2026-09-10 |
+| **THE CHAIN, COMPLETE**: every admissible chirality class, `C = 0`, by way of collinearity | `cOf_eq_zero_of_resonance_full` | 2026-09-10 |
+
+The eight branches split three ways: two are *impossible* (a sum of three positive reals is not
+zero, so the signs cannot all agree), and the remaining six are the three patterns, each arising
+twice under global sign flip. Strict positivity of the three magnitudes is what kills the two, which
+is why it appears as a hypothesis and not as a convenience.
+
+**Two negative controls, both confirmed to fail, with distinct failure signatures** (LL-18):
+
+- **NC-A** — drop the three positivity hypotheses. Fails with **exactly two** `linarith` errors, on
+  branches `inl.inl.inl` and `inr.inr.inr`: the all-agree cases, and no others. The control
+  identifies which branches the hypothesis was load-bearing for, not merely that it was.
+- **NC-B** — mis-route the `(+,+,−)` branch to `resonance_pattern_p` instead of
+  `resonance_pattern_q`. Fails on that branch's side goal alone. The three patterns are therefore
+  not interchangeable; each proves its own case.
+
+Axiom footprints: all four exactly `[propext, Classical.choice, Quot.sound]`.
+
 ## Tier B — the Waleffe resonance condition is EXACTLY collinearity (2026-09-10)
 
 `tests/tier_b_helical_resonance.py`, wired into Gate 1. Exact integer arithmetic, **zero floating

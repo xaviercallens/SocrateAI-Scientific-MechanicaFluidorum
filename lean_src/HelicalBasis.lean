@@ -617,6 +617,90 @@ theorem cOf_eq_zero_of_resonance (sk sp sq : ℝ) {k p q : Wavevector} (hpq : p 
     cOf (triadNormal p q) sk sp sq k p q = 0 :=
   cOf_eq_zero_of_collinear sk sp sq k p q (resonance_implies_collinear hpq hres)
 
+/-! ### 11. The chain, for ALL THREE sign patterns
+
+§10 closed the chain for one sign pattern only — the one in which `k` is the odd one out. The
+resonance condition `s_k|k| + s_p|p| + s_q|q| = 0` admits **three**, according to which member
+carries the dissenting sign, and a theorem covering one of them is not the theorem. This section
+closes the other two and then the general statement. -/
+
+theorem crossZ_self (a : Wavevector) : crossZ a a = 0 := by
+  funext i; fin_cases i <;> simp [crossZ] <;> ring
+
+theorem crossZ_neg_right (a b : Wavevector) : crossZ a (-b) = -crossZ a b := by
+  funext i; fin_cases i <;> simp [crossZ] <;> ring
+
+theorem crossZ_sub_left (a b c : Wavevector) :
+    crossZ (a - b) c = crossZ a c - crossZ b c := by
+  funext i; fin_cases i <;> simp [crossZ] <;> ring
+
+theorem crossZ_antisymm (a b : Wavevector) : crossZ a b = -crossZ b a := by
+  funext i; fin_cases i <;> simp [crossZ] <;> ring
+
+theorem kNorm_neg (k : Wavevector) : kNorm (-k) = kNorm k := by
+  unfold kNorm; rw [k_sq_neg]
+
+/-- Pattern 2: `|p| = |k| + |q|`. Rewrite `p + q = k` as `k + (−q) = p` and apply §7. -/
+theorem resonance_pattern_p {p q k : Wavevector} (hpq : p + q = k)
+    (h : kNorm p = kNorm k + kNorm q) : crossZ p q = 0 := by
+  have hsum : k + (-q) = p := by rw [← hpq]; abel
+  have hn : kNorm p = kNorm k + kNorm (-q) := by rw [kNorm_neg]; exact h
+  have hkq : crossZ k (-q) = 0 := crossZ_eq_zero_of_kNorm_add hsum hn
+  have hkq' : crossZ k q = 0 := by
+    have := crossZ_neg_right k q
+    rw [this] at hkq
+    simpa using hkq
+  have hp : p = k - q := by rw [← hpq]; abel
+  rw [hp, crossZ_sub_left, hkq', crossZ_self]
+  simp
+
+/-- Pattern 3: `|q| = |k| + |p|`. Symmetric to pattern 2. -/
+theorem resonance_pattern_q {p q k : Wavevector} (hpq : p + q = k)
+    (h : kNorm q = kNorm k + kNorm p) : crossZ p q = 0 := by
+  have hsum : k + (-p) = q := by rw [← hpq]; abel
+  have hn : kNorm q = kNorm k + kNorm (-p) := by rw [kNorm_neg]; exact h
+  have hkp : crossZ k (-p) = 0 := crossZ_eq_zero_of_kNorm_add hsum hn
+  have hkp' : crossZ k p = 0 := by
+    have := crossZ_neg_right k p
+    rw [this] at hkp
+    simpa using hkp
+  have hq : q = k - p := by rw [← hpq]; abel
+  rw [hq, crossZ_antisymm p (k - p), crossZ_sub_left, hkp', crossZ_self]
+  simp
+
+/-- **The resonance condition, in full generality, implies collinearity.**
+
+`s_k, s_p, s_q ∈ {±1}` and `s_k|k| + s_p|p| + s_q|q| = 0` with all three magnitudes strictly
+positive. The signs cannot all agree — a sum of three positive numbers is positive — so exactly one
+dissents, and each of the three possibilities is one of §7's or §11's patterns. -/
+theorem resonance_implies_collinear_full {p q k : Wavevector}
+    {sk sp sq : ℝ} (hsk : sk = 1 ∨ sk = -1) (hsp : sp = 1 ∨ sp = -1) (hsq : sq = 1 ∨ sq = -1)
+    (hpq : p + q = k)
+    (hkpos : 0 < kNorm k) (hppos : 0 < kNorm p) (hqpos : 0 < kNorm q)
+    (h : sk * kNorm k + sp * kNorm p + sq * kNorm q = 0) : crossZ p q = 0 := by
+  rcases hsk with rfl | rfl <;> rcases hsp with rfl | rfl <;> rcases hsq with rfl | rfl <;>
+    simp only [one_mul, neg_mul] at h
+  · linarith                                            -- (+,+,+): impossible
+  · exact resonance_pattern_q hpq (by linarith)          -- (+,+,−)
+  · exact resonance_pattern_p hpq (by linarith)          -- (+,−,+)
+  · exact resonance_implies_collinear hpq (by linarith)  -- (+,−,−)
+  · exact resonance_implies_collinear hpq (by linarith)  -- (−,+,+)
+  · exact resonance_pattern_p hpq (by linarith)          -- (−,+,−)
+  · exact resonance_pattern_q hpq (by linarith)          -- (−,−,+)
+  · linarith                                            -- (−,−,−): impossible
+
+/-- **THE CHAIN, COMPLETE.** For every admissible sign pattern, the Waleffe resonance condition
+forces the interaction coefficient to vanish — and does so through collinearity, so it selects
+nothing that the degeneracy had not already selected. -/
+theorem cOf_eq_zero_of_resonance_full {p q k : Wavevector} {sk sp sq : ℝ}
+    (hsk : sk = 1 ∨ sk = -1) (hsp : sp = 1 ∨ sp = -1) (hsq : sq = 1 ∨ sq = -1)
+    (hpq : p + q = k)
+    (hkpos : 0 < kNorm k) (hppos : 0 < kNorm p) (hqpos : 0 < kNorm q)
+    (h : sk * kNorm k + sp * kNorm p + sq * kNorm q = 0) :
+    cOf (triadNormal p q) sk sp sq k p q = 0 :=
+  cOf_eq_zero_of_collinear sk sp sq k p q
+    (resonance_implies_collinear_full hsk hsp hsq hpq hkpos hppos hqpos h)
+
 /-! ### Audit certificates — no axiom outside [propext, Classical.choice, Quot.sound]. -/
 #print axioms dotZ_crossZ_left
 #print axioms dotZ_crossZ_self
@@ -641,5 +725,9 @@ theorem cOf_eq_zero_of_resonance (sk sp sq : ℝ) {k p q : Wavevector} (hpq : p 
 #print axioms hOf_zero_normal
 #print axioms cOf_eq_zero_of_collinear
 #print axioms cOf_eq_zero_of_resonance
+#print axioms resonance_pattern_p
+#print axioms resonance_pattern_q
+#print axioms resonance_implies_collinear_full
+#print axioms cOf_eq_zero_of_resonance_full
 
 end MechanicaFluidorum.FourierZ3
