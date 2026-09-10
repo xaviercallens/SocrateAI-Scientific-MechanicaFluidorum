@@ -82,19 +82,33 @@ def half_ball(M: int):
     return out
 
 
-def direction(k):
+def _nondegenerate(k, d):
+    return d != (0, 0, 0) and cross_int_g(k, [G(x) for x in d]) != [ZERO, ZERO, ZERO]
+
+
+def direction_const(k):
+    """The ORIGINAL constant director. Kept only for regression families: aligned phases
+    on ANY constant director are annihilated by C-DIR (cubic equivariance, proved in
+    tier_b_director_stratum.py), so this can never serve as a coherence control."""
     d = (1, 2, 3)
-    if cross_int_g(k, [G(x) for x in d]) == [ZERO, ZERO, ZERO]:
-        d = (1, 0, 0)
-    return d
+    return d if _nondegenerate(k, d) else (1, 0, 0)
 
 
-def make_family_state(M: int, phases, gamma: int):
+def direction_varied(k):
+    """AMENDMENT 5 (registered, and proved NECESSARY by C-DIR): k-dependent directors,
+    the memo's d(k) = (1,2,3) + (k2,k3,k1), with a degeneracy fallback chain."""
+    for d in ((1 + k[1], 2 + k[2], 3 + k[0]), (1, 0, 0), (0, 1, 0)):
+        if _nondegenerate(k, d):
+            return d
+    raise AssertionError(f"no admissible director for {k}")
+
+
+def make_family_state(M: int, phases, gamma: int, dirfn=direction_varied):
     """phases: dict k -> G on the half ball. Returns u on ball M."""
     amps = {}
     for k in half_ball(M):
         mod = Fraction(1, k_sq(k) ** gamma) if gamma else Fraction(1)
-        d = direction(k)
+        d = dirfn(k)
         a = [phases[k] * G(mod * x) for x in d]
         amps[k] = a
         amps[neg(k)] = [-c.conj() for c in a]
@@ -202,24 +216,37 @@ def main() -> int:
           f"{'terms':>6}")
     results = {}
     for M in M_RANGE:
-        # F1 coherent (real phases; parity-degenerate -- see the memo's first-run outcome)
-        u1 = make_family_state(M, phases_coherent(M), 0)
+        # REGRESSION ROW 1: aligned real phases on the CONSTANT director — must be EXACTLY
+        # zero, now as a positive check of parity + C-DIR (both proved).
+        u1 = make_family_state(M, phases_coherent(M), 0, dirfn=direction_const)
         ok &= all(check_state(M, u1))
-        rho1, num1, _, nterms, swap1 = measure(M, u1)
+        rho1, num1, den1, nterms, swap1 = measure(M, u1)
         ok &= swap1 and (rho1 is None or 0 <= rho1 <= 1)
-        results[(M, "F1")] = [rho1] if rho1 is not None else []
-        exact0 = " (sum EXACTLY 0: parity)" if (rho1 is not None and num1 == 0) else ""
-        print(f"{M:>2} {'F1 coherent':<12} {dec(rho1):>9} {dec(rho1):>9} {dec(rho1):>9} "
-              f"{nterms:>6}{exact0}")
+        ok &= (num1 == 0)
+        results[(M, "F1c")] = [rho1] if rho1 is not None else []
+        print(f"{M:>2} {'F1c const-d':<12} {dec(rho1):>9} {'':>9} {'':>9} "
+              f"{nterms:>6}  sum==0 exactly: {num1 == 0} (parity+C-DIR regression)")
 
-        # F1' tilted-coherent (amendment 4), deterministic
+        # REGRESSION ROW 2: aligned real phases, VARIED directors — parity alone still
+        # kills it (real amplitudes are director-independent parity-even). Must be 0.
+        u1v = make_family_state(M, phases_coherent(M), 0)
+        ok &= all(check_state(M, u1v))
+        rho1v, num1v, _, _, swap1v = measure(M, u1v)
+        ok &= swap1v and (num1v == 0)
+        results[(M, "F1v")] = [rho1v] if rho1v is not None else []
+        print(f"{M:>2} {'F1v real':<12} {dec(rho1v):>9} {'':>9} {'':>9} "
+              f"{'':>6}  sum==0 exactly: {num1v == 0} (parity regression)")
+
+        # THE COHERENCE CONTROL (amendment 5): tilted aligned phase, VARIED directors —
+        # off every known symmetry stratum. This row decides whether the observable can
+        # detect coherence at all.
         u1t = make_family_state(M, phases_coherent_tilted(M), 0)
         ok &= all(check_state(M, u1t))
         rho1t, _, _, _, swap1t = measure(M, u1t)
         ok &= swap1t and (rho1t is None or 0 <= rho1t <= 1)
-        results[(M, "F1'")] = [rho1t] if rho1t is not None else []
-        print(f"{M:>2} {chr(39).join(['F1', ' tilted']):<12} {dec(rho1t):>9} {dec(rho1t):>9} "
-              f"{dec(rho1t):>9}")
+        results[(M, "F1v'")] = [rho1t] if rho1t is not None else []
+        print(f"{M:>2} {'F1v-tilted':<12} {dec(rho1t):>9} {'':>9} {'':>9} "
+              f"{'':>6}  <-- THE coherence control")
 
         for label, gamma in (("F2 null", 0),) + tuple(
                 (f"F3 g={g}", g) for g in GAMMAS):
@@ -253,16 +280,17 @@ def main() -> int:
             m3 = sum(f3) / len(f3)
             rel = "<=" if m3 <= m2 else "> "
             line.append(f"F3(g={g}) {dec(m3)} {rel} null")
-        r1 = results[(M, "F1")]
-        r1t = results[(M, "F1'")]
-        line.append(f"F1 {dec(r1[0]) if r1 else 'n/a'}")
-        line.append(f"F1' {dec(r1t[0]) if r1t else 'n/a'}")
+        r1t = results[(M, "F1v'")]
+        line.append(f"CONTROL F1v' {dec(r1t[0]) if r1t else 'n/a'}")
         print("   ".join(line))
 
-    print("\n  Registered instrument control: F1 (coherent) must show rho well above the")
-    print("  null, or the observable cannot detect coherence and measures nothing.")
-    print("  Registered failure modes: F1 ~ F2 ~ F3 -> artifact; F3 slower than F2 ->")
-    print("  phase mixing refuted for this observable.")
+    print("\n  Registered instrument control: the varied-director tilted-coherent family")
+    print("  (F1v') must show rho well above the null, or the observable cannot detect")
+    print("  coherence and measures nothing. (Constant-director coherent families can")
+    print("  NEVER pass -- C-DIR annihilates them; they run above as exactness")
+    print("  regressions.) Registered failure modes: control ~ null -> third trip, the")
+    print("  observable goes to G2 review; F3 slower than the null with a passing")
+    print("  control -> phase mixing refuted for this observable.")
 
     if not ok:
         print("\nCANCELLATION BASELINE GATE: FAIL (instrument integrity)")

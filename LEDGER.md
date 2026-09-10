@@ -882,6 +882,34 @@ cubic symmetry is load-bearing, not decorative.
 
 **Lean target L-DIR registered:** C-DIR via the signed-permutation action on `ball M`.
 
+## The THIRD coherence-control trip, the X-reduction, and gate G2 (2026-09-10)
+
+The amendment-5 run executed (`tier_b_production_cancellation.py`, varied directors for all
+families; the constant-director rows retained as exactness regressions of parity + C-DIR, which
+they now **assert** on every run — both passed). Result: the varied-director tilted-coherent
+control came out **at the null** at `M = 2` (`0.0360` vs `0.0364`) and **far below the null** at
+`M = 3` (`0.0002` vs `0.0170`). Per the pre-registered failure mode this is the **third trip**:
+the observable goes to owner + Deep Think review, packet
+`docs/briefs/2026-09-10-G2-observable-review.md`. **Nothing further runs until G2 decides.**
+
+**The trip carries a proof — the X-reduction.** By trilinearity of the production sum, the
+always-(2,1) half-ball class split, and the negation law `t(−p,−q) = −conj t`: for **any**
+single-phase family, `T(u(c)) = 2i·Im(c·X)` with a single `c`-independent complex number
+`X(M, directors, moduli)`. Verified **exactly**: solving `X` from two tilts predicts a third
+tilt's sum to the last digit at `M = 2` and `M = 3`; moreover `X` came out purely real at both
+(`−1608` and `2928`), so `T = 2i·Im(c)·x(M)`.
+
+**Diagnosis.** The observable is trilinear, so every single-phase family collapses onto one
+geometric lattice number: the registered control-family **class** was structurally incapable of
+certifying coherence, independent of directors, moduli, or phase. Corollary recorded: `ρ` is
+invariant under any global phase (`T(cu) = c³T(u)`), so coherence for this observable can only
+mean *relative* phase structure across modes.
+
+**Standing after three trips:** three permanent results (parity at Tier A; C-DIR exact with a
+general-`M` proof recorded; the X-reduction exact and twice-verified), a hardened instrument,
+the F2/F3 quarantine intact — and the lesson now three-for-three: **an unexplained exact zero in
+this system is a symmetry not yet found, and must be found before anything else is believed.**
+
 **Audit flags — BOTH CLOSED 2026-09-10.** F1′ by `B_witness_ne_zero` / `B_not_identically_zero`
 (rows above). F4 by `mem_ball_iff`: `k ∈ ball M ↔ k_sq k ≤ M²`. The non-obvious direction is that
 `k_sq k ≤ M²` already forces every coordinate into `[−M, M]`, because each `(kᵢ)²` is one

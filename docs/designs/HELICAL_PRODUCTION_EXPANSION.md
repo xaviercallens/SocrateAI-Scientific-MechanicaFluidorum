@@ -186,6 +186,26 @@ ray) must show `ρ` near 1, or the instrument cannot detect coherence and measur
 > `ball M` (the equivariance proof above is finite-free and kernel-ready in outline).
 > **Amendment 5 stands**, now with a proof of necessity: no constant-director coherent family
 > can ever pass the coherence control.
+>
+> **Third-run outcome (2026-09-10) — THE THIRD TRIP, and gate G2 fires.** The amendment-5 run
+> (varied directors for all families; constant-director rows retained as exactness
+> regressions, which passed): the varied-director tilted-coherent control `F1v′` came out **at
+> the null at `M = 2`** (`0.0360` vs null `0.0364`) and **far below the null at `M = 3`**
+> (`0.0002` vs `0.0170`). Per the registered failure mode, this is the third trip and the
+> observable goes to owner + Deep Think review (`G2`), packet:
+> `docs/briefs/2026-09-10-G2-observable-review.md`.
+>
+> **And the trip has a proof — the X-reduction.** By trilinearity, the always-(2,1) class
+> split, and the negation law `t(−p,−q) = −conj t`: for ANY single-phase family (phase `c` on
+> the half-ball, forced conjugates opposite), `T(u(c)) = c·X − conj(c·X) = 2i·Im(c·X)` for
+> **one** complex number `X(M, directors, moduli)` independent of `c`. Verified exactly:
+> solving `X` from two tilts predicts the third tilt's sum to the last digit at `M = 2, 3` —
+> and `X` came out **purely real** at both (`−1608`, `2928`), so `T = 2i·Im(c)·x(M)`.
+> **Consequence: the coherence-control design class was structurally too thin.** A
+> single-phase family can only ever measure the single lattice number `x(M)`; it cannot
+> certify that the observable detects coherence, with any director scheme. The redesign
+> candidates are in the G2 packet; nothing further is run until G2 decides. The F2/F3
+> quarantine stands.
 > 3. **Parity is now Tier A**: for parity-even states (`u(−k) = u(k)`), the production term
 >    sum vanishes identically — `FourierDynamicsZ3.production_terms_eq_zero_of_even`, proved
 >    by the negation involution.
