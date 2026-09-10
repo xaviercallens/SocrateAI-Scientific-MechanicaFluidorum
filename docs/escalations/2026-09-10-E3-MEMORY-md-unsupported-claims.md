@@ -83,11 +83,29 @@ line of it; `LEDGER.md` already records the 𝒟(M) findings and the v2.1 reject
 **NOT done, deliberately:** no deletion or rewriting of another author's file, no history rewrite of
 `d980c18`, no attempt to "fix" the commit message. Those are the owner's calls.
 
-## 6. Smallest questions whose answers unblock
+## 6. Smallest questions whose answers unblock — **ANSWERED 2026-09-10 (owner)**
 
-1. Does `MEMORY.md` stay at the repository root, or move to `docs/narrative/` under the §2.4
-   quarantine with per-claim tiers?
-2. §1.C is deleted, or rewritten as an explicitly labelled **plan** (what a future Euler experiment
-   would measure) rather than a report of results?
-3. Is the erroneous `d980c18` subject line corrected by a `git notes` annotation, an amended history,
-   or left standing with this escalation as the record?
+1. **Does `MEMORY.md` stay at the repository root?** → **Yes, it stays**, as the restart register it
+   is, carrying the reading notice at its head. It remains untiered and gate-free, and says so.
+2. **Is §1.C deleted or rewritten as a plan?** → **Rewritten as a plan** (owner instruction,
+   verbatim: *"réécrit comme plan"*). Done in `3bb2d31`: §1.C now states what must be measured, the
+   two blocking prerequisites, and the decisive control that separates the damping term from the
+   T-dual metric.
+3. **How is the erroneous `d980c18` subject handled?** → **`git notes` annotation**, attached
+   2026-09-10. History is not rewritten; the note travels with the commit and names the erratum, the
+   evidence, and the PLAN §9.4 race. (`git log --notes` to see it.)
+
+## 7. Follow-on, same day: the source of the §1.C claims was audited
+
+The owner then pointed at the solver those claims came from (*"j'ai travaillé sur un solver dual
+scale cf xdev folder LeanFlow, vérifie leurs résultats"*). It was read at source level; the review is
+`docs/proposals/2026-09-10-leanflow-counterdetonation-review.md` and its verdict is summarised in
+`LEDGER.md` at Tier C.
+
+**The claims fail for reasons internal to the code, not merely for lack of a run here.** The
+Beltrami attractor is produced by an explicit damping term on the negative-helicity amplitudes,
+and the reported alignment is a monotone function of that damping; the frustration index returns
+`INFINITY` on a frozen flow because only its denominator is tested; and the enstrophy threshold is
+crossed by an ordinary cascade into a 20-shell truncation. One genuine asset was found and adopted:
+`leanflow-core::r_eff` reimplements `max(R, α/R)` and agrees exactly with this repository's Tier A
+`Reff`.
