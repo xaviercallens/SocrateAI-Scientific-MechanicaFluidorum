@@ -63,8 +63,8 @@ Revised After the External Audit of 13 August 2026}}
 \small\texttt{SocrateAI-Scientific-MechanicaFluidorum}}
 
 \date{13 August 2026 \quad$\vert$\quad revised 10 September 2026\\[0.3em]
-\small Repository state: commit \texttt{33a76df} \quad$\vert$\quad All verification gates PASS (exit 0)\\[0.2em]
-\small 12 Lean files, 197 kernel-compiled theorems, zero \texttt{sorry} \quad$\vert$\quad 14 exact-arithmetic harnesses}
+\small Repository state: commit \texttt{f104bee} \quad$\vert$\quad All verification gates PASS (exit 0)\\[0.2em]
+\small 12 Lean files, 215 kernel-compiled theorems, zero \texttt{sorry} \quad$\vert$\quad 15 exact-arithmetic harnesses}
 
 \begin{document}
 \maketitle
@@ -1724,6 +1724,48 @@ erroneous first draft would have failed. And the deflation of \S\ref{sec:waleffe
 rather than softened: the closed form gives the exact size of the transfer everywhere off the two
 loci, and nothing in it distinguishes $\Z^3$ from $\R^3$.
 
+\subsection{The gauge separation, and a mechanism retracted}
+\label{sec:gauge}
+
+The helical vector depends on an arbitrary transverse choice $\nu(k)$, so a claim about the
+\emph{phase} of $C$ is a claim about a gauge. One item was carried as open: the planar frame of
+\eqref{eq:coeff} is chosen per triad and is therefore not a global gauge, and the step ``the signed
+sum may be evaluated triad by triad in each triad's own frame'' was recorded as observed but not
+proved. It was described as small and off the critical path. It was neither: closing it retracted
+the mechanism that had been offered for a measured cancellation.
+
+\paragraph{The two frames respond oppositely to negation (\tA{}).}
+The mechanism read: \emph{in a triad's own planar frame the coefficient is purely imaginary, so
+$\overline C=-C$ and each triad is cancelled exactly by its negation.} Both halves are true, and
+they hold in different gauges. A global $\nu$ satisfies $\nu(-a)=-\nu(a)$, so its frame
+\emph{flips} and negation \emph{conjugates} the coefficient. The triad frame $p\times q$ is
+quadratic, so $(-p)\times(-q)=p\times q$: it is \emph{fixed}, and negation leaves the coefficient
+\emph{unchanged}. The separation is total rather than marginal --- in an exact sweep of $48$
+triad-by-class cases the conjugation law fails in $48$ of $48$ in the triad frame and $0$ of $48$
+under a global $\nu$, and the invariance law does the exact reverse. So the asserted cancellation
+occurs in neither gauge: in the triad frame a triad and its negation sum to \emph{twice} a
+coefficient that a lattice witness shows is nonzero, and under a global $\nu$ the pairing projects
+the sum onto its real part, nonzero in $40$ of $48$ cases.
+
+\paragraph{A control refuted the natural explanation, and the theorem is stronger for it.}
+Pure-imaginarity looks like it should come from $p\times q$ being orthogonal to the triad plane. A
+control moved the common normal off the plane, expecting the real part to appear; it stayed exactly
+zero in all $48$ cases. The actual cause carries no geometry: every term that could hold an even
+power of $i$ is a triple product $(N\times x)\cdot N$, which vanishes for any $N$ whatever. The
+kernel statement therefore has \emph{no hypotheses} --- the coefficient is purely imaginary whenever
+the three helical vectors share one frame vector --- and it explains why the argument cannot be
+repaired by choosing a better frame. What breaks it is using \emph{three different} frame vectors,
+which is exactly what a global $\nu$ does.
+
+\paragraph{What is retracted, and what stands.}
+The measurement is not contested: the per-class signed sum is numerically zero under two independent
+$\nu$ constructions. Only the explanation is withdrawn. Under a global $\nu$ the negation pairing
+does not cancel triads, it projects the sum onto its real part, so the observed zero requires the
+real parts to sum to zero over the ball --- a fact the retracted argument does not supply, and
+naming the true mechanism is open. The earlier verdict is untouched and mildly reinforced: a zero
+produced by a symmetry of a negation-symmetric lattice carries no information about turbulence, and
+it now looks less specific to the physics than when it was first read.
+
 \section{What Has Failed, and What That Taught}
 \label{sec:failures}
 %==============================================================================
@@ -1787,14 +1829,14 @@ LL-8 & \textbf{The verification gate itself had a false positive.} A lemma prove
 \texttt{FourierStateZ3.lean} & 3-D Fourier state space, Leray projector (\textsc{draft}) & \tA{} & 24 \\
 \texttt{FourierDynamicsZ3.lean} & The operator $B$ of \eqref{eq:Bop}; $B\neq0$ witness; $F1$, $F4$ closed & \tA{} & 18 \\
 \texttt{HelicalBasis.lean} & Helical basis, five facts; resonance $=$ collinearity; the closed
-form \eqref{eq:closed} and its converse & \tA{} & 57 \\
+form \eqref{eq:closed}, its converse, and the gauge separation & \tA{} & 75 \\
 \midrule
-\multicolumn{2}{@{}l}{\textbf{Tier A subtotal}} & & \textbf{189} \\
+\multicolumn{2}{@{}l}{\textbf{Tier A subtotal}} & & \textbf{207} \\
 \midrule
 \texttt{MillenniumReduction.lean} & Conditional reduction skeleton & \tC{} & 8 \\
  & \quad (\textsc{demoted} 2026-08-13, verdict B1) & & \\
 \midrule
-\multicolumn{2}{@{}l}{\textbf{Total kernel-compiled, no axiom outside \texttt{\{propext, Classical.choice, Quot.sound\}}}} & & \textbf{197} \\
+\multicolumn{2}{@{}l}{\textbf{Total kernel-compiled, no axiom outside \texttt{\{propext, Classical.choice, Quot.sound\}}}} & & \textbf{215} \\
 \bottomrule
 \end{tabular}
 \end{center}
