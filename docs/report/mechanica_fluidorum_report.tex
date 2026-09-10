@@ -62,8 +62,9 @@ Revised After the External Audit of 13 August 2026}}
 \small SocrateAI Scientific Programme\\
 \small\texttt{SocrateAI-Scientific-MechanicaFluidorum}}
 
-\date{13 August 2026\\[0.3em]
-\small Repository state: commit \texttt{a35cb92}+ \quad$\vert$\quad All verification gates PASS (exit 0)}
+\date{13 August 2026 \quad$\vert$\quad revised 10 September 2026\\[0.3em]
+\small Repository state: commit \texttt{c4e149a} \quad$\vert$\quad All verification gates PASS (exit 0)\\[0.2em]
+\small 12 Lean files, 174 kernel-compiled theorems, zero \texttt{sorry} \quad$\vert$\quad 13 exact-arithmetic harnesses}
 
 \begin{document}
 \maketitle
@@ -1447,6 +1448,225 @@ weights from $c_n=1$ to $c_n=\lambda^{-n}$. The telescoping is robust to the exp
 sensitive to the \emph{index structure}. That perturbation now serves as a second positive
 control, and the genuine negative control breaks the index structure instead.
 
+\section{The 3-D Bridge Continued: the Nonlinearity, the Energy Identity, and the Helical Basis}
+\label{sec:sept}
+%==============================================================================
+
+This section reports the work of 9--10 September 2026. Four results are new, and three of them
+are \emph{negative}: they remove claims the programme had been carrying. That ratio is not an
+accident of a bad week; it is what the gating system is for, and reporting it is the point.
+
+\subsection{The Leray-projected nonlinearity, and a theorem that was true but empty (\tA{})}
+\label{sec:opsixb}
+
+\texttt{FourierDynamicsZ3.lean} defines the Galerkin index set $\Lambda_M=\{k\in\Z^3:|k|^2\le M^2\}$
+as a \texttt{Finset}, the convective term, and the operator
+\begin{equation}
+  B(u,v)_k \;=\; \mathbb{P}(k)\Bigl[-i\!\!\sum_{p+q=k,\;p\in\Lambda_M}\!\!(q\cdot u_p)\,v_q\Bigr],
+  \label{eq:Bop}
+\end{equation}
+which is the \emph{corrected} convolution formula certified in exact arithmetic in
+\S\ref{sec:opsix}. Proven: transversality $k\cdot B(u,v)_k=0$ unconditionally, and the
+triad-support property that \texttt{sublattice\_invariance} takes as a hypothesis --- so that
+theorem now applies to a concrete operator rather than a hypothetical one.
+
+That last point had been flagged as audit item F1, and it was not pedantry. The invariance theorem
+is conditional on a hypothesis \emph{the zero map satisfies trivially}: it was true, and possibly
+about nothing. The repair is an explicit witness. With $k_0=(1,0,0)$ carrying amplitude $(0,1,0)$
+and $q_0=(0,1,0)$ carrying $(1,0,0)$, one computes
+$B\bigl(\delta_{k_0}a,\delta_{q_0}b\bigr)_{k_0+q_0}$, first component, $=-i/2\neq0$. Two negative
+controls fire: perturbing the computed value to $-i/3$ breaks the proof, and asserting the same
+existence at $M=0$, where the mode leaves the ball, breaks it too.
+
+Audit item F4 is closed in the same file. The ball is built cube-then-filter while the Galerkin
+cutoff is stated by squared norm; \texttt{mem\_ball\_iff} shows they agree, the non-obvious
+direction being that $|k|^2\le M^2$ \emph{already} forces every coordinate into $[-M,M]$, since
+each $k_i^2$ is one non-negative term of the sum. The cube is implied, not imposed.
+
+\subsection{The energy identity is a two-swap, and its abstract form was already proved here}
+\label{sec:twoswap}
+
+The identity $\mathrm{Re}\sum_k\langle u_k,B(u,u)_k\rangle=0$ had been scoped as hard and left as a
+\texttt{Prop} for two weeks. It is one symmetry argument.
+
+Write the triad sum with $r:=-k$, so the constraint reads $p+q+r=0$. The factor $(u_q\cdot u_r)$ is
+\emph{symmetric} in $q,r$ while the constraint set is invariant under exchanging them, so averaging
+the two orderings gives
+\begin{equation}
+  2S \;=\; \sum_{p+q+r=0}\bigl((q+r)\cdot u_p\bigr)(u_q\cdot u_r)
+       \;=\; -\sum_{p+q+r=0}(p\cdot u_p)(u_q\cdot u_r) \;=\; 0,
+  \label{eq:twoswap}
+\end{equation}
+by divergence-freeness at $p$ --- and by nothing else. No reality condition, no Leray projection,
+no truncation convention enters.
+
+Two things are worth recording about \emph{why} this took two weeks. First, the exact-arithmetic
+harness had noted that ``a first attempt at a direct 3-way relabeling argument did not close
+cleanly''. The diagnosis is that a \emph{3-cycle} cannot close, because $p$ is distinguished: it is
+the index whose amplitude sits inside the wavevector contraction. The 2-swap that \emph{fixes} $p$
+closes in one line. The failure was of the chosen group, not of the identity. Second, and more
+embarrassing, \texttt{AbstractAlgebraicConservation.triad\_sum\_zero} --- whose \texttt{swap3} is
+exactly that two-swap --- had been \tA{} in this repository since 13 August. Task~2.2 is therefore
+an \emph{instantiation} obligation, not a proof obligation.
+
+A \emph{reuse audit} is now a required stage of the formalisation workflow
+(\texttt{docs/designs/FORMALIZATION\_WORKFLOW.md}). The same document records why the common habit
+of stubbing a hard lemma with \texttt{sorry} is wrong here: Gate~2 fails on any \texttt{sorry}, and
+a \texttt{sorry}'d theorem still \emph{defines its name}, so every downstream \texttt{\#print
+axioms} silently carries \texttt{sorryAx}. The supported substitute is a \texttt{Prop} with an
+inhabited quantifier domain.
+
+\subsection{A ``frustration index'' that measures its own null model (\tC{}, refuted as posed)}
+\label{sec:frustration}
+
+A programme narrative proposed a triadic frustration index
+$\mathcal{D}(M)=\sum|T|\,/\,\bigl|\sum T\bigr|$ over the Galerkin ball, predicted it to grow like
+$M^3$, and read that growth as the lattice stifling the ultraviolet cascade. It was computed to
+$M=20$ in Rust, against three families of fields on the same lattice with the same spectral
+envelope.
+
+\begin{center}
+\begin{tabular}{@{}lcc@{}}
+\toprule
+\textbf{field} & \textbf{slope, flat envelope} & \textbf{slope, Kolmogorov envelope} \\
+\midrule
+random independent phases (\emph{the null model}) & $3.43$ & $1.89$ \\
+phase-coherent & $-0.12$ & $-0.20$ \\
+deterministic arithmetic construction & $4.01$ & $2.07$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+The growth belongs to the \emph{random phases}, not to $\Z^3$: a phase-coherent field gives
+$\mathcal{D}$ flat in $M$. The predicted $M^3$ is the null model's own arithmetic --- a random walk
+over the same number of terms. Two of the three coherent comparators are moreover degenerate: one
+has zero net flux across every sphere, and one has identically zero transfer by parity, discovered
+only because a liveness guard was added after an inert control passed silently. $\mathcal{D}$ is
+not a robust instrument, and directive~D-2 accordingly replaced global scalar ratios with
+\emph{local directional fluxes} --- net helicity transfer into named shell bands.
+
+\subsection{A companion solver's ``Beltrami shield'', and a control that refuted our own review}
+\label{sec:beltrami}
+
+A companion dual-scale solver reported that a T-dual metric converts a finite-time blow-up into a
+stationary Beltrami flow. A source-level audit found the reported alignment to be a monotone
+function of a hand-added damping term on the negative-helicity amplitudes, the Lamb-vector norm to
+be \emph{derived from} that same alignment rather than computed from $u\times\omega$, the
+frustration index there to return $\infty$ on a frozen flow because only its denominator is tested,
+and the blow-up threshold to be crossed by an ordinary cascade into a 20-shell truncation, where
+$\Omega\le\kappa_N^2E\approx2.7\times10^{11}E$ against a threshold of $10^6$.
+
+The decisive control was then run, and \emph{it partly refuted that audit}. The instruction as
+posed --- ``damping on, $\alpha'=0$'' --- cannot be executed, because in the source the damping is
+\emph{derived from} $\alpha'$; zeroing it zeroes the damping too. A $2\times2$ factorial separating
+metric from damping gives:
+
+\begin{center}
+\begin{tabular}{@{}lccrl@{}}
+\toprule
+\textbf{run} & \textbf{metric} & \textbf{damping} & \textbf{alignment} & \textbf{outcome} \\
+\midrule
+A & $k_{\mathrm{eff}}$ & on & $0.9888$ & bounded \\
+B & bare $k$ & on & --- & \textsc{diverged}, inadmissible \\
+C & $k_{\mathrm{eff}}$ & \emph{off} & $0.9805$ & bounded \\
+D & bare $k$ & off & --- & \textsc{diverged}, inadmissible \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Boundedness is supplied by the \emph{metric}, not by the damping: the metric alone stays bounded
+while the damping alone diverges. But the sharper finding is that the initial condition is
+\emph{already} $0.9560$ aligned by construction, so the claimed ``topological conversion into a
+Beltrami flow'' is a move of $+0.0329$ from a state chosen to be $95.6\,\%$ Beltrami. The owner
+recorded the spontaneous Beltrami attractor as \textsc{killed}.
+
+Two defects in our own control were caught by the control itself: its first run interpreted a
+\emph{diverged} cell, and its negative perturbation was \emph{inert}, indexing the same shell on
+both branches. Both are fixed and recorded.
+
+One further correction belongs here because it was nearly built upon. The directional-flux
+instrument reported \emph{exactly zero} net transfer into the ultraviolet band under the metric,
+and an analytic explanation was requested. There is none to give: the band is never populated. Peak
+amplitudes fall $2.6\times10^{-9}$ at shell~8, $1.5\times10^{-43}$ at shell~10,
+$3.6\times10^{-184}$ at shell~12, and below the smallest representable double thereafter. The zero
+is an \emph{underflow}. The real effect --- super-exponential suppression of the cascade --- is
+genuine; an algebraic cancellation to explain a number that is really ${\sim}10^{-370}$ would be a
+ghost.
+
+\subsection{The helical basis, the exact triad coefficient, and a condition with no content}
+\label{sec:waleffe}
+
+With the two analytic tracks blocked on definitions that may not be invented, the remaining
+tractable branch is Waleffe's helical decomposition, whose content is \emph{algebra}: the
+interaction coefficient is a determinate function of three wavevectors and three signs.
+
+\paragraph{The coefficient, derived and then corrected by test.}
+Projecting the Leray-filtered nonlinearity onto $h^{\pm}$ and antisymmetrising --- the same
+two-element move as \eqref{eq:twoswap} --- gives $C=-\tfrac14(s_p|p|-s_q|q|)\,g$ with
+$g=(h^{s_p}(p)\times h^{s_q}(q))\cdot\overline{h^{s_k}(k)}$. In the triad's own planar frame this
+collapses onto a single geometric scalar:
+\begin{equation}
+  C^{\,s_ks_ps_q}_{k,p,q}
+   \;=\;+\frac{i\,S_{pq}}{4|k|}\,
+     \bigl(s_p|p|+s_q|q|+s_k|k|\bigr)\bigl(s_p|p|-s_q|q|\bigr),
+  \qquad S_{pq}=(\hat\kappa_p\times\hat\kappa_q)\cdot\hat n .
+  \label{eq:coeff}
+\end{equation}
+The first derivation of \eqref{eq:coeff} was \emph{wrong}: it carried $-s_k|k|$, because the
+reduction of the signed areas used the relation for a triad written $p+q+r=0$ while the convention
+in force was $p+q=k$. A triad-by-triad test against a brute-force construction exposed it
+immediately --- all eight magnitudes matched but were \emph{permuted}, the signature of a sign
+inside a factor. The corrected form agrees with brute force to $2.1\times10^{-16}$ in all eight
+chirality classes, and it authenticates itself: the balance factor becomes the sum of \emph{all
+three} signed helical wavenumbers, i.e.\ the classical Waleffe resonance condition, which the
+erroneous version did not reproduce.
+
+\paragraph{The resonance condition is exactly collinearity (\tA{}).}
+Equation~\eqref{eq:coeff} has three vanishing loci. The middle one is empty of content:
+
+\begin{theorem}[Resonance $=$ collinearity]\label{thm:reso}
+For a triad $p+q=k$ of nonzero real vectors, $s_k|k|+s_p|p|+s_q|q|=0$ holds for some choice of
+signs if and only if the triad is collinear.
+\end{theorem}
+
+\begin{proof}
+The magnitudes are positive, so the signs cannot all agree; exactly one differs and the condition
+reads $|k|=|p|+|q|$, or $|p|=|k|+|q|$, or $|q|=|k|+|p|$. Each is equality in the triangle
+inequality for $k=p+q$, which holds exactly when the two vectors on the right are parallel and
+like-directed. The converse is immediate.
+\end{proof}
+
+Collinear triads already carry no transfer, for want of a plane. \emph{So the resonance condition
+selects no new inert triads.} The theorem is kernel-verified in \texttt{HelicalBasis.lean} via
+Cauchy--Schwarz through Lagrange's identity, every step after one squaring being integer
+arithmetic; it was first established in exact integers over $558\,090$ lattice triads by two
+independent decision procedures agreeing without a single disagreement.
+
+Note what the proof does \emph{not} use: $\Z^3$. The programme's recurring appeal to ``the
+arithmetic rigidity of the lattice'' contributes nothing here --- this is the triangle inequality,
+true for real vectors. That is the third independent deflation of the same narrative, after
+\S\ref{sec:frustration} and the ultraviolet underflow of \S\ref{sec:beltrami}.
+
+\paragraph{What survives, and the basis that carries it (\tA{}).}
+The non-degenerate content is the \emph{other} factor: $C=0$ whenever $s_p|p|=s_q|q|$. This is
+immediate from the antisymmetrisation, and unlike the resonance condition it \emph{bites}: it is
+satisfied by every pair of lattice modes sharing a sphere with equal chirality, and a witness
+records a non-collinear instance, so it is not a restatement of the degenerate case.
+
+\texttt{HelicalBasis.lean} proves the five basis facts --- $h\cdot h=0$, the normalisation,
+transversality, the curl eigenvector property $i\,k\times h^s=s|k|h^s$, and
+$\overline{h^s}=h^{-s}$ --- with the choice of $\nu(k)$ made \emph{total} and its degeneracy
+excluded on every nonzero lattice point. Two design decisions are worth recording. The vector is
+kept \emph{unnormalised}: $|k|=\sqrt{k_{\mathrm{sq}}}$ is irrational at almost every lattice point,
+so a normalised basis drags a square root and a division through every proof, and in Lean an
+unwitnessed division silently proves a different theorem, since $x/0=0$. And the basis is
+\emph{parametrised} by $\nu$, because \eqref{eq:coeff} is derived in the triad's own planar frame
+and a basis hard-coding one $\nu$ cannot state it --- a generic $\nu$ changes $C$ by a phase, as
+the crucible measured. On the lattice that planar frame is available as an \emph{integer} vector,
+$p\times q$, orthogonal to $p$, to $q$, and --- since $k=p+q$ --- to $k$ as well; and it degenerates
+exactly on the collinear triads, that is, by Theorem~\ref{thm:reso}, exactly where the coefficient
+has no content anyway.
+
 \section{What Has Failed, and What That Taught}
 \label{sec:failures}
 %==============================================================================
@@ -1498,22 +1718,25 @@ LL-8 & \textbf{The verification gate itself had a false positive.} A lemma prove
 \toprule
 \textbf{Artifact} & \textbf{Content} & \textbf{Tier} & \textbf{Theorems} \\
 \midrule
-\texttt{CallensDualScale.lean} & T-dual $\Reff$ laws, Sym$^2$ lock, sharpness & \tA{} & 14 \\
+\texttt{LocalDualScale.lean} & T-dual $\Reff$ laws, Sym$^2$ lock, sharpness & \tA{} & 14 \\
 \texttt{DyadicShells.lean} & Energy-flux telescoping, monotonicity & \tA{} & 3 \\
 \texttt{DyadicShell\_Statements.lean} & Shell-model Hypothesis U; concrete \texttt{shellB} & \tA{} & 16 \\
  & \quad and its energy conservation (\textsc{draft}) & & \\
 \texttt{EnstrophyProduction.lean} & Exact enstrophy-production identity & \tA{} & 11 \\
 \texttt{EnstrophyProductionBound.lean} & Local bound $S_N^2\le2\Omega_N^3$ & \tA{} & 15 \\
-\texttt{AbstractAlgebraicConservation.lean} & Abstract triad conservation + transversality & \tA{} & 7 \\
-\texttt{TriadTorus.lean} & Triad 2-section on a torus: $A=6(J{-}I)-2P$, spectrum & \tA{} & 7 \\
-\texttt{DyadicRiccati.lean} & The $\alpha=1/2$ threshold as an integrability threshold & \tA{} & 13 \\
+\texttt{AbstractAlgebraicConservation.lean} & Abstract triad conservation + transversality & \tA{} & 5 \\
+\texttt{TriadTorus.lean} & Triad 2-section on a torus: $A=6(J{-}I)-2P$, spectrum & \tA{} & 12 \\
+\texttt{DyadicRiccati.lean} & The $\alpha=1/2$ threshold as an integrability threshold & \tA{} & 14 \\
+\texttt{FourierStateZ3.lean} & 3-D Fourier state space, Leray projector (\textsc{draft}) & \tA{} & 24 \\
+\texttt{FourierDynamicsZ3.lean} & The operator $B$ of \eqref{eq:Bop}; $B\neq0$ witness; $F1$, $F4$ closed & \tA{} & 18 \\
+\texttt{HelicalBasis.lean} & Helical basis, five facts; resonance $=$ collinearity & \tA{} & 34 \\
 \midrule
-\multicolumn{2}{@{}l}{\textbf{Tier A subtotal}} & & \textbf{86} \\
+\multicolumn{2}{@{}l}{\textbf{Tier A subtotal}} & & \textbf{166} \\
 \midrule
-\texttt{MillenniumReduction.lean} & Conditional reduction skeleton & \tC{} & 7 \\
+\texttt{MillenniumReduction.lean} & Conditional reduction skeleton & \tC{} & 8 \\
  & \quad (\textsc{demoted} 2026-08-13, verdict B1) & & \\
 \midrule
-\multicolumn{2}{@{}l}{\textbf{Total kernel-compiled, no axiom outside \texttt{\{propext, Classical.choice, Quot.sound\}}}} & & \textbf{93} \\
+\multicolumn{2}{@{}l}{\textbf{Total kernel-compiled, no axiom outside \texttt{\{propext, Classical.choice, Quot.sound\}}}} & & \textbf{174} \\
 \bottomrule
 \end{tabular}
 \end{center}
