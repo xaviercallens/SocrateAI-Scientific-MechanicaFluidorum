@@ -799,6 +799,43 @@ guard at job 4669/4724** of its Mathlib phase (31 GB host, ~18 GB in use). All c
 are cached in their `.lake`, so a resume loses almost nothing; the known fix on this machine is
 limited parallelism (`lake build -j2`). No transcript exists yet; the no-citation rule stands.
 
+### WP-0b interim — the VM build SUCCEEDED, the four warnings are located, and the audit design sharpened (2026-09-10)
+
+The owner rebuilt on a GCP VM and published the evidence publicly (world-readable GCS,
+`gs://socrateai-datalake-gen-lang-client-0625573011/formal_verification/navierstokes_euler/`).
+Verified by fetching `build_summary.json` and the full `build.log`:
+
+| fact | value |
+|---|---|
+| upstream | `github.com/openai/NavierStokesAndEuler`, commit `8937a8f4`, branch `main` |
+| toolchain | Lean `4.34.0-rc2` (matches the local checkout's pin) |
+| result | **`build_success: true`, 0 errors, 4 warnings** |
+| modules | **517** project oleans: NavierStokes 469, Euler 46, ComparatorChallenges 2 — *correcting the leverage proposal's "2,400+ files"* |
+
+**All four warnings are `sorry` — and all four are the intentional challenge placeholders**, in
+`ComparatorChallenges/{NavierStokes,Euler}.lean`, verified by reading the cited lines: they are
+the Clay-style breakdown statements themselves, **adapted from Google DeepMind's
+`formal-conjectures` repository**, with headers saying "the theorem proofs are intentional
+Comparator challenge placeholders" and "the reference imports only Mathlib, independently of the
+Euler proof development". The proof tree carries proved name-twins
+(`NavierStokes.ComparatorBridge.*`; `Euler.euler_breakdown_R3` in `Euler/Solution.lean`).
+
+**FINDING F-NAME (structural, and it reframes what "discharged" can mean).** The Euler
+placeholder and the Euler proof share the **same fully-qualified name** in two modules that can
+never be imported together. Therefore a kernel-level identification "proved theorem ⟹ challenge
+statement" cannot even be *stated* for that pair. The discharge of the DeepMind-derived
+challenge is **meta-level by construction**: the kernel certifies each side separately, and only
+a human side-by-side comparison of the two statement sets certifies they mean the same thing —
+precisely the statement-adequacy audit class this programme already applies to itself.
+
+**Audit design updated accordingly** (`docs/proposals/openai-audit-vm.sh`, self-contained for
+the VM): part 1 prints the four proof-tree footprints (acceptance: exactly
+`[propext, Classical.choice, Quot.sound]`); part 2 prints the four placeholder footprints
+(acceptance: `sorryAx` PRESENT everywhere — the audit's built-in negative control; if these come
+back clean the tooling is broken); part 3 scans that no proof module imports the challenges
+(sealing F-NAME). **Footprints still pending; the no-citation rule stands until the transcripts
+land.**
+
 **Audit flags — BOTH CLOSED 2026-09-10.** F1′ by `B_witness_ne_zero` / `B_not_identically_zero`
 (rows above). F4 by `mem_ball_iff`: `k ∈ ball M ↔ k_sq k ≤ M²`. The non-obvious direction is that
 `k_sq k ≤ M²` already forces every coordinate into `[−M, M]`, because each `(kᵢ)²` is one
