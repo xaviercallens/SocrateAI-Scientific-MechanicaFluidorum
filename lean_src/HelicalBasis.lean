@@ -845,6 +845,180 @@ theorem cOf_eq_zero_of_resonance_algebraic {p q k : Wavevector} (hpq : p + q = k
     cOf (triadNormal p q) sk sp sq k p q = 0 :=
   (cOf_eq_zero_iff hpq sk sp sq).mpr (Or.inr (Or.inl (by linarith)))
 
+/-! ### 13. The gauge question of the memo's §6bis, and what it does to item 4
+
+`docs/designs/WALEFFE_HELICAL_MEMO.md` §6bis left one item open: the planar frame is chosen *per
+triad*, so it is not a global gauge, and evaluating a sum triad by triad in each triad's own frame
+was recorded as observed but not proved. This section settles the frame question, and the answer
+falls out against the memo.
+
+Item 4 of §6bis states the mechanism for the observed per-class zero as:
+
+> "In a triad's own planar frame the coefficient is **purely imaginary**, so `conj(C) = −C` and
+> each triad is cancelled exactly by its negation."
+
+That sentence uses two facts. Pure-imaginarity is a **triad-frame** fact. The conjugation law
+`C(−k,−p,−q) = conj(C(k,p,q))` was verified in two **global** `ν` conventions. This section proves
+both, and proves that they hold in *different* gauges and never in the same one:
+
+* under a global `ν`, which flips sign with its argument, negation **conjugates** the coefficient;
+* in the triad's own frame `p × q`, which does **not** flip, negation **leaves it unchanged**.
+
+So in the triad's own frame a triad and its negation carry the *same* coefficient and add to twice
+it, and `cOf_neg_no_cancellation_witness` exhibits a lattice triad where that is nonzero. The
+mechanism as stated cannot hold. -/
+
+theorem crossZ_neg_neg (a b : Wavevector) : crossZ (-a) (-b) = crossZ a b := by
+  funext i; fin_cases i <;> simp [crossZ]
+
+/-- **Negating the frame and the wavevector together conjugates the helical vector.** The real part
+`ν × k` is quadratic in the pair and survives; the imaginary part is linear in `ν` and flips. -/
+theorem hOf_neg (N : Wavevector) (s : ℝ) (a : Wavevector) (i : Fin 3) :
+    hOf (-N) s (-a) i = conj (hOf N s a i) := by
+  unfold hOf
+  rw [crossZ_neg_neg, kNorm_neg]
+  simp only [map_add, map_mul, Complex.conj_I, Complex.conj_ofReal, map_intCast,
+    Pi.neg_apply, Int.cast_neg]
+  ring
+
+/-- Hence the geometric factor is conjugated. This is the memo's item-4 law, and the gauge it holds
+in is the one whose frame **flips** with its argument. -/
+theorem gOf_neg (N : Wavevector) (sk sp sq : ℝ) (k p q : Wavevector) :
+    gOf (-N) sk sp sq (-k) (-p) (-q) = conj (gOf N sk sp sq k p q) := by
+  unfold gOf cdot crossRC'
+  simp only [Fin.sum_univ_three, Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.head_cons,
+    Matrix.cons_val_two, Matrix.tail_cons, hOf_neg, Complex.conj_conj, map_add, map_mul, map_sub]
+
+theorem cOf_neg (N : Wavevector) (sk sp sq : ℝ) (k p q : Wavevector) :
+    cOf (-N) sk sp sq (-k) (-p) (-q) = conj (cOf N sk sp sq k p q) := by
+  unfold cOf
+  rw [gOf_neg, kNorm_neg, kNorm_neg]
+  simp only [map_mul, map_sub, map_div₀, map_neg, map_one, Complex.conj_ofReal,
+    map_ofNat]
+
+/-- The canonical global `ν` **does** flip with its argument, so `gOf_neg` applies to it. -/
+theorem nuInt_neg (k : Wavevector) : nuInt (-k) = -nuInt k := by
+  unfold nuInt
+  have hx : crossZ (-k) ex = -crossZ k ex := by
+    funext i; fin_cases i <;> simp [crossZ] <;> ring
+  have hy : crossZ (-k) ey = -crossZ k ey := by
+    funext i; fin_cases i <;> simp [crossZ] <;> ring
+  by_cases h : crossZ k ex = 0
+  · have h' : crossZ (-k) ex = 0 := by rw [hx, h]; simp
+    rw [if_pos h, if_pos h', hy]
+  · have h' : crossZ (-k) ex ≠ 0 := by rw [hx]; simpa [neg_eq_zero] using h
+    rw [if_neg h, if_neg h', hx]
+
+/-- **The triad's own frame does NOT flip.** `(−p) × (−q) = p × q`: the two sign flips cancel,
+because the cross product is quadratic. This single line is what separates the two gauges. -/
+theorem triadNormal_neg (p q : Wavevector) : triadNormal (-p) (-q) = triadNormal p q :=
+  crossZ_neg_neg p q
+
+/-- **In the triad's own frame, negation leaves the coefficient UNCHANGED** — it does not conjugate
+it. Immediate from the closed form: the frame, the magnitudes and the chiralities are all invariant
+under negation, and the closed form depends on nothing else. -/
+theorem cOf_neg_triad_frame {p q k : Wavevector} (hpq : p + q = k) (sk sp sq : ℝ) :
+    cOf (triadNormal (-p) (-q)) sk sp sq (-k) (-p) (-q)
+      = cOf (triadNormal p q) sk sp sq k p q := by
+  have hneg : (-p) + (-q) = -k := by rw [← hpq]; abel
+  rw [cOf_closed_form hneg, cOf_closed_form hpq, crossZ_neg_neg,
+    kNorm_neg, kNorm_neg, kNorm_neg]
+
+/-- **The other half of the memo's sentence, and it is true far more generally than the memo says.**
+The coefficient is purely imaginary whenever the three helical vectors are built on **one common
+frame vector** — with no orthogonality hypothesis, no triad relation, and no condition on `N` at
+all.
+
+This corrects the reason, not just the scope. The natural guess is that pure-imaginarity comes from
+`p × q` being orthogonal to the triad; a Tier B control refuted that guess by perturbing the normal
+out of the plane and finding the real part still zero. The actual cause is structural and needs no
+geometry: every term that could carry an even power of `i` is a triple product of the form
+`(N × x) · N`, and `N × x` is orthogonal to `N` whatever `N` is. So `i` appears only in odd powers,
+and conjugation negates the whole thing.
+
+That is exactly why the memo's argument cannot be repaired by choosing a better frame: what breaks
+pure-imaginarity is using **three different** frame vectors, which is precisely what a global `ν`
+does. -/
+theorem gOf_conj (N : Wavevector) (sk sp sq : ℝ) (k p q : Wavevector) :
+    conj (gOf N sk sp sq k p q) = -gOf N sk sp sq k p q := by
+  unfold gOf cdot crossRC' hOf
+  simp only [Fin.sum_univ_three, map_add, map_mul, map_sub, map_neg, Complex.conj_I,
+    Complex.conj_ofReal, map_intCast, Complex.conj_conj, neg_neg,
+    crossZ_apply_zero, crossZ_apply_one, crossZ_apply_two,
+    Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.head_cons,
+    Matrix.cons_val_two, Matrix.tail_cons]
+  push_cast
+  ring
+
+theorem cOf_conj (N : Wavevector) (sk sp sq : ℝ) (k p q : Wavevector) :
+    conj (cOf N sk sp sq k p q) = -cOf N sk sp sq k p q := by
+  unfold cOf
+  simp only [map_mul, map_sub, map_div₀, map_neg, map_one, Complex.conj_ofReal,
+    map_ofNat, gOf_conj]
+  ring
+
+/-- The memo's statement is the special case `N = p × q`. -/
+theorem cOf_conj_triad_frame (p q k : Wavevector) (sk sp sq : ℝ) :
+    conj (cOf (triadNormal p q) sk sp sq k p q) = -cOf (triadNormal p q) sk sp sq k p q :=
+  cOf_conj (triadNormal p q) sk sp sq k p q
+
+/-- **The two halves never hold together.** In the triad's own frame a triad and its negation carry
+the SAME coefficient, so they sum to twice it — the opposite of cancelling. -/
+theorem cOf_neg_add_triad_frame {p q k : Wavevector} (hpq : p + q = k) (sk sp sq : ℝ) :
+    cOf (triadNormal (-p) (-q)) sk sp sq (-k) (-p) (-q)
+        + cOf (triadNormal p q) sk sp sq k p q
+      = 2 * cOf (triadNormal p q) sk sp sq k p q := by
+  rw [cOf_neg_triad_frame hpq]
+  ring
+
+/-- Non-vacuity, without which the previous theorem says nothing (LL-11): a lattice triad and a
+chirality class whose coefficient is **nonzero**, so that "twice it" is not "twice zero".
+
+`p = (1,0,0)`, `q = (0,1,0)`, `k = (1,1,0)`, class `(s_k,s_p,s_q) = (+,+,−)`. The frame is
+`(0,0,1)`, the balance factor is `|k| = √2 > 0` and the antisymmetrisation factor is `2`. -/
+theorem k_sq_e1 : k_sq (![1,0,0] : Wavevector) = 1 := by
+  simp [k_sq, Fin.sum_univ_three]
+
+theorem k_sq_e2 : k_sq (![0,1,0] : Wavevector) = 1 := by
+  simp [k_sq, Fin.sum_univ_three]
+
+theorem k_sq_e12 : k_sq (![1,1,0] : Wavevector) = 2 := by
+  simp [k_sq, Fin.sum_univ_three]
+
+theorem kNorm_e1 : kNorm (![1,0,0] : Wavevector) = 1 := by
+  unfold kNorm; rw [k_sq_e1]; norm_num
+
+theorem kNorm_e2 : kNorm (![0,1,0] : Wavevector) = 1 := by
+  unfold kNorm; rw [k_sq_e2]; norm_num
+
+theorem kNorm_e12_pos : 0 < kNorm (![1,1,0] : Wavevector) := by
+  unfold kNorm
+  rw [k_sq_e12]
+  apply Real.sqrt_pos.mpr
+  norm_num
+
+theorem cOf_neg_no_cancellation_witness :
+    cOf (triadNormal (![1,0,0] : Wavevector) (![0,1,0] : Wavevector))
+        1 1 (-1) (![1,1,0] : Wavevector) (![1,0,0] : Wavevector) (![0,1,0] : Wavevector) ≠ 0 := by
+  have hpq : (![1,0,0] : Wavevector) + (![0,1,0] : Wavevector) = (![1,1,0] : Wavevector) := by
+    funext i; fin_cases i <;> simp
+  rw [ne_eq, cOf_eq_zero_iff hpq]
+  push_neg
+  refine ⟨?_, ?_, ?_⟩
+  · -- the triad is not collinear: p × q = (0,0,1) ≠ 0
+    intro hc
+    have hlast := congrFun hc 2
+    simp only [crossZ_apply_two, Matrix.cons_val_zero, Matrix.cons_val_one,
+      Pi.zero_apply] at hlast
+    norm_num at hlast
+  · -- the balance factor is 1 − 1 + |k| = √2 > 0
+    rw [kNorm_e1, kNorm_e2]
+    intro hc
+    nlinarith [kNorm_e12_pos]
+  · -- the antisymmetrisation factor is 1 − (−1) = 2 ≠ 0
+    rw [kNorm_e1, kNorm_e2]
+    norm_num
+
 /-! ### Audit certificates — no axiom outside [propext, Classical.choice, Quot.sound]. -/
 #print axioms dotZ_crossZ_left
 #print axioms dotZ_crossZ_self
@@ -879,5 +1053,16 @@ theorem cOf_eq_zero_of_resonance_algebraic {p q k : Wavevector} (hpq : p + q = k
 #print axioms cOf_closed_form
 #print axioms cOf_eq_zero_iff
 #print axioms cOf_eq_zero_of_resonance_algebraic
+#print axioms hOf_neg
+#print axioms gOf_neg
+#print axioms cOf_neg
+#print axioms nuInt_neg
+#print axioms triadNormal_neg
+#print axioms cOf_neg_triad_frame
+#print axioms gOf_conj
+#print axioms cOf_conj
+#print axioms cOf_conj_triad_frame
+#print axioms cOf_neg_add_triad_frame
+#print axioms cOf_neg_no_cancellation_witness
 
 end MechanicaFluidorum.FourierZ3

@@ -790,6 +790,56 @@ frame `p × q` specifically.
 triad in floating point at `2.1e−16` relative deviation. The same claim is now Tier B on 5 256
 checks in exact integers, and Tier A in the kernel.
 
+## Tier A + Tier B — the gauge separation; memo §6bis item 4 RETRACTED (2026-09-10)
+
+`lean_src/HelicalBasis.lean` §13 and `tests/tier_b_helical_gauge.py` (Gate 1, exact integers, 48
+triad × chirality-class cases). This closes the item `docs/designs/WALEFFE_HELICAL_MEMO.md` §6bis
+left open — the per-triad frame is not a global gauge — and closing it **retracted item 4 of that
+same section**, which had been recorded as the mechanism for the observed per-class zero.
+
+**The two facts item 4 combines hold in different gauges, and the two gauges respond oppositely to
+negation.**
+
+| Claim | Theorem | Date |
+|---|---|---|
+| Negating frame and wavevector together conjugates the helical vector | `hOf_neg` | 2026-09-10 |
+| Hence the geometric factor and the coefficient are conjugated | `gOf_neg`, `cOf_neg` | 2026-09-10 |
+| The canonical global `ν` **does** flip: `ν(−k) = −ν(k)` | `nuInt_neg` | 2026-09-10 |
+| **The triad's own frame does NOT flip**: `(−p)×(−q) = p×q` | `triadNormal_neg` | 2026-09-10 |
+| **In the triad's own frame negation leaves the coefficient UNCHANGED** | `cOf_neg_triad_frame` | 2026-09-10 |
+| **The coefficient is purely imaginary whenever the three helical vectors share ONE frame vector** — no hypotheses at all | `gOf_conj`, `cOf_conj` | 2026-09-10 |
+| Hence a triad and its negation ADD to twice the coefficient, not zero | `cOf_neg_add_triad_frame` | 2026-09-10 |
+| Non-vacuity: a lattice triad and class where that is nonzero | `cOf_neg_no_cancellation_witness` | 2026-09-10 |
+
+**The separation is total, not marginal.** In the Tier B sweep the conjugation law fails in 48 of 48
+cases in the triad frame and 0 of 48 in the global gauge; the invariance law does the exact reverse.
+So the cancellation item 4 asserts occurs in **neither** gauge: in the triad frame a triad and its
+negation sum to twice a nonzero coefficient, and under a global `ν` the pairing projects the sum
+onto its real part, which is nonzero in 40 of 48 cases.
+
+**A control refuted my own first explanation, and the theorem is stronger for it.** I assumed
+pure-imaginarity came from `p × q` being orthogonal to the triad plane, and wrote a control that
+moved the normal off the plane expecting it to break. It did not: the real part stayed exactly zero,
+48 of 48. The actual cause needs no geometry — every term that could carry an even power of `i` is a
+triple product `(N × x) · N`, zero for any `N`. `gOf_conj` therefore carries **no hypotheses**, and
+the corrected statement explains why the memo's argument cannot be repaired by choosing a better
+frame: what breaks it is using *three different* frame vectors, which is what a global `ν` does.
+
+**What is retracted and what is not.** The *measurement* of §6bis item 3 stands — the per-class
+signed sum is numerically zero under two independent `ν` constructions, and nothing here contests
+it. What is retracted is the *explanation*. The observed zero requires `Σ Re(C) = 0` over the ball,
+which item 4 does not supply, and **naming the true mechanism is now open**. §6bis's verdict that the
+zero carries no information about turbulence is untouched.
+
+**Three Tier B negative controls and two Lean negative controls, all confirmed to fail:** breaking
+frame commonality for one of the three (N1); asserting the conjugation law inside the triad frame
+(N2, and Lean NC-E); asserting invariance under negation in the global gauge (N3, and Lean NC-F).
+Eleven demonstrated negatives on `HelicalBasis.lean`.
+
+**Scope note.** Everything here is computed in the unnormalised basis. Normalisation divides each
+helical vector by a positive real, and those factors are identical for a triad and its negation
+(`|−a| = |a|`, `|ν(−a)| = |ν(a)|`), so none of the conclusions depend on it.
+
 ## Tier B — the Waleffe resonance condition is EXACTLY collinearity (2026-09-10)
 
 `tests/tier_b_helical_resonance.py`, wired into Gate 1. Exact integer arithmetic, **zero floating

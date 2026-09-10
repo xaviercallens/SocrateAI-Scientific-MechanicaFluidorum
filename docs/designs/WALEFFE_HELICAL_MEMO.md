@@ -278,16 +278,60 @@ term (`exploration/waleffe_triad_crucible.py`, then `exploration/waleffe_gauge_p
    (`~10⁻¹⁴` against `Σ|C| ~ 10³`). So the zero is **robust and convention-independent**, not an
    artifact of how the basis was fixed.
 
-4. **The mechanism, verified as far as it goes.** `C(−k,−p,−q) = conj(C(k,p,q))` — checked
-   numerically in both conventions. In a triad's own planar frame (`ν = n̂`) the coefficient is
-   **purely imaginary**, so `conj(C) = −C` and each triad is cancelled exactly by its negation;
-   the lattice is symmetric under negation, hence the sum vanishes.
+4. ~~**The mechanism, verified as far as it goes.**~~ **RETRACTED 2026-09-10 — see §6ter.** The
+   original text read: "`C(−k,−p,−q) = conj(C(k,p,q))` — checked numerically in both conventions. In
+   a triad's own planar frame (`ν = n̂`) the coefficient is **purely imaginary**, so `conj(C) = −C`
+   and each triad is cancelled exactly by its negation; the lattice is symmetric under negation,
+   hence the sum vanishes." **Both halves are true and they hold in different gauges.** The
+   conclusion does not follow, and the cancellation it asserts happens in neither gauge.
 
-**What is still not derived, and is stated as open rather than glossed.** The planar frame is chosen
-*per triad*, so it is not a global gauge, and the step "the signed sum may be evaluated triad by
-triad in each triad's own frame" is *observed* to be legitimate (item 3) but not proved. Closing
-that is a small, well-posed piece of work, and it is not on the critical path: nothing downstream
-depends on it.
+**What was still not derived, and was stated as open rather than glossed.** The planar frame is
+chosen *per triad*, so it is not a global gauge, and the step "the signed sum may be evaluated triad
+by triad in each triad's own frame" was *observed* to be legitimate (item 3) but not proved. It was
+described as "a small, well-posed piece of work… not on the critical path". **It was well-posed and
+it was not small in consequence: closing it retracted item 4.**
+
+## 6ter. The gauge separation, and the retraction of item 4
+
+**Established 2026-09-10.** Tier A: `lean_src/HelicalBasis.lean` §13. Tier B:
+`tests/tier_b_helical_gauge.py`, in Gate 1, exact integers, 48 triad × chirality-class cases.
+
+Item 4 uses two facts. **Pure-imaginarity** is a property of a frame shared by all three helical
+vectors. **The conjugation law** `C(−k,−p,−q) = conj(C(k,p,q))` was measured under two *global* `ν`
+conventions, in which each wavevector carries its own normal. The two frames behave **oppositely**
+under negation, so the two facts never hold together:
+
+| | how the frame responds to `a ↦ −a` | consequence for `C` |
+|---|---|---|
+| global `ν` | `ν(−a) = −ν(a)` — **flips** | `C(−k,−p,−q) = conj C` — `gOf_neg` |
+| triad frame `p × q` | `(−p)×(−q) = p×q` — **fixed** | `C(−k,−p,−q) = C` — `cOf_neg_triad_frame` |
+
+The separation is total, not marginal: in the Tier B sweep the conjugation law fails in 48 of 48
+cases in the triad frame and 0 of 48 in the global gauge, and the invariance law does the exact
+reverse.
+
+**So the cancellation happens in neither gauge.** In the triad's own frame a triad and its negation
+carry the *same* coefficient and sum to twice it, which `cOf_neg_no_cancellation_witness` shows is
+nonzero on `p=(1,0,0)`, `q=(0,1,0)`, class `(+,+,−)`. Under a global `ν` the pairing sends the sum to
+twice its **real part**, which is nonzero in 40 of 48 cases.
+
+**A second correction, to the stated reason.** The natural reading of "in a triad's own planar
+frame" is that orthogonality to the triad plane is what makes `C` purely imaginary. A Tier B control
+**refutes** that: move the common normal off the plane and the real part is still exactly zero. The
+actual condition needs no geometry — every term that could carry an even power of `i` is a triple
+product `(N × x) · N`, zero for any `N` whatsoever. `HelicalBasis.gOf_conj` therefore states it with
+**no hypotheses at all**: the coefficient is purely imaginary whenever the three helical vectors
+share one frame vector. What breaks it is using *three different* ones, which is exactly what a
+global `ν` does — so the argument cannot be repaired by choosing a better frame.
+
+**What this does and does not overturn.** The *measurement* of item 3 stands: the per-class signed
+sum is numerically zero under two independent `ν` constructions, and that is not contested here.
+What is retracted is the *explanation*. Under a global `ν` the negation pairing does not cancel
+triads; it projects the sum onto its real part. The observed zero therefore requires `Σ Re(C) = 0`
+over the ball, which item 4 does not supply. **Naming the true mechanism is open.** It is not urgent:
+§6bis's own verdict — that the zero is a symmetry of a negation-symmetric lattice carrying no
+information about turbulence — is untouched, and if anything is reinforced by the mechanism being
+less specific to the physics than was claimed.
 
 **The consequence that does matter, and it is a negative one.** The per-class zero is a symmetry of
 a negation-symmetric lattice, not a cancellation of physical transfer. It carries **no information
