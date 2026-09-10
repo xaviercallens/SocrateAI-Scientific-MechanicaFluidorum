@@ -469,9 +469,13 @@ the sign it claims to depend on, and an unnoticed sign error would not have pass
 Remaining steps 2–5 (Leray drop, reindexing bijection, out-of-ball vanishing, assembly) are
 specified in the memo's §8 with their own negative controls.
 
-**Audit flags:** F1′ — **CLOSED 2026-09-10** by `B_witness_ne_zero` / `B_not_identically_zero`
-(rows above). F4 — still open: `ball M` is cube-then-filter while `GalerkinState.cutoff` is stated
-with `M² < k_sq k`; the two agree but the equivalence is not proved.
+**Audit flags — BOTH CLOSED 2026-09-10.** F1′ by `B_witness_ne_zero` / `B_not_identically_zero`
+(rows above). F4 by `mem_ball_iff`: `k ∈ ball M ↔ k_sq k ≤ M²`. The non-obvious direction is that
+`k_sq k ≤ M²` already forces every coordinate into `[−M, M]`, because each `(kᵢ)²` is one
+non-negative term of the sum — so the cube in the definition is implied, not an extra restriction.
+`GalerkinState.eq_zero_of_notMem_ball` restates the cutoff in the form the Task 2.2 bridge consumes.
+Negative control, **confirmed to fail**: bounding the *wrong* coordinate (`Finset.mem_univ 0` in
+place of `Finset.mem_univ i`) breaks the proof, so the term-by-term minoration is doing real work.
 
 **Import change to `FourierStateZ3.lean`, 2026-09-09, recorded because it touches a Tier A file:**
 its umbrella `import Mathlib` was replaced by the eleven narrow modules it actually uses. Reason:

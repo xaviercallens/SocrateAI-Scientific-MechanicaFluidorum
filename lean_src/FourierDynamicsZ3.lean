@@ -13,20 +13,24 @@ Scope   : DYNAMICS, first slice. Defines
             B M u v k        = P(k)[convective M u v k],
           and proves (i) transversality of B, (ii) the triad-support property
           `htriad` that `FourierStateZ3.sublattice_invariance` takes as a
-          hypothesis — so the sublattice theorem now applies to a CONCRETE B,
-          which is the first half of audit flag F1 (the second half, a witness
-          that B is not identically zero, is still owed and is flagged below).
+          hypothesis — so the sublattice theorem applies to a CONCRETE B — and
+          (iii) an explicit witness that this B is NOT the zero map, which is
+          what makes that invariance statement non-vacuous.
+          §7 opens Task 2.2: the `swap3`-closed index set, step 1 of 5 of
+          `docs/designs/TASK22_ENERGY_IDENTITY.md`.
 Formula : the convective term is the CORRECTED Tier B formula of
           tests/tier_b_nse_triad_convolution.py, `N(u)_k = −i Σ P(k)[(q·u_p) u_q]`
           (q dotted with u_p, times the vector u_q). The variant with q·(u_p·u_q)
           is identically zero (erratum recorded there) and is NOT used.
 Owner memorandum 2026-09-09, Task 2.1 asks for exactly this operator.
-Flags for the human audit (not resolved here):
-  F1' — non-vacuity witness `B ≠ 0` not yet supplied (see §5).
-  F4  — `ball M` uses the cube-then-filter construction; `GalerkinState.cutoff`
-        uses `M² < k_sq k → u k = 0`. These agree (k ∈ ball M ↔ k_sq k ≤ M² for
-        k in the cube; and k_sq k ≤ M² forces |k_i| ≤ M), but the equivalence
-        is not proved here.
+Audit flags — BOTH CLOSED 2026-09-10:
+  F1' — a witness that `B` is not identically zero. Closed by `B_witness_ne_zero`
+        and `B_not_identically_zero` (§6).
+  F4  — `ball M` is cube-then-filter while `GalerkinState.cutoff` is stated with
+        `M² < k_sq k`. Closed by `mem_ball_iff`: the cube is IMPLIED, since each
+        `(k_i)²` is one non-negative term of `k_sq k`.
+Still owed on this file: steps 2–5 of Task 2.2 (the Leray drop, the reindexing
+bijection, the out-of-ball vanishing, and the assembly).
 =============================================================================
 -/
 
@@ -42,6 +46,7 @@ import Mathlib.Tactic.Abel
 import Mathlib.Tactic.FinCases
 import Mathlib.Tactic.NormNum
 import Mathlib.Tactic.Ring
+import Mathlib.Tactic.Linarith
 import FourierStateZ3
 import AbstractAlgebraicConservation
 
@@ -62,6 +67,32 @@ def ball (M : ℕ) : Finset Wavevector :=
 theorem k_sq_le_of_mem_ball {M : ℕ} {k : Wavevector} (hk : k ∈ ball M) :
     k_sq k ≤ (M : ℤ) ^ 2 :=
   (Finset.mem_filter.mp hk).2
+
+/-- **Audit flag F4, closed.** `ball M` is built as cube-then-filter, while
+`GalerkinState.cutoff` is stated as `M² < k_sq k → u k = 0`. The two descriptions agree, and the
+non-obvious direction is this one: `k_sq k ≤ M²` already forces every coordinate into `[-M, M]`,
+because each `(kᵢ)²` is one non-negative term of the sum `k_sq k`. So the cube in the definition
+is not an extra restriction — it is implied. -/
+theorem mem_ball_iff {M : ℕ} {k : Wavevector} : k ∈ ball M ↔ k_sq k ≤ (M : ℤ) ^ 2 := by
+  refine ⟨k_sq_le_of_mem_ball, fun h => ?_⟩
+  rw [ball, Finset.mem_filter, Fintype.mem_piFinset]
+  refine ⟨fun i => ?_, h⟩
+  rw [Finset.mem_Icc]
+  have hMnn : (0 : ℤ) ≤ (M : ℤ) := Int.natCast_nonneg M
+  have hi : (k i) ^ 2 ≤ (M : ℤ) ^ 2 := by
+    have hle : (k i) ^ 2 ≤ ∑ j : Fin 3, (k j) ^ 2 :=
+      Finset.single_le_sum (f := fun j : Fin 3 => (k j) ^ 2)
+        (fun j _ => sq_nonneg (k j)) (Finset.mem_univ i)
+    exact le_trans hle h
+  constructor
+  · nlinarith [hi, hMnn, sq_nonneg (k i + (M : ℤ))]
+  · nlinarith [hi, hMnn, sq_nonneg (k i - (M : ℤ))]
+
+/-- The Galerkin cutoff, restated on `ball M`: a state's amplitude vanishes off the ball. This is
+the form the Task 2.2 bridge consumes (step C: terms with `q ∉ Λ_M` carry a zero factor). -/
+theorem GalerkinState.eq_zero_of_notMem_ball {M : ℕ} (s : GalerkinState M) {k : Wavevector}
+    (hk : k ∉ ball M) : s.toFourierState.u k = 0 :=
+  s.cutoff k (lt_of_not_ge fun hle => hk (mem_ball_iff.mpr hle))
 
 /-- Non-vacuity of the index set (SPEC §7.5): the witness mode lies in the unit ball. -/
 theorem k0_mem_ball_one : k0 ∈ ball 1 := by
@@ -305,5 +336,7 @@ theorem triadSet_nonempty_two : ((k0, wq) : Wavevector × Wavevector) ∈ triadS
 #print axioms B_not_identically_zero
 #print axioms triadSet_swap3_closed
 #print axioms triadSet_nonempty_two
+#print axioms mem_ball_iff
+#print axioms GalerkinState.eq_zero_of_notMem_ball
 
 end MechanicaFluidorum.FourierZ3
