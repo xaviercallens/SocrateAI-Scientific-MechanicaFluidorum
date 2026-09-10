@@ -836,6 +836,52 @@ back clean the tooling is broken); part 3 scans that no proof module imports the
 (sealing F-NAME). **Footprints still pending; the no-citation rule stands until the transcripts
 land.**
 
+### WP-0b parts 2–3 VERIFIED from the uploaded transcripts (2026-09-10)
+
+Fetched from the public bucket and read directly — not from anyone's summary:
+
+- **Part 2 PASS (the audit's negative control fired):** `audit-placeholders.transcript.txt`
+  shows all four challenge placeholders with `sorryAx` in their footprints, exactly as required
+  — `NavierStokes.Comparator.navier_stokes_breakdown_R3`, `…_periodic`,
+  `Euler.euler_breakdown_R3`, `Euler.exists_compact_smooth_euler_singularity`.
+- **Part 3 PASS (F-NAME sealed):** `import-scan.txt` is empty — **zero** matches for
+  `import ComparatorChallenges` under `NavierStokes/` or `Euler/`. The proof tree provably never
+  touches the sorried challenge modules, and the challenge discharge is meta-level by
+  construction, as F-NAME states.
+- **Part 1 (the proof-tree footprints) still pending** — the VM's full `lake build` is running
+  (~9.6k/11.3k targets at last report) with a watcher set to run `audit-main.lean` and upload
+  the transcript on completion. **The no-citation rule stands until that transcript lands and
+  reads clean.**
+
+## A1 RESOLVED — the director stratum, and the C-DIR identity (2026-09-10)
+
+`tests/tier_b_director_stratum.py` (Gate 1); memo section in
+`HELICAL_PRODUCTION_EXPANSION.md`. The double coherence-control trip of the cancellation
+baseline is now **fully explained, with proof**, and the quasi-planarity suspicion is refuted.
+
+For director states `u_x = c_x (x × d)` (any fixed integer `d`, arbitrary complex `c`):
+
+| result | content |
+|---|---|
+| **R1** | the term factorizes: `t(p,q) = −W c_p c_q c_r · det[p,q,d] · [(q·r)\|d\|² − (q·d)(r·d)]` |
+| **R2** | the six orderings of one triad sum to `2 c_a c_b c_c · det[a,b,d] · EXPR`, `EXPR = 2(a·d)(b·d)(B−A) + (b·d)²(B−C) + (a·d)²(C−A)`; the `\|d\|²` part cancels identically |
+| **R3** | `EXPR ≢ 0`: **no per-triad vanishing**; random-phase director states have nonzero production (the F2 seeds are standing witnesses) — quasi-planarity does NOT kill production |
+| **R4, C-DIR** | `Σ_{triads(ball M)} det[a,b,d]·EXPR = 0` **identically in `d`** — proved exactly for `M = 2, 3` (all ten cubic coefficients vanish, over 91 and 1178 triads), and for **every `M`** by signed-permutation equivariance: `Σ(d) = det(σ)Σ(σᵀd)`, axis reflections force every monomial odd in each variable, a transposition kills the survivor `d₀d₁d₂` |
+
+**What this explains and what it warns.** An aligned-phase family on ANY constant director is
+annihilated by the lattice's own point symmetry — coherence collapses the sum onto `Σ det·EXPR`,
+which the cubic group kills. That is the third symmetry stratum of the production sum found in
+one day (parity; negation-conjugation; now cubic equivariance of the director class), each first
+seen as an inexplicable exact zero in a measurement. **Amendment 5 now carries a proof of
+necessity**: no constant-director coherent family can ever pass the coherence control. The
+interpretation quarantine on F2/F3 stands until a varied-director coherent family passes.
+
+**Controls, both confirmed to fail:** flipping one sign inside `EXPR` (N1, 7 nonzero
+coefficients appear); removing a single point from the ball (N2, 2 nonzero coefficients) — the
+cubic symmetry is load-bearing, not decorative.
+
+**Lean target L-DIR registered:** C-DIR via the signed-permutation action on `ball M`.
+
 **Audit flags — BOTH CLOSED 2026-09-10.** F1′ by `B_witness_ne_zero` / `B_not_identically_zero`
 (rows above). F4 by `mem_ball_iff`: `k ∈ ball M ↔ k_sq k ≤ M²`. The non-obvious direction is that
 `k_sq k ≤ M²` already forces every coordinate into `[−M, M]`, because each `(kᵢ)²` is one

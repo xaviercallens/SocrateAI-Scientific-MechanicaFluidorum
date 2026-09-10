@@ -158,6 +158,34 @@ ray) must show `ρ` near 1, or the instrument cannot detect coherence and measur
 >    **amendment 5** — the next run must use `k`-dependent directors
 >    (`d(k) = (1,2,3) + (k₂,k₃,k₁)`-type, with the parallel-degeneracy fallback), for ALL
 >    families, F2/F3 included, so that no family owes its behaviour to the director artifact.
+>
+> **A1 RESOLVED (2026-09-10, same day) — the mechanism is cubic-group equivariance, and the
+> quasi-planarity suspicion was WRONG in an instructive way.** Full detail:
+> `tests/tier_b_director_stratum.py`. Four exact results:
+>
+> 1. **The director term factorizes**:
+>    `t(p,q) = −W · c_p c_q c_r · det[p,q,d] · [(q·r)|d|² − (q·d)(r·d)]`.
+> 2. **The six orderings of one triad sum to** `2 c_a c_b c_c · det[a,b,d] · EXPR` with
+>    `EXPR = 2(a·d)(b·d)(B−A) + (b·d)²(B−C) + (a·d)²(C−A)` — the `|d|²` part cancels
+>    identically (a clean `A,B,C` identity), so **all `d`-dependence is through the two
+>    contractions**.
+> 3. **`EXPR ≢ 0`: the stratum does NOT vanish per-triad**, and random-phase director states
+>    have genuinely nonzero production (the F2 seeds are the standing witnesses). So
+>    quasi-planarity does *not* kill production — the suspicion in item 2 above is refuted.
+> 4. **C-DIR**: `Σ_{triads(ball M)} det[a,b,d]·EXPR = 0` **identically in `d`** — proved for
+>    `M = 2, 3` by computing all ten coefficients of the cubic form exactly, and for **every**
+>    `M` by equivariance: the ball is invariant under signed permutations `σ`, and
+>    `Σ(d) = det(σ)·Σ(σᵀd)`; each axis reflection forces every monomial odd in that variable,
+>    leaving only `d₀d₁d₂`, and any transposition kills that. **The double control trip is
+>    hereby fully explained**: an aligned-phase family on any constant director is annihilated
+>    by the lattice's own point symmetry — coherence collapses the sum onto `Σ det·EXPR`,
+>    which the cubic group kills. Controls: flipping one sign inside `EXPR` breaks it, and
+>    removing a single point from the ball breaks it — the symmetry is load-bearing.
+>
+> **Lean target L-DIR registered**: formalise C-DIR via the signed-permutation action on
+> `ball M` (the equivariance proof above is finite-free and kernel-ready in outline).
+> **Amendment 5 stands**, now with a proof of necessity: no constant-director coherent family
+> can ever pass the coherence control.
 > 3. **Parity is now Tier A**: for parity-even states (`u(−k) = u(k)`), the production term
 >    sum vanishes identically — `FourierDynamicsZ3.production_terms_eq_zero_of_even`, proved
 >    by the negation involution.
