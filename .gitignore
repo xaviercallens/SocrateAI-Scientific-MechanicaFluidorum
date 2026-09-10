@@ -16,3 +16,8 @@ lean_src/lake-manifest.json.bak
 
 # Claude Code transient runtime state (PID/session lock; not project content)
 .claude/scheduled_tasks.lock
+
+# Rust build output of the Tier C exploration crate (regenerable: `cargo build --release`).
+# The SOURCE (Cargo.toml, src/) is tracked; only the compiled artifacts are ignored.
+exploration/triad_frustration_rs/target/
+exploration/triad_frustration_rs/Cargo.lock

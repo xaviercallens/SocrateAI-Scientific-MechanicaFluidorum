@@ -1,0 +1,18 @@
+[package]
+name = "triad_frustration"
+version = "0.1.0"
+edition = "2021"
+description = "TIER C - EXPLORATORY, NO CLAIMS. Triadic 'frustration index' D(M) on the Galerkin ball of Z^3, three readings side by side with a null model. Floating point: never gates a claim."
+
+# Zero external crates on purpose (no rayon): the build must not depend on network access or on
+# a registry cache this repository does not control. Parallelism is std::thread::scope over
+# disjoint slices, which is deterministic (per-mode results are stored, then reduced in index
+# order) -- rayon would add nothing but a dependency for an embarrassingly parallel loop.
+[dependencies]
+
+[workspace]
+
+[profile.release]
+opt-level = 3
+codegen-units = 1
+lto = "fat"

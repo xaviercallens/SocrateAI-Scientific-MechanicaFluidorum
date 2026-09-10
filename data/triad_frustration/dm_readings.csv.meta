@@ -1,0 +1,7 @@
+generating_command: /tmp/claude-1000/-home-xavkal-xdev-SocrateAI-Scientific-MechanicaFluidorum/151351af-c14b-4556-a053-1dce162c7106/scratchpad/triad_frustration_rs/target/release/triad_frustration --mmin 2 --mmax 20 --mmax-c 14 --seeds 3 --out /tmp/claude-1000/-home-xavkal-xdev-SocrateAI-Scientific-MechanicaFluidorum/151351af-c14b-4556-a053-1dce162c7106/scratchpad/dm_out
+threads: 8
+rustc: rustc 1.97.1 (8bab26f4f 2026-07-14)
+git_commit: c84f4172bff6d94d9c5452e78688ecb8046d33f9
+sha256sum: d090dcf9d71f68893418e9e1de0bbd65c17617c8b8ea2cbfcec91116188567c6  /tmp/claude-1000/-home-xavkal-xdev-SocrateAI-Scientific-MechanicaFluidorum/151351af-c14b-4556-a053-1dce162c7106/scratchpad/dm_out/dm_readings.csv
+sha256sum: 77facb13af1aeea7f949c162f4569e55e029a8abc01bac3cc2eccd36be4969d6  /tmp/claude-1000/-home-xavkal-xdev-SocrateAI-Scientific-MechanicaFluidorum/151351af-c14b-4556-a053-1dce162c7106/scratchpad/dm_out/dm_waleffe.csv
+tier: C (floating point; no claim; no verdict)

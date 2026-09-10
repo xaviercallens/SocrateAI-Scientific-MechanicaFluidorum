@@ -4,6 +4,8 @@
       "Read",
       "Glob",
       "Grep",
+      "Write",
+      "Edit",
       "WebSearch",
       "WebFetch(domain:arxiv.org)",
       "WebFetch(domain:www.claymath.org)",

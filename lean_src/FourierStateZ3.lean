@@ -66,7 +66,17 @@ GATE-RISK (original submission note, retained for the record): written blind aga
 =============================================================================
 -/
 
-import Mathlib
+import Mathlib.Algebra.BigOperators.Fin
+import Mathlib.Algebra.BigOperators.Ring.Finset
+import Mathlib.Algebra.Order.BigOperators.Group.Finset
+import Mathlib.Algebra.Group.Subgroup.Basic
+import Mathlib.Data.Complex.Basic
+import Mathlib.Data.Fin.VecNotation
+import Mathlib.Data.Fintype.Pi
+import Mathlib.Data.Int.Interval
+import Mathlib.Tactic.FinCases
+import Mathlib.Tactic.NormNum
+import Mathlib.Tactic.Ring
 
 set_option autoImplicit false
 
@@ -282,7 +292,7 @@ theorem leray_col_orthogonal (k : Wavevector) (j : Fin 3) :
       _ = (k j : ℂ) - (k_sq k : ℂ) * ((k j : ℂ) / (k_sq k : ℂ)) := by
           rw [Finset.sum_ite_eq' Finset.univ j (fun i => (k i : ℂ)),
               if_pos (Finset.mem_univ j), hcast]
-      _ = 0 := by field_simp; ring
+      _ = 0 := by rw [mul_div_cancel₀ _ hS, sub_self]
 
 /-! ### 7. The projector as an operator -/
 
@@ -340,8 +350,8 @@ theorem applyLeray_eq_self {k : Wavevector} {v : Fin 3 → ℂ}
       unfold LerayProjector
       rw [if_neg h]
       by_cases hij : i = j
-      · simp only [if_pos hij]; field_simp
-      · simp only [if_neg hij]; field_simp; ring
+      · simp only [if_pos hij, div_eq_mul_inv]; ring
+      · simp only [if_neg hij, div_eq_mul_inv]; ring
     rw [Finset.sum_congr rfl fun j _ => expand j, Finset.sum_sub_distrib,
         Finset.sum_ite_eq Finset.univ i v, if_pos (Finset.mem_univ i),
         ← Finset.mul_sum, hdot, mul_zero, sub_zero]

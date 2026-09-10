@@ -1,0 +1,193 @@
+/tmp/claude-1000/-home-xavkal-xdev-SocrateAI-Scientific-MechanicaFluidorum/151351af-c14b-4556-a053-1dce162c7106/scratchpad/v21_narrow.lean:48:14: warning: This simp argument is unused:
+  neg_sq
+
+Hint: Omit it from the simp argument list.
+  [apply] simp [k_sq]
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+/tmp/claude-1000/-home-xavkal-xdev-SocrateAI-Scientific-MechanicaFluidorum/151351af-c14b-4556-a053-1dce162c7106/scratchpad/v21_narrow.lean:85:33: error: unsolved goals
+⊢ ![1, 0, 0] 2 = 0
+/tmp/claude-1000/-home-xavkal-xdev-SocrateAI-Scientific-MechanicaFluidorum/151351af-c14b-4556-a053-1dce162c7106/scratchpad/v21_narrow.lean:96:2: error: unsolved goals
+case pos
+k : Wavevector
+h1 : k = k0
+⊢ ↑(k 1) + ↑(k 2) * ![0, 1, 0] 2 = 0
+/tmp/claude-1000/-home-xavkal-xdev-SocrateAI-Scientific-MechanicaFluidorum/151351af-c14b-4556-a053-1dce162c7106/scratchpad/v21_narrow.lean:97:2: error: unsolved goals
+case pos
+k : Wavevector
+h1 : ¬k = k0
+h2 : k = -k0
+⊢ ↑(k 1) + ↑(k 2) * ![0, 1, 0] 2 = 0
+/tmp/claude-1000/-home-xavkal-xdev-SocrateAI-Scientific-MechanicaFluidorum/151351af-c14b-4556-a053-1dce162c7106/scratchpad/v21_narrow.lean:112:26: error: Tactic `rewrite` failed: Did not find an occurrence of the pattern
+  if k0 = -k0 then ?m.100 else ?m.101
+in the target expression
+  modeAmp i = (starRingEnd ℂ) ((if -k0 = k0 then modeAmp else if -k0 = -k0 then modeAmp else 0) i)
+
+case pos
+i : Fin 3
+h1 : ¬-k0 = k0
+h3 : - -k0 = k0
+⊢ modeAmp i = (starRingEnd ℂ) ((if -k0 = k0 then modeAmp else if -k0 = -k0 then modeAmp else 0) i)
+/tmp/claude-1000/-home-xavkal-xdev-SocrateAI-Scientific-MechanicaFluidorum/151351af-c14b-4556-a053-1dce162c7106/scratchpad/v21_narrow.lean:115:56: error: Tactic `rewrite` failed: Did not find an occurrence of the pattern
+  ?f 0
+in the target expression
+  0 i = (starRingEnd ℂ) (0 i)
+
+case neg
+k : Wavevector
+i : Fin 3
+h1 : ¬k = k0
+h2 : ¬k = -k0
+hn1 : -k ≠ k0
+hn2 : -k ≠ -k0
+⊢ 0 i = (starRingEnd ℂ) (0 i)
+/tmp/claude-1000/-home-xavkal-xdev-SocrateAI-Scientific-MechanicaFluidorum/151351af-c14b-4556-a053-1dce162c7106/scratchpad/v21_narrow.lean:122:24: error: unsolved goals
+x✝ : Fin 3
+hz1 : 0 ≠ k0
+hz2 : 0 ≠ -k0
+⊢ 0 x✝ = 0
+/tmp/claude-1000/-home-xavkal-xdev-SocrateAI-Scientific-MechanicaFluidorum/151351af-c14b-4556-a053-1dce162c7106/scratchpad/v21_narrow.lean:168:4: error: Type mismatch
+  hδ
+has type
+  (if i = j then 1 else 0) = if j = i then 1 else 0
+but is expected to have type
+  1 = 1
+/tmp/claude-1000/-home-xavkal-xdev-SocrateAI-Scientific-MechanicaFluidorum/151351af-c14b-4556-a053-1dce162c7106/scratchpad/v21_narrow.lean:169:8: error: Tactic `rewrite` failed: Did not find an occurrence of the pattern
+  if i = j then 1 else 0
+in the target expression
+  1 = 0
+
+case neg
+k : Wavevector
+i j : Fin 3
+hδ : (if i = j then 1 else 0) = if j = i then 1 else 0
+h : k_sq k = 0
+h✝¹ : i = j
+h✝ : ¬j = i
+⊢ 1 = 0
+/tmp/claude-1000/-home-xavkal-xdev-SocrateAI-Scientific-MechanicaFluidorum/151351af-c14b-4556-a053-1dce162c7106/scratchpad/v21_narrow.lean:161:51: error: unsolved goals
+case pos
+k : Wavevector
+i j : Fin 3
+hδ : (if i = j then 1 else 0) = if j = i then 1 else 0
+h : k_sq k = 0
+h✝¹ : ¬i = j
+h✝ : j = i
+⊢ 0 = 1
+
+case neg
+k : Wavevector
+i j : Fin 3
+hδ : (if i = j then 1 else 0) = if j = i then 1 else 0
+h : k_sq k = 0
+h✝¹ : ¬i = j
+h✝ : ¬j = i
+⊢ 0 = 0
+
+case pos
+k : Wavevector
+i j : Fin 3
+hδ : (if i = j then 1 else 0) = if j = i then 1 else 0
+h : ¬k_sq k = 0
+h✝¹ : i = j
+h✝ : j = i
+⊢ 1 - ↑(k i) * ↑(k j) / ↑(k_sq k) = 1 - ↑(k j) * ↑(k i) / ↑(k_sq k)
+
+case neg
+k : Wavevector
+i j : Fin 3
+hδ : (if i = j then 1 else 0) = if j = i then 1 else 0
+h : ¬k_sq k = 0
+h✝¹ : i = j
+h✝ : ¬j = i
+⊢ 1 - ↑(k i) * ↑(k j) / ↑(k_sq k) = 0 - ↑(k j) * ↑(k i) / ↑(k_sq k)
+
+case pos
+k : Wavevector
+i j : Fin 3
+hδ : (if i = j then 1 else 0) = if j = i then 1 else 0
+h : ¬k_sq k = 0
+h✝¹ : ¬i = j
+h✝ : j = i
+⊢ 0 - ↑(k i) * ↑(k j) / ↑(k_sq k) = 1 - ↑(k j) * ↑(k i) / ↑(k_sq k)
+
+case neg
+k : Wavevector
+i j : Fin 3
+hδ : (if i = j then 1 else 0) = if j = i then 1 else 0
+h : ¬k_sq k = 0
+h✝¹ : ¬i = j
+h✝ : ¬j = i
+⊢ 0 - ↑(k i) * ↑(k j) / ↑(k_sq k) = 0 - ↑(k j) * ↑(k i) / ↑(k_sq k)
+/tmp/claude-1000/-home-xavkal-xdev-SocrateAI-Scientific-MechanicaFluidorum/151351af-c14b-4556-a053-1dce162c7106/scratchpad/v21_narrow.lean:195:16: error: Function expected at
+  Finset.sum_ite_eq' Finset.univ j fun i => ↑(k i)
+but this term has type
+  (∑ x, if x = j then ↑(k x) else 0) = if j ∈ Finset.univ then ↑(k j) else 0
+
+Note: Expected a function because this term is being applied to the argument
+  (Finset.mem_univ j)
+/tmp/claude-1000/-home-xavkal-xdev-SocrateAI-Scientific-MechanicaFluidorum/151351af-c14b-4556-a053-1dce162c7106/scratchpad/v21_narrow.lean:196:14: error: Tactic `rewrite` failed: Did not find an occurrence of the pattern
+  ∑ i ∈ ?s, ?f i * ?a
+in the target expression
+  ∑ i, ↑(k i) ^ 2 * ↑(k j) / ↑(k_sq k) = (∑ i, ↑(k i) ^ 2) * ↑(k j) / ↑(k_sq k)
+
+case e_a
+k : Wavevector
+j : Fin 3
+h : ¬k_sq k = 0
+hS : ↑(k_sq k) ≠ 0
+hcast3 : ↑(k_sq k) = ∑ i, ↑(k i) ^ 2
+⊢ ∑ i, ↑(k i) ^ 2 * ↑(k j) / ↑(k_sq k) = (∑ i, ↑(k i) ^ 2) * ↑(k j) / ↑(k_sq k)
+/tmp/claude-1000/-home-xavkal-xdev-SocrateAI-Scientific-MechanicaFluidorum/151351af-c14b-4556-a053-1dce162c7106/scratchpad/v21_narrow.lean:199:31: error: Tactic `rewrite` failed: Did not find an occurrence of the pattern
+  ?m.393 * ↑(k_sq k) / ↑(k_sq k)
+in the target expression
+  ↑(k j) - ↑(k_sq k) * ↑(k j) / ↑(k_sq k) = 0
+
+k : Wavevector
+j : Fin 3
+h : ¬k_sq k = 0
+hS : ↑(k_sq k) ≠ 0
+hcast3 : ↑(k_sq k) = ∑ i, ↑(k i) ^ 2
+⊢ ↑(k j) - ↑(k_sq k) * ↑(k j) / ↑(k_sq k) = 0
+/tmp/claude-1000/-home-xavkal-xdev-SocrateAI-Scientific-MechanicaFluidorum/151351af-c14b-4556-a053-1dce162c7106/scratchpad/v21_narrow.lean:234:10: error: Function expected at
+  Finset.sum_ite_eq' Finset.univ i v
+but this term has type
+  (∑ x, if x = i then v x else 0) = if i ∈ Finset.univ then v i else 0
+
+Note: Expected a function because this term is being applied to the argument
+  (Finset.mem_univ i)
+/tmp/claude-1000/-home-xavkal-xdev-SocrateAI-Scientific-MechanicaFluidorum/151351af-c14b-4556-a053-1dce162c7106/scratchpad/v21_narrow.lean:243:8: error: Type mismatch
+  Finset.sum_sub_distrib
+has type
+  ∀ (f g : ?m.229 → ?m.230), ∑ x ∈ ?m.231, (f x - g x) = ∑ x ∈ ?m.231, f x - ∑ x ∈ ?m.231, g x
+but is expected to have type
+  ∑ j, ((if i = j then 1 else 0) * v j - ↑(k i) * (↑(k j) * v j) / ↑(k_sq k)) =
+    ∑ j, (if i = j then 1 else 0) * v j - ∑ j, ↑(k i) * (↑(k j) * v j) / ↑(k_sq k)
+/tmp/claude-1000/-home-xavkal-xdev-SocrateAI-Scientific-MechanicaFluidorum/151351af-c14b-4556-a053-1dce162c7106/scratchpad/v21_narrow.lean:246:16: error: Function expected at
+  Finset.sum_ite_eq' Finset.univ i v
+but this term has type
+  (∑ x, if x = i then v x else 0) = if i ∈ Finset.univ then v i else 0
+
+Note: Expected a function because this term is being applied to the argument
+  (Finset.mem_univ i)
+/tmp/claude-1000/-home-xavkal-xdev-SocrateAI-Scientific-MechanicaFluidorum/151351af-c14b-4556-a053-1dce162c7106/scratchpad/v21_narrow.lean:247:14: error: Tactic `rewrite` failed: Did not find an occurrence of the pattern
+  ∑ i ∈ ?s, ?a * ?f i
+in the target expression
+  ∑ j, ↑(k i) * (↑(k j) * v j) / ↑(k_sq k) = (↑(k i) * ∑ j, ↑(k j) * v j) / ↑(k_sq k)
+
+case e_a
+k : Wavevector
+v : Fin 3 → ℂ
+hv : fourier_dot k v = 0
+i : Fin 3
+h : ¬k_sq k = 0
+hS : ↑(k_sq k) ≠ 0
+⊢ ∑ j, ↑(k i) * (↑(k j) * v j) / ↑(k_sq k) = (↑(k i) * ∑ j, ↑(k j) * v j) / ↑(k_sq k)
+/tmp/claude-1000/-home-xavkal-xdev-SocrateAI-Scientific-MechanicaFluidorum/151351af-c14b-4556-a053-1dce162c7106/scratchpad/v21_narrow.lean:267:15: warning: `Set.mem_setOf_eq` has been deprecated: Use `Set.mem_ofPred_eq` instead
+/tmp/claude-1000/-home-xavkal-xdev-SocrateAI-Scientific-MechanicaFluidorum/151351af-c14b-4556-a053-1dce162c7106/scratchpad/v21_narrow.lean:271:15: warning: `Set.mem_setOf_eq` has been deprecated: Use `Set.mem_ofPred_eq` instead
+'MechanicaFluidorum.FourierZ3.k_sq_eq_zero_iff' depends on axioms: [propext, Classical.choice, Quot.sound]
+'MechanicaFluidorum.FourierZ3.applyLeray_div_free' depends on axioms: [propext, sorryAx, Classical.choice, Quot.sound]
+'MechanicaFluidorum.FourierZ3.applyLeray_eq_self' depends on axioms: [propext, sorryAx, Classical.choice, Quot.sound]
+'MechanicaFluidorum.FourierZ3.applyLeray_idem' depends on axioms: [propext, sorryAx, Classical.choice, Quot.sound]
+'MechanicaFluidorum.FourierZ3.sublattice_invariance' depends on axioms: [propext, Classical.choice, Quot.sound]
+'MechanicaFluidorum.FourierZ3.leray_support' depends on axioms: [propext, Classical.choice, Quot.sound]

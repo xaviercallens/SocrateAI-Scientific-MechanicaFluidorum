@@ -413,6 +413,40 @@ repositories it names. Applying LL-6 within one repo and concluding "unsourced" 
 class of error as verifying a threshold against an abstract (LL-16) — right discipline, wrong
 scope.*
 
+### `lean_src/FourierDynamicsZ3.lean` — OP-6b, first slice: the operator `B` (**DRAFT**, 2026-09-09)
+
+**SCOPE, normative:** kinematics-plus-one-operator. It defines the Galerkin index set, the
+Leray-projected bilinear operator, and proves two properties of it. It contains **no** dynamics
+(no ODE, no time), **no** energy theorem, and **nothing** about regularity or Hypothesis U.
+DRAFT until a human statement-adequacy audit passes.
+
+The operator is `B(u,v)_k = P(k)[ −i Σ_{p+q=k} (q·u_p) v_q ]`, i.e. the **corrected** formula
+certified in exact arithmetic by `tests/tier_b_nse_triad_convolution.py`. The rejected variant
+`q (u_p·u_q)` is identically zero (erratum recorded there) and is not used.
+
+| Claim | Theorem | Date |
+|---|---|---|
+| The Galerkin ball is inhabited: the witness mode lies in `ball 1` (non-vacuity, SPEC §7.5) | `k0_mem_ball_one` | 2026-09-09 |
+| **Transversality of the nonlinearity**: `k · B(u,v)_k = 0` for every `k`, `u`, `v` — Fact 1 of the Tier B harness, now a theorem | `B_div_free` | 2026-09-09 |
+| **Triad support**: if every pair `p+q=k` has `u_p = 0` or `v_q = 0` then `B(u,v)_k = 0` — this is exactly the `htriad` hypothesis of `sublattice_invariance` | `B_triad` | 2026-09-09 |
+| **Sublattice invariance for a CONCRETE operator** (first half of audit flag F1: the theorem is no longer conditional on a hypothetical `B`) | `B_sublattice_invariance` | 2026-09-09 |
+
+**Posed, NOT proved.** `⟨B(u,u), u⟩ = 0` is recorded as `EnergyConservationStatement (M : ℕ) : Prop`
+with its quantifier domain shown inhabited — **not** as a theorem carrying `sorry`, which would
+define the name and pollute every downstream footprint with `sorryAx`. It is certified
+computationally at `M ∈ {1,2,3}` (Tier B, fact 2) and a symbolic proof is future work.
+
+**Audit flags carried forward:** F1′ — a witness `B M u v k ≠ 0` is still owed (a hand computation
+is recorded in the file); until it exists, `B_sublattice_invariance` could still be vacuous on the
+non-trivial side. F4 — `ball M` is cube-then-filter while `GalerkinState.cutoff` is stated with
+`M² < k_sq k`; the two agree but the equivalence is not proved.
+
+**Import change to `FourierStateZ3.lean`, 2026-09-09, recorded because it touches a Tier A file:**
+its umbrella `import Mathlib` was replaced by the eleven narrow modules it actually uses. Reason:
+the umbrella forces a full Mathlib build and **fails** against `lean_src/.lake`; CLAUDE.md's
+standing rule is narrow imports. No statement and no proof changed, and all ten `#print axioms`
+certificates still report exactly `[propext, Classical.choice, Quot.sound]`.
+
 ### `lean_src/DyadicRiccati.lean` — why the dyadic threshold is exactly `α = 1/2` (Tier A, 2026-08-15)
 
 **SCOPE, normative:** this is **not** a formalisation of Cheskidov's Theorem 4.4. It formalises
@@ -478,6 +512,35 @@ from `c_n = 1` to `c_n = λ^{−n}`. The telescoping is robust to the exponent a
 must find the shifted weights, testing that it tracks weights rather than pattern-matching the
 constant vector), and the real negative control breaks the index structure instead
 (`u_n u_{n+2}`), returning dim 0 as required.
+
+## Tier C — the triadic "frustration index" 𝒟(M), three readings vs the null model (2026-09-09)
+
+Design memo and pre-registration: `docs/designs/TRIAD_FRUSTRATION_DM.md`. Computation:
+`exploration/triad_frustration_rs/` (Rust, no dependencies) + `exploration/triad_frustration_plot.py`.
+Data: `data/triad_frustration/dm_readings.csv` (sha256 `d090dcf9…67c6`), `dm_waleffe.csv`
+(sha256 `77facb13…69d6`), with `.meta` sidecar. **Floating point ⇒ Tier C throughout; no verdict.**
+
+Object: 𝒟(M) = (absolute triadic energy transfer) / (net signed transfer) on Λ_M ⊂ ℤ³, as defined
+in the owner memorandum of 2026-09-09 (archived Tier C at `docs/narrative/MANIFESTE_THEORIQUE_NS.md`).
+Transfers use the **corrected** Tier B convolution formula (`tests/tier_b_nse_triad_convolution.py`).
+
+| finding | numbers | status |
+|---|---|---|
+| **The memorandum's `𝒟 ∝ M³` is the NULL MODEL's own prediction, not evidence about ℤ³.** Random independent phases give slope 3.43 (flat envelope) but only **1.89** under the Kolmogorov envelope γ=11/6 — so even the null does not reproduce M³ where it matters | slopes of log 𝒟_a vs log M, M≥8, 3 seeds | Tier C |
+| **A phase-COHERENT field on the same lattice, same envelope, gives 𝒟 FLAT in M** (slope −0.20, 𝒟_a ≈ 1.6e2 constant from M=12 to M=20). The growth is therefore a property of the random phases, **not** of the arithmetic rigidity of ℤ³ | field "locked_quad": θ⁺=0, θ⁻=π/2 | Tier C |
+| **Reading (c) — the pure-geometry Waleffe reading — is EXACTLY ZERO, in every chirality class**, at every M: `\|ΣC\|/Σ\|C\| ≈ 1e-17`. The memorandum's target "cancellation to O(M³)" is not asymptotic and not statistical: it is the exact cyclic triad identity `g·[(\|p\|−\|q\|)+(\|q\|−\|k\|)+(\|k\|−\|p\|)] = 0`, i.e. detailed energy conservation — **already Tier A here as `triad_sum_zero`** | 8 classes, M=2..14 | Tier C measurement of a Tier A fact |
+| **E-5 anomaly, recorded not explained:** the single-chirality real-amplitude field has net flux exactly 0 across *every* sphere (𝒟 ~ 1e17); and the all-phases-zero field has *identically zero* transfer by parity (`Σ\|T\| = 0`), so it is inert as a comparator. Two of three "locked" comparators are degenerate ⇒ 𝒟 is **not a robust instrument** | fields "locked_plus", "real_even" | Tier C |
+
+Controls (all pass, both directions, before any measurement; the binary refuses to run otherwise):
+helical basis is a curl eigenbasis (residual 4e-16; the sign-flipped vector fails at O(1));
+`Σ_k T_k = 0` on every field (≤1e-14; injecting a longitudinal component breaks it to 1e-2);
+the all-class Waleffe signed sum vanishes (1.85e-17). **A guard was added after the first run:
+an inert 0/0 pass was caught (LL-19) — the obvious "phase-locked" comparator is silent by parity.**
+
+**What this does NOT establish.** Nothing about Navier–Stokes, Euler, Hypothesis U, or the
+suppression of any cascade. No field here solves any equation. And a large 𝒟 says the cancellation
+is large *relative to gross traffic*; it does not say the net flux is small — Kolmogorov's 4/5 law
+asserts a nonzero constant net flux in the inertial range.
 
 ## Tier C — θ probe: screen for room below α=1/2 (2026-08-15; NO ADMISSIBLE READING at large A)
 
