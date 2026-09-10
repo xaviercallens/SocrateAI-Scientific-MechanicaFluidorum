@@ -1,8 +1,23 @@
 # The dual-scale programme: work packages, model tiers, and the human gates
 
-**Status: PROPOSAL, for the owner's approval.** Requested 2026-09-10 ("propose a workflow with
-appropriate model tier — Haiku, Opus, Fable — and say when human / Deep Think discussion is needed
-to progress"). **Author:** Fable. Nothing below overrides `SPEC.md`, `PLAN.md`, or rule E-1.
+**Status: ADJUDICATED 2026-09-10** by the Orchestrator's memorandum
+(`DECISION_2026-09-10_openai_leverage_adjudication.md`), which also settled the five Deep Think
+questions. Standing amendments to this document from that adjudication:
+
+- **Q1:** the theory is the **sharp projection** `J_{√α′}` = the Galerkin truncation
+  (`M ↔ 1/√α′`). The smooth Helmholtz filter is discarded as a primary target.
+- **Q2:** the Leray-α continuum formalization (what §7.4 of the review called WP-4b) is
+  **killed**; no resources.
+- **Q3:** WP-3's track is chosen: **phase mixing via transversality** — prove the exact
+  production sum undergoes massive cancellation, sub-linear in `M`. First deliverable: a
+  derivation memo stating the claim gauge-free with a pre-registered null model.
+- **Q4:** Tasks 2.3 and 3.1/3.2 are **retired**, not blocked.
+- **WP-1c** is re-scoped by the memorandum to: expand the exact enstrophy production sum in the
+  helical basis, and establish its baseline exact-arithmetic properties on finite Galerkin balls.
+
+**Original proposal text follows.** Requested 2026-09-10 ("propose a workflow with appropriate
+model tier — Haiku, Opus, Fable — and say when human / Deep Think discussion is needed to
+progress"). **Author:** Fable. Nothing below overrides `SPEC.md`, `PLAN.md`, or rule E-1.
 
 ---
 

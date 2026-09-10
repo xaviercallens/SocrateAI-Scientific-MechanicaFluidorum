@@ -707,6 +707,46 @@ footprint. Standing rule applies: cite the theorem with its kernel transcript, n
 owner's call. The full build-and-`#print axioms` audit of the foreign tree is queued as WP-0b
 (mechanical; needs shell access to that path, which this session does not have).
 
+## Owner adjudication of 2026-09-10 — the five questions, decided (BINDING)
+
+Archived verbatim: `docs/designs/DECISION_2026-09-10_openai_leverage_adjudication.md`, with
+execution notes. Received after consideration with Deep Think.
+
+| Q | verdict | executed as |
+|---|---|---|
+| Q1 regularization fork | **the theory is the SHARP projection** `J_{√α′}` = the Galerkin truncation; the Helmholtz filter is discarded as primary target | `DUAL_SCALE_WORKFLOW.md` amended |
+| Q2 Leray-α continuum formalization | **KILLED** — classical paper mathematics, zero Millennium leverage | work package retired |
+| Q3 attack on the disparity factor | **phase mixing via transversality is the only live track**: prove the exact production sum cancels to sub-linear growth in `M` | first deliverable is the gauge-free derivation memo + pre-registered nulls — `HELICAL_PRODUCTION_EXPANSION.md` §4 |
+| Q4 the two E-1 definitions | **RETIRED and struck** — "narrative artifacts… lacking strict closed forms"; the programme relies on the kernel-checked triad identities and production sum | `FORMALIZATION_WORKFLOW.md` queue rewritten |
+| Q5 foreign-tree audit | proceed with "extreme epistemic hostility"; three probes injected | `openai-axiom-audit.lean` extended; note: `Classical.choice` is not a red flag (our own Tier A admits it) — `sorryAx`, custom axioms and `ofReduceBool` are; footprint transitivity discharges the "sorry creep" probe |
+
+The adjudication also directs reliance on `weighted_triad_sum` / `enstrophy_production_identity`;
+`WEIGHTED_TRIAD_IDENTITY.md`'s status is updated to cite that directive (a line-by-line statement
+audit remains advisable and unperformed).
+
+## Tier B — WP-1c step 1: the helical expansion's frame factors (2026-09-10)
+
+`tests/tier_b_helical_production_expansion.py` (Gate 1) and
+`docs/designs/HELICAL_PRODUCTION_EXPANSION.md`. In the triad's own frame `N = p × q`:
+
+| Claim | Where | Date |
+|---|---|---|
+| **I1**: `q · h^{s_p}(p) = \|N\|²`, **independent of the chirality `s_p`** | Tier B, 36 cases; Lean target L1 | 2026-09-10 |
+| **I2**: `h^{s_q}(q) ·_bil h^{s_r}(r) = \|N\|²[(q·r) − s_q s_r \|q\|\|r\|]` | Tier B; Lean target L2 | 2026-09-10 |
+
+Substituted into the kernel-checked production sum they give the per-triad helical expansion, and
+four structural facts (memo §3): the stretched leg's chirality is invisible to production;
+handedness enters only through the `|q||r|`-weighted odd channel; the brace vanishes exactly on
+collinearity, again; and **square roots — hence anything genuinely Diophantine about `ℤ³` — are
+confined to the chirality-odd channel**. Gauge legitimacy is argued in the memo §1 and
+distinguishes this per-term use of the frame from the retracted cross-triad claim of Waleffe
+§6bis item 4. Two negative controls, both confirmed to fail (perturbed frame; `|q|²` for
+`|q||r|`).
+
+**The production sum itself is polynomial — no square roots — so the §4 phase-mixing baseline
+measurement can be exact rational end to end.** The measurement is pre-registered in the memo
+(families F1–F3, nulls first, falsifiable failure modes named) and has NOT been run.
+
 **Audit flags — BOTH CLOSED 2026-09-10.** F1′ by `B_witness_ne_zero` / `B_not_identically_zero`
 (rows above). F4 by `mem_ball_iff`: `k ∈ ball M ↔ k_sq k ≤ M²`. The non-obvious direction is that
 `k_sq k ≤ M²` already forces every coordinate into `[−M, M]`, because each `(kᵢ)²` is one

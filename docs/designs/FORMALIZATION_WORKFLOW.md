@@ -71,13 +71,15 @@ before any dependent code existed.
 | **Task 2.2** energy identity | **CLOSED** — `energy_conservation`, all five steps, three negative controls fail as required | — |
 | **F4** `ball` vs `GalerkinState.cutoff` | **CLOSED** — `mem_ball_iff` | — |
 | **weighted triad identity** (`WEIGHTED_TRIAD_IDENTITY.md`) | Lean + Tier B done; **memo is SELF-AUTHORED and awaits the owner's statement-adequacy audit** | owner to accept, amend or reject the statement. The proofs are machine-checked; whether the statement is the one the programme wants is not |
-| **Task 2.3** sweeping cancellation | **blocked, E-1** | the memorandum states a bound "∝ \|p\|" with no definition of the object bounded. A definition must be authored and audited before any Lean |
-| **Task 3.1/3.2** confinement ⇒ Hypothesis U | **blocked, E-1 and O5** | "invariant region" and "confinement guarantees U" are Tier C conjectures. Also: at fixed `α′` the truncated system is regular by an elementary argument, so a proof that does not use `α′ → 0` uniformly proves nothing (SPEC obstruction O5) |
+| **Task 2.3** sweeping cancellation | **RETIRED** (owner adjudication Q4, 2026-09-10) | struck from the specification: "Deep Think narrative artifact… lacks a strict, mathematically closed form in our discrete lattice formalism" |
+| **Task 3.1/3.2** confinement ⇒ Hypothesis U | **RETIRED** (owner adjudication Q4, 2026-09-10) | same verdict; the programme "relies entirely on the exact triad identities and the closed-form enstrophy production sum that are already kernel-checked" |
+| **WP-3 track selection** | **DECIDED** (owner adjudication Q3, 2026-09-10) | phase mixing via transversality is the only live track; first deliverable is a derivation memo defining the cancellation claim gauge-free, with a pre-registered null model, before any Lean or any interpreted run |
 
-**On the two blocked rows.** They are blocked on *definitions*, not on effort, and PLAN §3 rule E-1
-forbids inventing them. That is the correct state for them to be in, and it is where the
-programme's honesty lives: the queue above is short because most of the roadmap's later items are
-not yet mathematics.
+**On the two retired rows.** They were blocked on *definitions*, E-1 forbade inventing them, and
+the owner has now struck them rather than authoring them
+(`docs/designs/DECISION_2026-09-10_openai_leverage_adjudication.md`). The queue's honesty
+discipline is unchanged: what replaces them — the phase-mixing cancellation claim — enters the
+queue only once its defining memo exists.
 
 **On what closing Task 2.2 did and did not buy.** It proved the truncated system conserves energy —
 a prerequisite for global existence *of that system*, which obstruction O5 says was never in doubt.

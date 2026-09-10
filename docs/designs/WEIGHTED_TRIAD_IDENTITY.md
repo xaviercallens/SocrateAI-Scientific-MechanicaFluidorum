@@ -1,6 +1,12 @@
 # Design memo — the weighted triad identity: why energy conserves and enstrophy does not
 
-**Status: DRAFT — self-authored, and it needs the owner's statement-adequacy audit.**
+**Status: RELIED UPON by the owner's adjudication of 2026-09-10**
+(`DECISION_2026-09-10_openai_leverage_adjudication.md`, Q4: "We rely entirely on the exact triad
+identities and the closed-form enstrophy production sum that are already kernel-checked"). A
+line-by-line statement-adequacy audit remains advisable and has not been performed; the reliance
+is the owner's directive, not a completed audit.
+
+**Original status: DRAFT — self-authored, and it needs the owner's statement-adequacy audit.**
 Unlike `TASK22_ENERGY_IDENTITY.md`, this memo was not issued by the orchestrator. I derived it while
 looking for unblocked work on the goal after Task 2.2 closed. The mathematics below is checked in
 exact integers (`tests/tier_b_weighted_triad.py`) and formalised
