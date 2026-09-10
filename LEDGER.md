@@ -549,6 +549,23 @@ must find the shifted weights, testing that it tracks weights rather than patter
 constant vector), and the real negative control breaks the index structure instead
 (`u_n u_{n+2}`), returning dim 0 as required.
 
+## VERDICT (owner-issued 2026-09-10) — the "Spontaneous Beltrami Attractor" is KILLED
+
+**Killed.** The narrative that the T-dual metric spontaneously converts kinetic energy into a
+Beltrami state is **an artifact of heavily skewed initial conditions**: the initial condition is
+already **95.6 %** aligned by construction (`epsilon_cross = 0.15` fixes `u⁻ = 0.15 u⁺`), and the
+whole reported "conversion" is a move of `+0.0329` from there. Nothing in the run starts from
+isotropic turbulence, and nothing in it shows a Beltrami state being *created*.
+
+**What survives the kill, and its exact scope.** The metric bounds this flow where the bare model
+diverges — see the scope note below, which is narrower than "absolute global boundedness": one
+`α′`, one initial condition, one finite horizon, a 20-shell truncation, floating point.
+
+**Standing consequence.** No document in this repository may describe a Beltrami attractor as
+emerging, forming, or being created. `docs/narrative/MANIFESTE_THEORIQUE_NS.md` §III asserts exactly
+that ("formation d'un flot de Beltrami"); it is Tier C and quarantined, and this row is the record
+that its central mechanism is now refuted rather than merely unproven.
+
 ## OWNER VERDICTS AND STANDING DIRECTIVES — issued 2026-09-10
 
 Recorded verbatim in substance, because they change what may be claimed and how the repository is
@@ -629,10 +646,43 @@ was **inert**; the corrected mis-indexing fires at `4.85e-01`. Positive control 
 telescopes, drift `3.07e-15`) and N1 (the cross term genuinely breaks total energy conservation,
 drift `1.98e-04`, confirming the review's finding 4 on our own transcription) both hold.
 
-**Directive D-2 instrument, first use.** The run also reports net helicity transferred into three
-shell bands, replacing the global scalar ratio. Under the metric the UV band receives **exactly
-zero** while the IR band takes `9.0`; without it the UV band takes `3.5e40` (in a diverged cell, so
-that number is a magnitude of overflow, not a flux).
+**Directive D-2 instrument, first use.** The run reports net helicity transferred into three shell
+bands, replacing the global scalar ratio. Under the metric the UV band reads `0.0` while the IR band
+takes `9.0`; without it the UV band reads `3.5e40` (in a diverged cell, so that is a magnitude of
+overflow, not a flux).
+
+### ⚠ The UV zero is an UNDERFLOW, not a cancellation — checked before any theory was built on it
+
+The owner's directive D-3 asked for an analytic explanation of why the UV band "receives exactly
+zero net transfer under the T-dual metric". **It does not receive zero by cancellation. The band is
+never populated.** Peak amplitude by shell, over the whole run, with the metric on:
+
+| shell `n` | 0 | 4 | 6 | 8 | 10 | 12 | 13…19 |
+|---|---|---|---|---|---|---|---|
+| peak \|uₙ\| | 2.0 | 1.0 | 1.1e−1 | 2.6e−9 | 1.5e−43 | 3.6e−184 | **0.0 (underflow)** |
+
+The decay in shell index is **super-exponential**, and by `n = 13` it has fallen below the smallest
+representable float64. Without the metric all seven UV shells are populated. So:
+
+- **the real effect is genuine and strong** — the metric throttles the cascade super-exponentially,
+  which is what `k_eff = k/(1+α′k²)` should do, since the transfer coefficient decays like `1/(α′k)`;
+- **but "exactly zero net transfer" is a floating-point artifact.** In exact arithmetic the flux is
+  astronomically small and non-zero. Searching for an algebraic cancellation to explain a `0.0` that
+  is really `~10⁻³⁷⁰` would be chasing a ghost — the LL-11 pattern (a number that looks like a
+  mechanism) in its underflow form.
+
+The D-3 memo therefore analyses the *decay rate*, which is real, and not a cancellation, which is not.
+
+### Scope of what the control established, stated because the summary of it was broader
+
+The runs show boundedness for **one** value of `α′`, **one** initial condition, over **one** finite
+horizon `T = 0.5`, in a **20-shell truncated** helical model, in **floating point** — Tier C on every
+count. They do not establish global-in-time boundedness, do not vary `α′`, and say nothing about
+uniformity as `α′ → 0`, which is the only thing Hypothesis U is about. The honest statement is:
+*at fixed `α′ = 0.01` the metric suppressed this cascade super-exponentially and kept `Ω/Ω₀ ≤ 15`
+over the window observed, where the same run without it diverged.* SPEC obstruction O5 applies in
+full: at fixed `α′` a regularised truncation is expected to stay bounded, and a result that does not
+track the `α′ → 0` limit uniformly is not evidence for the programme's hypothesis.
 **Not reviewed:** the ETD-RK4/Leray CFD core, the JHTDB benchmarks, the enterprise/GPU claims.
 
 ## Tier C — the triadic "frustration index" 𝒟(M), three readings vs the null model (2026-09-09)
