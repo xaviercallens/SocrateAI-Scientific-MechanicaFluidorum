@@ -77,15 +77,24 @@ def main(out_dir):
     for i, gamma in enumerate(gammas):
         for j, key in enumerate(readings):
             ax = axes[i][j]
+            anchor = None   # value of the RANDOM series at M = MFIT, used to place the guide line
+            m_max = MFIT
             for (gm, field, k), (Ms, ys, lo, hi) in series.items():
                 if gm != gamma or k != key:
                     continue
                 ax.plot(Ms, ys, marker="o", ms=3, label=field)
+                m_max = max(m_max, max(Ms))
                 if field == "random":
                     ax.fill_between(Ms, lo, hi, alpha=0.2)
-            xs = [M for M in range(MFIT, max(Ms) + 1)]
-            ref = [ys[0] * (x / Ms[0]) ** 3 for x in xs] if ys and ys[0] > 0 else None
-            ax.plot(xs, [(x / MFIT) ** 3 * 10 for x in xs], "k--", lw=0.8, label="∝ M³ (null)")
+                    # anchor the guide to the null model itself, not to an arbitrary offset:
+                    # a slope guide placed by hand invites eyeballing an agreement that is not there.
+                    for M, y in zip(Ms, ys):
+                        if M == MFIT and y > 0 and math.isfinite(y):
+                            anchor = y
+            if anchor is not None:
+                xs = list(range(MFIT, m_max + 1))
+                ax.plot(xs, [anchor * (x / MFIT) ** 3 for x in xs], "k--", lw=0.8,
+                        label="slope 3 guide (anchored to random at M=%d)" % MFIT)
             ax.set_xscale("log"); ax.set_yscale("log")
             ax.set_title(f"{key}, γ={gamma:.3f}"); ax.set_xlabel("M"); ax.grid(True, which="both", alpha=0.3)
             if i == 0 and j == 0:

@@ -79,9 +79,9 @@ Until then, `max_frustration_index > 100.0` in the test is satisfiable by the fl
 The calibration run is a **20-shell helical dyadic model**, not the Euler equations. Blow-up is
 declared when enstrophy exceeds `initial_enstrophy × 1e6`.
 
-In a truncation at `N = 20` shells with `κₙ = 2ⁿ`, enstrophy is bounded a priori by
-`κ_N² · 2E ≈ 2.7 × 10¹¹ · E`. Energy merely reaching the upper shells therefore crosses a `10⁶`
-threshold **with no singularity anywhere**. The detector cannot separate "finite-time blow-up" from
+In a truncation at `N = 20` shells with `κₙ = 2ⁿ` (so `κ_N = 2¹⁹`), enstrophy obeys the a priori
+bound `Ω = ½Σκₙ²(uₙ₊² + uₙ₋²) ≤ ½κ_N²·2E = κ_N²·E ≈ 2.7 × 10¹¹ · E`. Energy merely reaching the
+upper shells therefore crosses a `10⁶` threshold **with no singularity anywhere**. The detector cannot separate "finite-time blow-up" from
 "the cascade arrived at the cutoff", which is the exact defect this programme documented in D5/D6
 and mechanised as `StopReason`/`Aggregate` in `tests/controls.py` (LL-18). The published D6 design
 memo requires the shell-population profile and the cutoff flux `F_N` to be reported with every run
