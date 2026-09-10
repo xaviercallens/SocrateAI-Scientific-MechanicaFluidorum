@@ -1,3 +1,23 @@
+> ## ⚠ CORRECTION NOTICE — READ BEFORE USING THIS FILE (added 2026-09-10, orchestrator)
+>
+> This file is **not tiered** and is **not** covered by any gate. Parts of §1.C report results that
+> **were never computed in this repository** — there is no Euler solver here and none was run, so the
+> "calibration blow-up at t ≈ 0.38–0.40", the velocity/vorticity alignment, the Lamb-term
+> annihilation and the Beltrami attractor are **not measurements**. §1.C's label "Rust Tier B" is
+> also a category error: SPEC §2 bars floating point from Tier B in any language.
+>
+> One claim is **contradicted by data committed alongside it**: the growth of 𝒟(M) is a property of
+> the *random phases* used as the null model, not of ℤ³ — a phase-coherent field on the same lattice
+> gives 𝒟 **flat** in M. See `data/triad_frustration/` and `docs/designs/TRIAD_FRUSTRATION_DM.md`.
+>
+> The gate results in §2.A are accurate as of `d980c18` (verified: Gates 1, 1b, 2 exit 0). The commit
+> subject of `d980c18` is **wrong** where it says "integrate FourierStateZ3 v2.1": that submission was
+> **rejected** with 16 compile errors (`docs/proposals/2026-09-09-review.md`).
+>
+> Full analysis, and the three questions this raises for the owner:
+> **`docs/escalations/2026-09-10-E3-MEMORY-md-unsupported-claims.md`**.
+> No other line of this file has been altered by the orchestrator.
+
 # SOCRATEAI DUAL-SCALE PROGRAM MEMORY & FAST RESTART REGISTER
 
 **Dernière mise à jour :** 2026-09-10  
