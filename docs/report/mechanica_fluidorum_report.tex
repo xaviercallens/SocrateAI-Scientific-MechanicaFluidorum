@@ -63,8 +63,8 @@ Revised After the External Audit of 13 August 2026}}
 \small\texttt{SocrateAI-Scientific-MechanicaFluidorum}}
 
 \date{13 August 2026 \quad$\vert$\quad revised 10 September 2026\\[0.3em]
-\small Repository state: commit \texttt{f104bee} \quad$\vert$\quad All verification gates PASS (exit 0)\\[0.2em]
-\small 12 Lean files, 215 kernel-compiled theorems, zero \texttt{sorry} \quad$\vert$\quad 15 exact-arithmetic harnesses}
+\small Repository state: commit \texttt{024909b} \quad$\vert$\quad All verification gates PASS (exit 0)\\[0.2em]
+\small 12 Lean files, 224 kernel-compiled theorems, zero \texttt{sorry} \quad$\vert$\quad 15 exact-arithmetic harnesses}
 
 \begin{document}
 \maketitle
@@ -1516,6 +1516,33 @@ a \texttt{sorry}'d theorem still \emph{defines its name}, so every downstream \t
 axioms} silently carries \texttt{sorryAx}. The supported substitute is a \texttt{Prop} with an
 inhabited quantifier domain.
 
+\paragraph{The instantiation, carried out (\tA{}).}
+\texttt{energy\_conservation} now proves \eqref{eq:twoswap} for the concrete truncated operator, for
+every $M$, with no smallness, no genericity and no hypothesis beyond the Galerkin structure. Four
+bridge steps carry it: the Leray projector drops out of the outer pairing; the double sum over
+$\Lambda_M\times\Lambda_M$ is reindexed by $(k,p)\mapsto(p,k-p)$; the terms whose middle member has
+left the ball are discarded, which the cutoff supplies; and the abstract theorem applies. The third
+step is the one the design memo flagged as the only real trap, and it is real: the set the
+reindexing lands on is \emph{not} closed under the two-swap, because it constrains $p$ and $r$ but
+not $q$. The cutoff repairs it, and the repaired set is closed for the reason that matters --- its
+defining condition is a property of the \emph{unordered} triad, which the swap merely permutes.
+
+One deviation from the memo simplifies the proof. The memo routes the projector step through the
+conjugate symmetry $\overline{u_k}=u_{-k}$; that is not needed, since integer wavevector entries are
+fixed by conjugation, so divergence-freeness transfers to $\overline u$ directly and the step holds
+for \emph{any} divergence-free field. Conjugate symmetry is still used, once, and elsewhere: to turn
+the Hermitian outer pairing into the bilinear form the abstract theorem is stated for.
+
+The three negative controls the memo mandates all fail as required. The sharpest supplies
+divergence-freeness at the \emph{wrong} index of the pair and does not typecheck --- which is
+exactly what a 3-cycle would have needed, so its failure is the formal counterpart of why the first
+attempt stalled.
+
+Audit verdict D1 still binds, and the scope should be stated plainly: this is the
+\emph{finite-dimensional} identity. The Galerkin ODE conserves energy exactly, which is a
+prerequisite for global existence \emph{of the truncated system}. It is not evidence about the
+$\alpha'\to0$ limit, about Hypothesis~U, or about Navier--Stokes.
+
 \subsection{A ``frustration index'' that measures its own null model (\tC{}, refuted as posed)}
 \label{sec:frustration}
 
@@ -1827,16 +1854,17 @@ LL-8 & \textbf{The verification gate itself had a false positive.} A lemma prove
 \texttt{TriadTorus.lean} & Triad 2-section on a torus: $A=6(J{-}I)-2P$, spectrum & \tA{} & 12 \\
 \texttt{DyadicRiccati.lean} & The $\alpha=1/2$ threshold as an integrability threshold & \tA{} & 14 \\
 \texttt{FourierStateZ3.lean} & 3-D Fourier state space, Leray projector (\textsc{draft}) & \tA{} & 24 \\
-\texttt{FourierDynamicsZ3.lean} & The operator $B$ of \eqref{eq:Bop}; $B\neq0$ witness; $F1$, $F4$ closed & \tA{} & 18 \\
+\texttt{FourierDynamicsZ3.lean} & The operator $B$ of \eqref{eq:Bop}; $B\neq0$ witness; $F1$, $F4$
+closed; \textbf{energy conservation} & \tA{} & 27 \\
 \texttt{HelicalBasis.lean} & Helical basis, five facts; resonance $=$ collinearity; the closed
 form \eqref{eq:closed}, its converse, and the gauge separation & \tA{} & 75 \\
 \midrule
-\multicolumn{2}{@{}l}{\textbf{Tier A subtotal}} & & \textbf{207} \\
+\multicolumn{2}{@{}l}{\textbf{Tier A subtotal}} & & \textbf{216} \\
 \midrule
 \texttt{MillenniumReduction.lean} & Conditional reduction skeleton & \tC{} & 8 \\
  & \quad (\textsc{demoted} 2026-08-13, verdict B1) & & \\
 \midrule
-\multicolumn{2}{@{}l}{\textbf{Total kernel-compiled, no axiom outside \texttt{\{propext, Classical.choice, Quot.sound\}}}} & & \textbf{215} \\
+\multicolumn{2}{@{}l}{\textbf{Total kernel-compiled, no axiom outside \texttt{\{propext, Classical.choice, Quot.sound\}}}} & & \textbf{224} \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -1858,8 +1886,10 @@ bound, and now the exact energy conservation of the concrete Katz--Pavlovi\'c no
 T-dual effective radius laws with sharpness; a non-vacuous statement-level formalisation of
 Hypothesis~U \emph{for the shell model}, with nothing abstract remaining in the headline
 statement, and including a machine-checked refutation of a prior, provably false formulation;
-and exact-arithmetic verification of two structural properties of the Fourier--Galerkin
-nonlinearity, one of which is now also proven abstractly.
+and, for the 3-D Fourier--Galerkin nonlinearity on $\Z^3$, the exact energy identity
+$\mathrm{Re}\sum_k\langle u_k,B(u,u)_k\rangle=0$ for every truncation radius, together with the
+closed form of the helical triad coefficient and the converse that closes the inventory of inert
+triads.
 
 \subsection{What is emphatically not established}
 
