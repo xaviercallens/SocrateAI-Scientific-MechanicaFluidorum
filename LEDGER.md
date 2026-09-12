@@ -1241,6 +1241,17 @@ quadratic algorithm; with the incremental objective and per-class enumeration of
 instead of a stored table, it is negligible memory and an estimated 1–2 h. The conclusion "a VM
 does not help" stands; its reasoning is retracted.
 
+**⚠ CORRECTION, same evening: the "1–2 h" above is an unmeasured extrapolation and must not be
+cited.** The table-free algorithm now exists (`--align free`), its memory claim holds, and it is
+**bit-identical to the archived `M = 8` run** — all nine sweep values and the output CSV. Its
+*time* claim is unverified: the only measurement is at `M = 8`, where the inner parallel loop is
+2 109 elements long and rayon overhead dominates, and naive scaling of that measurement gives
+~6 h **per sweep** at `M = 32` rather than 1–2 h total. Three orders of magnitude apart; only a
+measurement at a size that amortises the loop can decide. `M = 16` is running for exactly that
+number, and doubles as the check against the table version's 42-sweep sequence. **LL-22 against
+its own author: a cost quoted from a model instead of a clock. No `M = 32` claim, and no VM
+request, until it lands.**
+
 ### Tier C — S-3's first result, and a falsified pre-registration (2026-09-13)
 
 `CORE_TAIL_CAP.md` §4.3.4. `M = 16` alignment converged at sweep 42 (`best =

@@ -337,6 +337,19 @@ per-class enumeration off the lattice replacing the stored table, `M = 32` needs
 memory and an estimated 1–2 h. The brief's conclusion that a VM does not help stands; its
 reasoning is withdrawn. The obstacle was never compute.
 
+> **⚠ The "1–2 h" in the paragraph above is an UNMEASURED extrapolation and is flagged as such
+> pending the `M = 16` measurement now running.** The memory claim is solid — the table-free
+> algorithm is built (`--align free`), holds `O((2M+1)³)` bytes, and is **bit-identical to the
+> archived `M = 8` run**, all nine sweep values and the output CSV. The *time* claim is not: the
+> only cost measurement in hand is at `M = 8`, where the inner parallel loop runs over just
+> 2 109 elements and rayon overhead dominates, so it over-states the per-unit cost by an unknown
+> factor. Scaling that measurement naively (cost ∝ classes × |ball|) gives ~6 h **per sweep** at
+> `M = 32`, not 1–2 h in total — a disagreement of three orders of magnitude that can only be
+> settled by measuring at a size where the loop is long enough to amortise. **This is LL-22
+> recurring against its own author: a cost quoted from a model rather than a clock.** The
+> `M = 16` run will supply the number, and it doubles as the correctness check against the
+> table version's 42-sweep sequence. No `M = 32` commitment — and no VM request — before it lands.
+
 #### 4.3.3 Pre-registration: what S-3 is predicted to return, and why it may not decide anything
 
 Written **while the `M = 16` alignment is still running and before any S-3 trajectory exists**,

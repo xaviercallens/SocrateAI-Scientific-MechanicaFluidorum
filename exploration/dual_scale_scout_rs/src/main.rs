@@ -434,6 +434,132 @@ fn phases_adversarial(m: i64) -> std::collections::HashMap<K, C> {
     half_ball(m).into_iter().map(|k| (k, C::new(0.0, idx.get(&k).map_or(1, |&i| signs[i as usize]) as f64))).collect()
 }
 
+/// TABLE-FREE ALIGNMENT (2026-09-13) — the same greedy with no triad table at all.
+///
+/// The incremental version above still stores every triad (3.03 GB at M = 16, ~195 GB at
+/// M = 32, which does not exist). But the incremental objective only ever reads ONE class's
+/// triads at a time, so they need not be stored: they can be enumerated from the lattice on
+/// demand. For a rep class `c`, every triad containing it has `c` or `-c` in one of the three
+/// legs, so ~6|ball| candidate ordered pairs cover it, enumerated in three disjoint groups so
+/// that each ordered pair is produced EXACTLY once:
+///
+///   (1) p = +-c,  q over the ball;
+///   (2) q = +-c,  p over the ball with rep(p) != c;
+///   (3) r = +-c   (so q = -r - p), p over the ball with rep(p) != c and rep(q) != c.
+///
+/// Cost per sweep becomes O(classes x |ball|) with O((2M+1)^3) bytes of state, against
+/// O(classes x triads) and O(triads) bytes for the original. At M = 32 that is the difference
+/// between 195 GB / ~108 days and a few megabytes / hours.
+///
+/// Every hot-path lookup is a dense array indexed by the wavevector, never a HashMap: at
+/// M = 32 a sweep evaluates ~5.6e10 candidates, and three hash lookups apiece would dominate
+/// everything. `direction_varied` is pure arithmetic and is simply recomputed.
+///
+/// This returns the SAME alignment as the table version — same class set and order, same sweep
+/// order, same accept test — and is checked by reproducing it exactly at M = 8 and M = 16.
+fn phases_adversarial_free(m: i64) -> std::collections::HashMap<K, C> {
+    let bv = ball(m);
+    let side = (2 * m + 1) as usize;
+    let lin = |k: &K| -> Option<usize> {
+        if k.0.iter().any(|&x| x < -m || x > m) { return None; }
+        Some((((k.0[0] + m) as usize * side) + (k.0[1] + m) as usize) * side + (k.0[2] + m) as usize)
+    };
+    let mut inball = vec![false; side * side * side];
+    for k in &bv { inball[lin(k).unwrap()] = true; }
+
+    // The (rep triple, weight) of one ordered pair, or None when absent/degenerate. Identical
+    // arithmetic to `entry` in the table version; only the lookups differ.
+    let entry = |p: &K, q: &K| -> Option<(K, K, K, i64)> {
+        let r = p.add(q).neg();
+        // ALL THREE legs must be in the ball. In the table version both p and q ranged over the
+        // ball by construction so only r was tested; here group (3) builds q = -r - p, which can
+        // land outside, so the test has to be explicit or an out-of-ball class index is read.
+        for k in [p, q, &r] {
+            match lin(k) { Some(i) if inball[i] => {}, _ => return None }
+        }
+        if *p == K([0,0,0]) || *q == K([0,0,0]) || r == K([0,0,0]) { return None; }
+        let (rp, rq, rr) = (rep(p), rep(q), rep(&r));
+        let w = r.sq() - q.sq();
+        let g = w * q.dot(&p.cross(&direction_varied(&rp)))
+                  * q.cross(&direction_varied(&rq)).dot(&r.cross(&direction_varied(&rr)));
+        if g == 0 { None } else { Some((rp, rq, rr, g)) }
+    };
+
+    // Pass 1: the class SET, in the table version's order. O(|ball|^2) once, nothing stored.
+    let present: std::collections::HashSet<K> = bv.par_iter().map(|p| {
+        let mut s = std::collections::HashSet::new();
+        for q in &bv {
+            if let Some((rp, rq, rr, _)) = entry(p, q) { s.insert(rp); s.insert(rq); s.insert(rr); }
+        }
+        s
+    }).reduce(std::collections::HashSet::new, |mut a, b| { a.extend(b); a });
+    let mut classes: Vec<K> = present.into_iter().collect();
+    classes.sort();
+    let n = classes.len();
+    let mut cidx = vec![u32::MAX; side * side * side];
+    for (i, c) in classes.iter().enumerate() { cidx[lin(c).unwrap()] = i as u32; }
+    let cls = |k: &K| -> u32 { lin(&rep(k)).map_or(u32::MAX, |i| cidx[i]) };
+    eprintln!("   [align/free] M={} classes={} dense state {:.1} MB",
+        m, n, (side * side * side * 5) as f64 / 1e6);
+
+    let term = |rp: &K, rq: &K, rr: &K, g: i64, signs: &Vec<i64>| -> i128 {
+        (signs[cls(rp) as usize] * signs[cls(rq) as usize] * signs[cls(rr) as usize] * g) as i128
+    };
+    // Sum of the terms that flip when class `ci` flips: triads containing it an ODD number of
+    // times. The three groups are disjoint by construction, so no pair is counted twice.
+    let contrib = |ci: usize, signs: &Vec<i64>| -> i128 {
+        let c = classes[ci];
+        [c, c.neg()].iter().map(|&s| {
+            bv.par_iter().map(|x| {
+                let mut acc: i128 = 0;
+                let mut take = |p: K, q: K| {
+                    if let Some((rp, rq, rr, g)) = entry(&p, &q) {
+                        let mult = (rp == c) as u32 + (rq == c) as u32 + (rr == c) as u32;
+                        if mult % 2 == 1 { acc += term(&rp, &rq, &rr, g, signs); }
+                    }
+                };
+                take(s, *x);                                   // (1) p = s
+                if rep(x) != c {
+                    take(*x, s);                               // (2) q = s, rep(p) != c
+                    let q = s.neg().sub(x);                    // (3) r = s  =>  q = -s - p
+                    let inb = matches!(lin(&q), Some(i) if inball[i]);
+                    if inb && rep(&q) != c { take(*x, q); }
+                }
+                acc
+            }).sum::<i128>()
+        }).sum()
+    };
+
+    let mut signs: Vec<i64> = vec![1; n];
+    let mut s: i128 = bv.par_iter().map(|p| {
+        let mut acc: i128 = 0;
+        for q in &bv {
+            if let Some((rp, rq, rr, g)) = entry(p, q) { acc += term(&rp, &rq, &rr, g, &signs); }
+        }
+        acc
+    }).sum();
+    let mut best = s.abs();
+    let t0 = std::time::Instant::now();
+    for sweep in 1.. {
+        let mut improved = false;
+        for i in 0..n {
+            let s_new = s - 2 * contrib(i, &signs);
+            if s_new.abs() > best {
+                best = s_new.abs();
+                s = s_new;
+                signs[i] *= -1;
+                improved = true;
+            }
+        }
+        eprintln!("   [align/free] sweep {} done, best={} ({:.1} s elapsed){}", sweep, best,
+            t0.elapsed().as_secs_f64(), if improved { "" } else { " -- converged" });
+        if !improved { break; }
+    }
+    half_ball(m).into_iter()
+        .map(|k| (k, C::new(0.0, match cls(&k) { u32::MAX => 1, i => signs[i as usize] } as f64)))
+        .collect()
+}
+
 /// The alignment is deterministic and, at M = 16, the most expensive part of a run, while the
 /// six adversarial runs of protocol S-3 (two signs x two step sizes, plus the every-step pair)
 /// all need the SAME phases. `--phases-out` writes them, `--phases-in` reads them back, so the
@@ -525,9 +651,13 @@ fn scout(args: &[String]) {
     let seed: u64 = get("--seed", "1").parse().unwrap();
     let pin = get("--phases-in", "");
     let pout = get("--phases-out", "");
+    // `--align table` keeps the validated triad-table greedy; `--align free` uses the
+    // table-free enumeration, which is the only one that reaches M = 32. Both are retained so
+    // that either can check the other.
+    let align = get("--align", "table");
     let phases = if ic == "adv" {
         if pin.is_empty() {
-            let p = phases_adversarial(m);
+            let p = if align == "free" { phases_adversarial_free(m) } else { phases_adversarial(m) };
             if !pout.is_empty() { phases_write(&pout, m, &p); }
             p
         } else {
