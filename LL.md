@@ -730,6 +730,40 @@ a refinement that lowers a maximum is arithmetically impossible, so the reading 
 **Keep a list of such impossibilities for your instruments** — they are the cheapest available
 detector of a broken measurement, and they fire before any interpretation has been built.
 
+## LL-26 — the memory budget of a workstation is not a constant, and the reaper eats the compute (2026-09-13)
+
+**Incident.** Four unattended jobs — two horizon-6 trajectories at 33 % complete, a redundant
+alignment, and an algorithm validation — were killed simultaneously by the harness's
+out-of-memory reaper. **None of them was the cause.** Their resident sets were `0.10`, `0.10`,
+`3.03` and `0.01` GB against a 31 GB machine. The memory had gone to the interactive desktop:
+Chrome across its processes ~7 GB, plus the shell, portal and file manager, for a ~21 GB
+baseline that grows and shrinks while the compute runs. Roughly 1.5 h of trajectory progress was
+lost, unrecoverably, because the scout has no checkpoint.
+
+**Two distinct errors, and the first is a correction to LL-21.** LL-21 says to compare *peak*
+against *measured free* memory. That is right and insufficient: **`available` was read once, at
+launch, and treated as a constant.** On a machine that is also somebody's desktop it is a
+fluctuating quantity contended by processes this programme does not control, and the margin has
+to cover its excursions, not its value at the moment you happened to look. The second error is
+plainer: **a multi-hour unattended run with no checkpoint is one Chrome tab away from losing
+everything**, and that risk was never priced when the overnight plan was made.
+
+**Rules.**
+1. Budget against the *low-water mark* of available memory over the run, not a single reading.
+   On a shared/interactive machine, assume the desktop can take several GB more at any moment.
+2. **The reaper kills what the harness started, not what caused the pressure.** Small, innocent
+   compute jobs are exactly what dies. Do not infer from "my job was killed for memory" that your
+   job used memory — check, as here, where the real answer was 0.01 GB.
+3. Price the restart cost of any unattended run before launching it. If losing it is expensive,
+   either checkpoint or shorten the segments; if it is cheap, say so explicitly and proceed.
+4. Ask for headroom in the terms the owner can act on. "Close some Chrome windows" is a real and
+   sufficient remedy here, and is cheaper than any of the alternatives.
+
+**Recorded because it nearly went the other way.** The first reflex on seeing four
+simultaneous OOM kills was to suspect the new table-free pass, whose `par_iter().map(HashSet)
+.reduce(...)` looks like it could materialise thousands of sets. Checking the actual RSS before
+theorising showed it was using 0.01 GB and was innocent. One `ps` beat a plausible story.
+
 ## LL-21 — a declared risk must carry a counted quantity, not an order of magnitude (2026-09-13)
 
 **Incident.** Protocol S-3 was registered with an explicit, creditable risk declaration: the
@@ -808,6 +842,7 @@ occurred with **both gates green**, and none of them is a proof error:
 | LL-23 | The allow-list subsumed its own denial | Permissions are not a tier |
 | LL-24 | A product observable's composite was extrapolated instead of its factors; the pre-registered bracket was falsified | Gates check identities, not the structure of a forecast |
 | LL-25 | An aggregate was read off a file a background job was still writing | A truncated file and a finished one look identical to a row reader |
+| LL-26 | Four unattended jobs OOM-killed by desktop pressure they did not cause; no checkpoint, 1.5 h lost | Neither gate models the machine the work runs on |
 
 **The three blind spots, stated for the next campaign:**
 
