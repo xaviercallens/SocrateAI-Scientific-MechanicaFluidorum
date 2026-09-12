@@ -977,6 +977,29 @@ clean, zero `sorry`. So the concurrent rewrite is churn, not breakage: the state
 footprints are intact, and the escalation's substance is the missing provenance, the deleted
 docstring, and the roadmap's fabricated references — not compilation.
 
+**RESOLVED 2026-09-12 by owner acknowledgement** ("a wrong update from another tool due to
+parallel work"). See `docs/escalations/2026-09-12-E3-RESOLUTION.md`. Actions, all reversible and
+nothing deleted: the rewrite **stashed** (`git stash@{0}`, recoverable verbatim with
+`stash pop`) and the committed version restored; the roadmap **moved verbatim** to
+`docs/escalations/2026-09-12-E3-ARCHIVED-roadmap-verbatim.md`, kept for the record, **not
+adopted, not citable**; the stray premature-audit error file moved out of `docs/proposals/` so
+it cannot be mistaken for the audit result. **Preventive measure still open:** worktree
+isolation for the concurrent stream — this is the third incident in this family, each caught by
+a gate or a read, each costing a full review cycle.
+
+## Deep Think brief issued (2026-09-12)
+
+`docs/briefs/2026-09-12-deep-think-brief-actions-and-recommendations.md` — self-contained state
+of the programme, the three coherence-control trips with their mechanisms, the audited external
+landscape, and four open decisions each with a recommendation and its rationale: redesign the
+observable (chirp phases + windowed ratios, a fourth trip decisive against it); keep phase
+mixing but re-aimed at the disparity factor, with the honest risk named — three symmetry-driven
+vanishings found, zero evidence yet of cancellation *beyond* symmetry; formalise the
+cubic-coefficient step of C-DIR at low priority; adopt the external results as Tier L with the
+naming caveat. One question is put to DeepMind directly, since the challenge statements are
+theirs, and one is decision-grade: whether any known equidistribution or oscillatory-sum
+technique bounds `Σ (|r|²−|q|²)(q·u_p)(u_q·u_r)` sub-linearly in the ball radius.
+
 **Audit flags — BOTH CLOSED 2026-09-10.** F1′ by `B_witness_ne_zero` / `B_not_identically_zero`
 (rows above). F4 by `mem_ball_iff`: `k ∈ ball M ↔ k_sq k ≤ M²`. The non-obvious direction is that
 `k_sq k ≤ M²` already forces every coordinate into `[−M, M]`, because each `(kᵢ)²` is one

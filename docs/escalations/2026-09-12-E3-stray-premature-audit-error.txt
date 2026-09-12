@@ -1,0 +1,1 @@
+/home/xavkal/xdev/SocrateAI-Scientific-MechanicaFluidorum/docs/proposals/openai-axiom-audit.lean:21:0: error: object file '/home/xavkal/xdev/OpenAINavierStokesEuler/NavierStokesAndEuler/.lake/build/lib/lean/NavierStokes/ComparatorR3Theorem.olean' of module NavierStokes.ComparatorR3Theorem does not exist
