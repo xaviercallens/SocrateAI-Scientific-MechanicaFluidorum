@@ -301,6 +301,61 @@ afternoon" counted the trajectories only and omitted this entirely; S-3 is an ov
 Because the alignment is deterministic and all six adversarial runs need the same phases, the
 scout now takes `--phases-out` / `--phases-in`, so it is paid once rather than six times.
 
+#### 4.3.2 Pre-registration: what S-3 is predicted to return, and why it may not decide anything
+
+Written **while the `M = 16` alignment is still running and before any S-3 trajectory exists**,
+so that the reading of §4.3 can be checked against a prediction rather than fitted to a result.
+Everything here is arithmetic on the three archived points; nothing is a claim.
+
+**First, a correction to how §4.2 reads its own series.** §4.2 reports that the increments of
+`Z_max/Z₀ − 1` *decelerate* (`×5.3` then `×2.2`) and calls the result "consistent with
+saturation". Those are **ratios**. In absolute terms the same three points are
+
+> `e(M) = Z_max/Z₀ − 1 = 0.0023, 0.0122, 0.0265`, increments **`+0.0099` then `+0.0143`**,
+
+i.e. the increments are **growing, not shrinking** — and so are the injection's
+(`ΔZ_inj/Z₀ = 0.0157, 0.0292, 0.0464`, increments `+0.0135`, `+0.0172`). Saturation requires the
+increments to turn over, and **nothing in the data has turned over**. Concretely: fitting the
+three-parameter family `e(M) = e_∞ − A·M^{−β}`, which is the generic approach-to-a-ceiling
+shape, returns **`β = −0.53`** — the exponent has the wrong sign, so the only member of that
+family through these points is a *divergent* one. The honest statement is therefore weaker than
+§4.2's: the ratios falling is compatible with saturation, but **no saturating form actually fits
+the three points**, and the "consistent with saturation" reading rests entirely on the ratios.
+
+**A structural reason the ratios fall, which is not evidence of saturation.** The fraction of
+the injected enstrophy that survives to the peak, `e/ΔZ_inj`, is `0.147, 0.418, 0.571` — it is
+climbing toward a hard ceiling of `1`. At small `M` dissipation eats most of the injection
+before the peak; at larger `M` the injection is over sooner (`t_peak = 0.022, 0.011, 0.003`) and
+more of it survives. So `e` had to grow faster than `ΔZ_inj` early and must decelerate to
+`ΔZ_inj`'s own rate as the fraction saturates — which is most of the way done. **The ratio
+deceleration is largely this bookkeeping effect, not a statement about the enstrophy.**
+
+**The prediction.** Two independent routes:
+
+| route | predicted `e(16)` | `Z_max/Z₀` |
+|---|---|---|
+| `e ≈ c(log₂M)²`, `c = 0.00294` fixed at `M = 8` (a **divergent** form; it reproduces the growing increments) | `0.047` | **`1.047`** |
+| survival-fraction bracket: `e(16) = (e/ΔZ_inj)(16) · ΔZ_inj(16)`, fraction `0.63–0.71`, injection ratio `1.37–1.59` from its falling exponent | `0.040–0.052` | **`1.040–1.052`** |
+
+So S-3 is predicted to return **`Z_max/Z₀ ≈ 1.040–1.052`**, a third consecutive fall in the
+ratio (`×5.3`, `×2.2`, then `≈×1.6–1.9`).
+
+**And that is the point: the fourth point is predicted not to decide the question §4.3 poses
+it to decide.** §4.3 says a third falling increment is "consistent with saturation" and a
+non-falling one with a power law. But the divergent `(log₂M)²` model *also* predicts a third
+falling ratio (`×1.78`), and lands inside the same bracket as the saturating reading. **At
+`M = 16` the two hypotheses are predicted to differ by less than the spread of either
+estimate.** They separate at `M = 32` (`(log₂M)²` gives `e ≈ 0.073` against roughly `0.055` for
+a turnover) and cleanly at `M = 64`.
+
+**What S-3 is still worth, stated without inflation.** It is a falsification test of the
+bookkeeping model above, not of Hypothesis U: a return outside `1.040–1.052` refutes the
+survival-fraction reading and is the informative outcome. A return inside it confirms the model
+and leaves the saturation question exactly where §4.2 left it. **If the owner's purpose is to
+separate saturation from slow divergence, the registered `M = 16` point is predicted to be
+insufficient and `M = 32` is the first one that bites** — and per §4 of the compute brief, the
+`M = 32` adversarial arm needs a new alignment algorithm before it needs a machine.
+
 ---
 
 ## 5. The certificate's arithmetic, built and measured (Tier B)
