@@ -21,3 +21,5 @@ lean_src/lake-manifest.json.bak
 # The SOURCE (Cargo.toml, src/) is tracked; only the compiled artifacts are ignored.
 exploration/triad_frustration_rs/target/
 exploration/triad_frustration_rs/Cargo.lock
+exploration/dual_scale_scout_rs/target/
+exploration/dual_scale_scout_rs/Cargo.lock

@@ -951,12 +951,13 @@ All three parts landed and were verified from the transcripts, archived with pro
 | placeholders (built-in negative control) | `sorryAx` present in all four | **PASS** |
 | import scan | zero proof-tree imports of the challenge modules | **PASS** (empty scan) |
 
-**Tier L rows proposed for owner confirmation** (per Tier L governance, rows are owner-adopted):
+**Tier L rows — CONFIRMED by the owner, 2026-09-13 (adjudication D-3).** Adopted as stated,
+with the F-NAME caveat carried on every citation:
 
-| proposed row | statement, as kernel-verified | source | caveats |
+| row | statement, as kernel-verified | source | caveats |
 |---|---|---|---|
-| **L-9 (proposed)** | Forced Navier–Stokes breakdown on ℝ³ and on 𝕋³ (Clay options C and D shapes): smooth decaying data and force with no global smooth solution, force constructed as the residual of a pre-built singular candidate | `openai/NavierStokesAndEuler@8937a8f`, `NavierStokes.ComparatorBridge.navier_stokes_breakdown_R3` / `…_periodic`; kernel transcript archived | **F-NAME**: equivalence to the DeepMind-derived challenge *statements* is human-audited, not kernel-linked; the force is a manufactured residual (their own construction); nothing about unforced NS or Statement A |
-| **L-10 (proposed)** | Unforced Euler blowup on ℝ³ for a constructed compact smooth datum, with the quantitative singularity package (local existence below `T*`, C¹ blow-up at `T*`, divergent vorticity integral) | same tree, `Euler.euler_breakdown_R3`, `Euler.exists_compact_smooth_euler_singularity` | F-NAME as above; a specific constructed datum, no genericity claim |
+| **L-9** | Forced Navier–Stokes breakdown on ℝ³ and on 𝕋³ (Clay options C and D shapes): smooth decaying data and force with no global smooth solution, force constructed as the residual of a pre-built singular candidate | `openai/NavierStokesAndEuler@8937a8f`, `NavierStokes.ComparatorBridge.navier_stokes_breakdown_R3` / `…_periodic`; kernel transcript archived | **F-NAME**: equivalence to the DeepMind-derived challenge *statements* is human-audited, not kernel-linked; the force is a manufactured residual (their own construction); nothing about unforced NS or Statement A |
+| **L-10** | Unforced Euler blowup on ℝ³ for a constructed compact smooth datum, with the quantitative singularity package (local existence below `T*`, C¹ blow-up at `T*`, divergent vorticity integral) | same tree, `Euler.euler_breakdown_R3`, `Euler.exists_compact_smooth_euler_singularity` | F-NAME as above; a specific constructed datum, no genericity claim |
 
 A Tier L row never discharges a Lean obligation, and neither row touches Hypothesis U — the
 review's asymmetry analysis stands: the negative directions are now machine-checked territory;
@@ -1105,6 +1106,61 @@ contact belongs to `exploration/` at Tier C, calibrated against this exact run f
 **Scope.** Eight Euler steps at `M = 2`, weakly nonlinear: a direction of travel, no bearing on
 the limit or Hypothesis U; O5 stands. Verdict on the pivot's premise is the owner's; the data
 say the flow moves toward the adversarial region on this horizon, not away from it.
+
+## Owner / Deep Think adjudication of 2026-09-13 — the pivot validated, four resolutions (BINDING)
+
+Received in-session; recorded verbatim in `docs/designs/DECISION_2026-09-13_core_tail_cap.md`.
+
+| resolution | verdict | executed as |
+|---|---|---|
+| **D-1** | **ADOPTED**: the disparity decomposition and the trajectory ratio `P/(νD)` are the core observables; the `δ = 0` theorem is the Tier A baseline | `DYNAMIC_ACCESS.md` §2 statuses updated |
+| **D-2** | **AUTHORIZED**: Tier C floating-point "scout" runs for long horizons, strictly calibrated against the exact eight rational steps | `exploration/export_exact_calibration.py` writes the calibration target; the Rust scout follows |
+| **D-3** | **CONFIRMED**: the audited external formalizations enter as Tier L | rows L-9, L-10 above marked confirmed |
+| **D-4** | **EXECUTED**: strict git worktree isolation for concurrent operations | worktree `../MechanicaFluidorum-concurrent` on branch `concurrent-stream`; policy in `CLAUDE.md` |
+
+**Strategic shift recorded: Core-Tail computer-assisted proof.** Numerically certified bounds on
+the modes `|k| ≤ M_core` (interval arithmetic, direct convolution, `M_core ≤ 8`, Rust with
+`rayon`) plus an analytic bound on the tail `|k| > M_core`. **Fable's epistemic note, filed
+with the acknowledgement:** the tail statement as phrased ("decays super-exponentially assuming
+the core is bounded") is not a theorem in that form — a bounded core does not make the tail
+decay, since the tail is forced by the core through the disparate triads. The provable shape is
+a **self-consistent** tail envelope (rigorous-numerics style: assume an explicit envelope, show
+`ν|k|²` dominates the forcing by boxed core + enveloped tail, close), with an exponential-in-`k`
+(Gevrey) rate and constants supplied by the certificate. Its virtue is exactly the one wanted
+against O5: the tail estimate is independent of the outer truncation. Objects proposed exactly
+in `docs/designs/CORE_TAIL_CAP.md` for owner adoption before any Lean (E-1).
+
+**Hardware limits acknowledged** (local i7, 32 GB, no GPU/TPU; no CUDA/WGPU/JAX): Tier C by
+pseudo-spectral FFT with 2/3 de-aliasing at `M ≤ 32`; Tier B certification by direct `O(M⁶)`
+convolution in interval arithmetic at `M_core ≤ 8`. Algorithmic strategy confirmed in the memo.
+
+### Tier C scout (D-2) — calibration and protocol S-2, 2026-09-13 (DATA, no tier, no verdict)
+
+`exploration/dual_scale_scout_rs` (Rust: `rustfft` 6.4 pseudo-spectral with exact 2/3
+de-aliasing `N ≥ 3M+1`, `rayon`, RK4; a direct-convolution engine for cross-checks). Its
+right-hand side is **calibrated, not asserted**: both engines reproduce the exact rational
+eight-step trajectory of `tests/tier_b_dynamic_access.py` (both initial conditions) to
+`2.4e-16` relative, and agree with each other to round-off at `M = 4`
+(`exploration/calibration/CALIBRATION_RESULT.md`). Long-horizon output is Tier C and is read
+only where the step-halving partner agrees within 2%.
+
+**Protocol S-2** (registered in `docs/designs/CORE_TAIL_CAP.md` §4 before its runs): fixed
+`E₀ = 144`, `ν = 0.05`, `|λ| = 0.05`, horizon 6, sampled every 0.01, halving pairs at every
+`M`. Outcome at `M = 2, 4` (twelve runs, all readable over the full horizon, worst halving
+disagreement `1.3e-5`), archived in `exploration/scout_runs/`:
+
+| `M` | production-positive adversarial: `P/(νD₂)` at `t=0` → dephasing time → `Z_max/Z₀` | null | production-negative twin |
+|---|---|---|---|
+| 2 | 1.60 → 0.06 → **1.0022** (at `t = 0.02`) | ratio 0.007, no amplification | holds sign to `t = 0.18`, removes 10% of `Z₀` |
+| 4 | 2.84 → 0.02 → **1.0122** (at `t = 0.01`) | ratio 0.19, no amplification | holds sign to `t = 0.23`, removes 24% of `Z₀` |
+
+Read as data: the greedy alignment starts above the enstrophy balance and is destroyed by the
+nonlinear phase rotation on a time `t_φ` that shrinks with `M`; the resulting transient
+enstrophy gain is small and **grows with `M`** on the two points measured (`×5.5` from `M = 2`
+to `4`); the two signs are strongly asymmetric under viscosity; by `t = 1` all initial
+conditions at a given `M` decay alike. `M = 8` and the `M = 16` null are running; their rows
+are appended to `CORE_TAIL_CAP.md` §4.1 when the halving check passes. **No verdict is drawn**;
+whether the growth in `M` saturates is exactly the question the next point answers.
 
 ## Deep Think brief issued (2026-09-12)
 

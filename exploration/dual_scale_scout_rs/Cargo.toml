@@ -1,0 +1,13 @@
+[package]
+name = "dual_scale_scout"
+version = "0.1.0"
+edition = "2021"
+description = "TIER C — EXPLORATORY, NO CLAIMS. Pseudo-spectral f64 scout for the Galerkin-truncated 3-D Navier–Stokes system on Z^3 (the sharp-projection dual-scale system), calibrated against the exact Tier B eight-step trajectory."
+
+[dependencies]
+rustfft = "6"
+rayon = "1"
+serde_json = "1"
+
+[profile.release]
+opt-level = 3

@@ -126,3 +126,9 @@ merge — self-reported "no sorry" is never trusted without the compiler transcr
   non-compiling file into a commit; see `PLAN.md` §9.4 and `LL.md`.
 - **Physical/cosmological narrative is quarantined in `docs/narrative/`** and must never be
   imported by `lean_src/` or cited as justification for a tier promotion.
+- **Concurrent tools work in their own git worktree, never in this checkout** (owner directive
+  D-4, 2026-09-13, after three incidents of parallel writes into gate-verified files). The
+  isolated worktree is `../MechanicaFluidorum-concurrent` on branch `concurrent-stream`; changes
+  flow back only through a reviewed merge after the two gates pass there. A file modified in
+  this checkout by anything other than the session that owns it is an E-3 escalation, not a
+  merge.

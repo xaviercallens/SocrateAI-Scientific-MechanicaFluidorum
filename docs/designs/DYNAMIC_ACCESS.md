@@ -1,5 +1,15 @@
 # Design memo — dynamic access: the pivot's objects, proposed in exact form
 
+> **STATUS UPDATE 2026-09-13 (owner / Deep Think adjudication, D-1 ADOPTED):** the disparity
+> decomposition (§2.1) and the trajectory ratio `P/(νD)` (§2.4's proposed replacement for `ρ`)
+> are the programme's **core observables**. The `δ = 0` theorem is the Tier A baseline. D-2
+> authorizes the Tier C long-horizon scouts, calibrated against the exact eight steps of §3
+> (calibration target: `exploration/calibration/exact_steps_M2.json`). The candidate
+> "small-`ρ` invariant region" retired by §3's second run stays retired. Successor memo:
+> `CORE_TAIL_CAP.md`; the scout is calibrated against §3's exact steps to `2.4e-16`
+> (`exploration/calibration/CALIBRATION_RESULT.md`) and its first registered protocol's
+> outcome is `CORE_TAIL_CAP.md` §4.1.
+
 **Status: PROPOSAL of definitions for owner adoption (rule E-1), with one object already
 Tier A and one pre-registered exact experiment.** Written on the Deep Think adjudication of
 2026-09-12 ("bounds must be derived DYNAMICALLY from the PDE restricting access to such
