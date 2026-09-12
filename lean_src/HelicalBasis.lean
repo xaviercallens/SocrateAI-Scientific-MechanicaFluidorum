@@ -48,6 +48,7 @@ import Mathlib.Tactic.LinearCombination
 import Mathlib.Tactic.NormNum
 import Mathlib.Tactic.Ring
 import FourierStateZ3
+import FourierDynamicsZ3
 
 set_option autoImplicit false
 
@@ -1076,6 +1077,133 @@ theorem frame_bilinear_h (sq sr : ℝ) (p q : Wavevector) :
         + (((p 0 : ℤ) : ℂ) * ((q 1 : ℤ) : ℂ) - ((p 1 : ℤ) : ℂ) * ((q 0 : ℤ) : ℂ)) ^ 2))
     * Complex.I_sq
 
+/-! ### 15. L-DIR: the director reduction, and the ball's signed-permutation symmetry
+
+Registered as a Lean target when A1 was resolved at Tier B
+(`tests/tier_b_director_stratum.py`; memo section in
+`docs/designs/HELICAL_PRODUCTION_EXPANSION.md`). The measurement that found the coherence
+control failing twice was explained by two facts about **director states** `u_k = c_k (k × d)`:
+the production term factors through a single determinant (**R1**, below), and the resulting
+sum over the ball is annihilated by the lattice's own point group (**C-DIR**).
+
+This section formalises R1 and the geometric core of C-DIR. **What is deliberately NOT claimed
+here:** the final step of C-DIR — that the cubic form in `d` has all ten coefficients zero — is
+a polynomial-degree argument, verified exactly at `M = 2, 3` in the Tier B harness and proved on
+paper for all `M` from the equivariance below. It remains an open Lean obligation, and is named
+as such rather than asserted. -/
+
+/-- The signed volume `det[a,b,c] = (a × b) · c`, in integers. -/
+def detZ (a b c : Wavevector) : ℤ := dotZ (crossZ a b) c
+
+/-- Contracting the *first* slot against a cross product costs a sign:
+`q · (p × d) = −det[p,q,d]`. -/
+theorem dotZ_crossZ_comm (p q d : Wavevector) : dotZ q (crossZ p d) = -detZ p q d := by
+  simp only [detZ, dotZ, crossZ, Fin.sum_univ_three, Matrix.cons_val_zero, Matrix.cons_val_one,
+    Matrix.head_cons, Matrix.cons_val_two, Matrix.tail_cons]
+  ring
+
+/-- **Lagrange's identity in the director slot**:
+`(q × d) · (r × d) = (q·r)|d|² − (q·d)(r·d)`. This is what makes the whole `|d|²` dependence of
+a director state collapse into two scalar contractions. -/
+theorem lagrange_crossZ (q r d : Wavevector) :
+    dotZ (crossZ q d) (crossZ r d) = dotZ q r * k_sq d - dotZ q d * dotZ r d := by
+  unfold dotZ crossZ k_sq
+  simp only [Fin.sum_univ_three, Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.head_cons,
+    Matrix.cons_val_two, Matrix.tail_cons]
+  ring
+
+/-- **A constant-director field**: `u_k = c_k (k × d)`. It is divergence-free for free
+(`k · (k × d) = 0`), which is why the measurement used it. -/
+noncomputable def directorField (d : Wavevector) (c : Wavevector → ℂ) :
+    Wavevector → Fin 3 → ℂ :=
+  fun k i => c k * ((crossZ k d i : ℤ) : ℂ)
+
+theorem detZ_self (a d : Wavevector) : detZ a a d = 0 := by
+  unfold detZ
+  rw [crossZ_self]
+  unfold dotZ
+  simp
+
+theorem fourier_dot_directorField (d : Wavevector) (c : Wavevector → ℂ) (p q : Wavevector) :
+    fourier_dot q (directorField d c p) = c p * ((-detZ p q d : ℤ) : ℂ) := by
+  unfold fourier_dot directorField
+  rw [← dotZ_crossZ_comm p q d]
+  unfold dotZ
+  push_cast
+  rw [Finset.mul_sum]
+  exact Finset.sum_congr rfl fun i _ => by ring
+
+/-- Director fields are divergence-free for free — which is why the measurement used them. -/
+theorem directorField_div_free (d : Wavevector) (c : Wavevector → ℂ) (k : Wavevector) :
+    fourier_dot k (directorField d c k) = 0 := by
+  rw [fourier_dot_directorField, detZ_self]
+  norm_num
+
+theorem dot_directorField (d : Wavevector) (c : Wavevector → ℂ) (q r : Wavevector) :
+    AbstractAlgebraicConservation.dot (directorField d c q) (directorField d c r)
+      = c q * c r * (((dotZ q r * k_sq d - dotZ q d * dotZ r d : ℤ)) : ℂ) := by
+  unfold AbstractAlgebraicConservation.dot directorField
+  rw [← lagrange_crossZ q r d]
+  unfold dotZ
+  push_cast
+  rw [Finset.mul_sum]
+  exact Finset.sum_congr rfl fun i _ => by ring
+
+/-- **R1 — the director term formula.** The production term of a constant-director state factors
+completely: one determinant carrying all the triad's orientation, and one bracket carrying all
+its `d`-dependence.
+
+`t(p,q) = −(|r|²−|q|²) · c_p c_q c_r · det[p,q,d] · [(q·r)|d|² − (q·d)(r·d)]`
+
+The measurement's whole reduction rests on this, and the harness checks it independently. -/
+theorem director_production_term (d : Wavevector) (c : Wavevector → ℂ) (p q : Wavevector) :
+    (ksqC (-(p + q)) - ksqC q)
+        * (fourier_dot q (directorField d c p)
+           * AbstractAlgebraicConservation.dot (directorField d c q)
+               (directorField d c (-(p + q))))
+      = -(ksqC (-(p + q)) - ksqC q) * (c p * c q * c (-(p + q)))
+          * ((detZ p q d : ℤ) : ℂ)
+          * (((dotZ q (-(p + q)) * k_sq d - dotZ q d * dotZ (-(p + q)) d : ℤ)) : ℂ) := by
+  rw [fourier_dot_directorField, dot_directorField]
+  push_cast
+  ring
+
+/-! #### The geometric core of C-DIR: the ball is a signed-permutation invariant -/
+
+/-- The action of a signed permutation of coordinates on a wavevector. -/
+def signedPerm (σ : Equiv.Perm (Fin 3)) (ε : Fin 3 → ℤ) (k : Wavevector) : Wavevector :=
+  fun i => ε i * k (σ i)
+
+/-- `k_sq` does not see a signed permutation: the signs square away and the permutation
+reindexes the sum. -/
+theorem k_sq_signedPerm (σ : Equiv.Perm (Fin 3)) (ε : Fin 3 → ℤ)
+    (hε : ∀ i, ε i * ε i = 1) (k : Wavevector) :
+    k_sq (signedPerm σ ε k) = k_sq k := by
+  unfold k_sq signedPerm
+  have hstep : ∀ i : Fin 3, (ε i * k (σ i)) ^ 2 = (k (σ i)) ^ 2 := by
+    intro i
+    have h := hε i
+    rw [mul_pow, sq, h, one_mul]
+  rw [Finset.sum_congr rfl fun i _ => hstep i]
+  exact Fintype.sum_equiv σ (fun i => (k (σ i)) ^ 2) (fun i => (k i) ^ 2) fun _ => rfl
+
+/-- **The ball is invariant under every signed permutation of coordinates.** This is the
+load-bearing geometry of C-DIR: the point group of the cubic lattice acts on `ball M`, and the
+Tier B control that removes a single point from the ball breaks the identity precisely because
+it breaks this. -/
+theorem mem_ball_signedPerm {M : ℕ} (σ : Equiv.Perm (Fin 3)) (ε : Fin 3 → ℤ)
+    (hε : ∀ i, ε i * ε i = 1) (k : Wavevector) :
+    signedPerm σ ε k ∈ ball M ↔ k ∈ ball M := by
+  rw [mem_ball_iff, mem_ball_iff, k_sq_signedPerm σ ε hε]
+
+/-- Negation is the signed permutation with identity permutation and all signs `−1`; recorded so
+the parity results of `FourierDynamicsZ3` §11 and this section share one vocabulary. -/
+theorem signedPerm_neg (k : Wavevector) :
+    signedPerm (Equiv.refl (Fin 3)) (fun _ => -1) k = -k := by
+  funext i
+  unfold signedPerm
+  simp
+
 /-! ### Audit certificates — no axiom outside [propext, Classical.choice, Quot.sound]. -/
 #print axioms dotZ_crossZ_left
 #print axioms dotZ_crossZ_self
@@ -1124,5 +1252,11 @@ theorem frame_bilinear_h (sq sr : ℝ) (p q : Wavevector) :
 #print axioms dotZ_q_crossZ_Np
 #print axioms frame_dot_h
 #print axioms frame_bilinear_h
+#print axioms dotZ_crossZ_comm
+#print axioms lagrange_crossZ
+#print axioms directorField_div_free
+#print axioms director_production_term
+#print axioms k_sq_signedPerm
+#print axioms mem_ball_signedPerm
 
 end MechanicaFluidorum.FourierZ3

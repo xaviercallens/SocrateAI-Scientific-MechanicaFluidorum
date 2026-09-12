@@ -881,6 +881,35 @@ coefficients appear); removing a single point from the ball (N2, 2 nonzero coeff
 cubic symmetry is load-bearing, not decorative.
 
 **Lean target L-DIR registered:** C-DIR via the signed-permutation action on `ball M`.
+**Partially discharged 2026-09-12 — see the next section.**
+
+### L-DIR at Tier A: the director reduction and the ball's point-group symmetry (2026-09-12)
+
+`lean_src/HelicalBasis.lean` §15 (the file now imports `FourierDynamicsZ3`, so the production
+term, `ball` and `triadSet` are in scope beside the integer vector algebra). Footprints exactly
+`[propext, Classical.choice, Quot.sound]`:
+
+| Claim | Theorem | Date |
+|---|---|---|
+| `q · (p × d) = −det[p,q,d]` — the first-slot sign | `dotZ_crossZ_comm` | 2026-09-12 |
+| **Lagrange in the director slot**: `(q×d)·(r×d) = (q·r)\|d\|² − (q·d)(r·d)` | `lagrange_crossZ` | 2026-09-12 |
+| `det[a,a,d] = 0` | `detZ_self` | 2026-09-12 |
+| Director fields are divergence-free for free | `directorField_div_free` | 2026-09-12 |
+| **R1 — the director production term factors**: `t(p,q) = −(\|r\|²−\|q\|²)·c_p c_q c_r·det[p,q,d]·[(q·r)\|d\|²−(q·d)(r·d)]` | `director_production_term` | 2026-09-12 |
+| `k_sq` is invariant under every signed permutation of coordinates | `k_sq_signedPerm` | 2026-09-12 |
+| **The ball is invariant under the cubic point group** — the load-bearing geometry of C-DIR | `mem_ball_signedPerm` | 2026-09-12 |
+| Negation is the all-minus signed permutation (shared vocabulary with the parity results) | `signedPerm_neg` | 2026-09-12 |
+
+**What is proved and what is deliberately still open.** R1 — the *reduction* that the whole A1
+analysis rests on — is now kernel-checked, as is the group action that annihilates the reduced
+sum. The final step of C-DIR, that the resulting cubic form in `d` has all ten coefficients zero,
+is a polynomial-degree argument: exact at `M = 2, 3` in the Tier B harness, proved on paper for
+all `M` from this equivariance, and **named as an open Lean obligation rather than asserted**.
+
+**Two Lean negative controls, both confirmed to fail:** flipping the sign in Lagrange's bracket
+(NC-T — that sign is what collapses the `|d|²` dependence correctly); weakening the
+signs-square-to-one hypothesis to a tautology (NC-U — without it the signs do not cancel and
+`k_sq` is not preserved). Fifteen demonstrated negatives on `HelicalBasis.lean`.
 
 ## The THIRD coherence-control trip, the X-reduction, and gate G2 (2026-09-10)
 
