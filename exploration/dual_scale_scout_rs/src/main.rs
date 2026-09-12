@@ -359,20 +359,73 @@ fn phases_adversarial(m: i64) -> std::collections::HashMap<K, C> {
     }}
     eprintln!("   [align] M={} classes={} triads={} table={:.2} GB", m, classes.len(), tab.len(),
         (tab.len() * std::mem::size_of::<(u32, u32, u32, i64)>()) as f64 / (1u64 << 30) as f64);
-    let mut signs: Vec<i64> = vec![1; classes.len()];
-    let total = |signs: &Vec<i64>| -> i128 {
-        tab.par_iter()
-            .map(|&(a, b, c, g)| (signs[a as usize] * signs[b as usize] * signs[c as usize] * g) as i128)
-            .sum::<i128>().abs()
+    // -----------------------------------------------------------------------------------
+    // THE GREEDY SWEEP, MADE INCREMENTAL (2026-09-13). Flipping one class's sign does not
+    // change the objective's other terms, so re-summing the whole table per flip -- which is
+    // what the original loop did -- is pure waste. Maintain the signed total S instead and
+    // update it:
+    //
+    //     S_after_flipping_i  =  S  -  2 * (sum of the terms that flip)
+    //
+    // and the terms that flip are exactly those whose triad contains class i an ODD number of
+    // times: if i appears twice, the term is multiplied by (-1)^2 = 1 and does not move. That
+    // is the whole trick, and it is why the incidence below is an ODD incidence.
+    //
+    // Cost per sweep falls from O(classes x triads) to O(sum of odd degrees) <= O(3 x triads),
+    // a factor of classes/3 -- 2846x at M = 16, 22876x at M = 32. The arithmetic stays integer
+    // and exact (i128), the classes are visited in the same order, and the accept test is the
+    // same strict improvement, so this is the SAME greedy and must return the SAME alignment.
+    // It is held to that: it reproduces the archived M = 8 run bit-for-bit and the
+    // sweep-by-sweep `best` of the pre-change M = 16 run.
+    let n = classes.len();
+    // The classes occurring an odd number of times in one triad.
+    let odd_of = |a: u32, b: u32, c: u32| -> [Option<u32>; 3] {
+        if a == b && b == c { [Some(a), None, None] }        // three times: odd
+        else if a == b { [Some(c), None, None] }             // a twice: even, drops out
+        else if a == c { [Some(b), None, None] }
+        else if b == c { [Some(a), None, None] }
+        else { [Some(a), Some(b), Some(c)] }
     };
-    let mut best = total(&signs);
+    let mut deg = vec![0u32; n];
+    for &(a, b, c, _) in &tab {
+        for o in odd_of(a, b, c).into_iter().flatten() { deg[o as usize] += 1; }
+    }
+    let mut off = vec![0usize; n + 1];
+    for i in 0..n { off[i + 1] = off[i] + deg[i] as usize; }
+    let mut fill = off.clone();
+    let mut adj = vec![0u32; off[n]];
+    for (t, &(a, b, c, _)) in tab.iter().enumerate() {
+        for o in odd_of(a, b, c).into_iter().flatten() {
+            adj[fill[o as usize]] = t as u32;
+            fill[o as usize] += 1;
+        }
+    }
+    eprintln!("   [align] odd incidence: {} entries, {:.2} GB; mean degree {:.0}",
+        off[n], (off[n] * 4) as f64 / (1u64 << 30) as f64, off[n] as f64 / n as f64);
+
+    let mut signs: Vec<i64> = vec![1; n];
+    let mut s: i128 = tab.par_iter()
+        .map(|&(a, b, c, g)| (signs[a as usize] * signs[b as usize] * signs[c as usize] * g) as i128)
+        .sum();
+    let mut best = s.abs();
     let t0 = std::time::Instant::now();
     for sweep in 1.. {
         let mut improved = false;
-        for i in 0..classes.len() {
-            signs[i] *= -1;
-            let v = total(&signs);
-            if v > best { best = v; improved = true; } else { signs[i] *= -1; }
+        for i in 0..n {
+            // The terms that would flip, at the CURRENT signs.
+            let contrib: i128 = adj[off[i]..off[i + 1]].par_iter()
+                .map(|&t| {
+                    let (a, b, c, g) = tab[t as usize];
+                    (signs[a as usize] * signs[b as usize] * signs[c as usize] * g) as i128
+                })
+                .sum();
+            let s_new = s - 2 * contrib;
+            if s_new.abs() > best {
+                best = s_new.abs();
+                s = s_new;
+                signs[i] *= -1;
+                improved = true;
+            }
         }
         eprintln!("   [align] sweep {} done, best={} ({:.1} s elapsed){}", sweep, best,
             t0.elapsed().as_secs_f64(), if improved { "" } else { " -- converged" });

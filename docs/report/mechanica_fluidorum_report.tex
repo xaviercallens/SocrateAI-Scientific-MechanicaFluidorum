@@ -2094,6 +2094,148 @@ $864$ modes at $M=2$ and $240$ at $M=3$; its constant was fixed after the tightn
 measured, because a sensitivity control must be calibrated to the measured slack to be capable
 of failing at all. The controls that failed to fail are kept and reported, not replaced.
 
+\subsection{Three points read twice: ratios, differences, and a pre-registered prediction (\tC{})}
+\label{sec:series}
+
+The sentence in \S\ref{sec:coretail} that the transient growth ``decelerates'' will not survive
+being checked, and the way it fails is instructive enough to record in full. It was read off the
+\emph{ratios} of the excess $e(M)=Z_{\max}/Z_0-1$, which do fall: $\times5.3$ then $\times2.2$.
+In absolute terms the same three numbers $e = 0.0023,\ 0.0122,\ 0.0265$ have increments
+\[
+  +0.0099 \quad\text{then}\quad +0.0143,
+\]
+that is, increments that are \emph{growing}; and so are the injection's
+($\Delta Z_{\mathrm{inj}}/Z_0 = 0.0157,\ 0.0292,\ 0.0464$, increments $+0.0135$, $+0.0172$).
+Saturation requires the increments to turn over, and nothing here has turned over. Fitting the
+generic approach-to-a-ceiling shape $e(M) = e_\infty - AM^{-\beta}$ --- three parameters to
+three points, so an exact fit exists --- returns $\beta = -0.53$: the exponent has the wrong
+sign, and the only member of that family through these points \emph{diverges}. The honest
+statement is thus weaker than the one first written: the falling ratios are compatible with
+saturation, but no saturating form actually fits, and the ``consistent with saturation'' reading
+rested entirely on which of two summaries of the same three numbers was looked at.
+
+There is, moreover, a mundane reason the ratios fall that says nothing about enstrophy. The
+fraction of the injected enstrophy surviving to the peak, $e/\Delta Z_{\mathrm{inj}}$, is
+$0.147$, $0.418$, $0.571$, climbing toward a hard ceiling of $1$: at small $M$ dissipation
+consumes most of the injection before the peak, while at larger $M$ the injection is over
+sooner ($t_{\mathrm{peak}} = 0.022,\ 0.011,\ 0.003$) and more of it survives. So $e$ was forced
+to grow faster than $\Delta Z_{\mathrm{inj}}$ early and must decelerate to the injection's own
+rate as that fraction saturates --- which is largely done. The deceleration is, to a good
+approximation, this bookkeeping.
+
+Accordingly the fourth point was \emph{predicted before it could be computed}, while the $M=16$
+alignment was still running, and the prediction committed to version control. Two independent
+routes agree: the divergent form $e \approx c(\log_2 M)^2$ with $c$ fixed at $M=8$ gives
+$e(16)=0.047$ and reproduces the growing increments; the survival-fraction bracket gives
+$0.040$--$0.052$. Hence
+\[
+  Z_{\max}/Z_0 \big|_{M=16} \;\approx\; 1.040\text{--}1.052,
+\]
+a third consecutive fall in the ratio. \textbf{And that is the point of stating it in advance:
+the registered protocol asks the fourth point to separate saturation from slow divergence, and
+it is predicted not to.} The divergent model also predicts a third falling ratio ($\times1.78$)
+and lands inside the same bracket, so at $M=16$ the two hypotheses differ by less than the
+spread of either estimate. They separate at $M=32$ and cleanly at $M=64$. What the run retains
+is value as a falsification test of the bookkeeping model above --- a return \emph{outside} the
+bracket is the informative outcome --- and that is a smaller claim than the protocol was written
+with.
+
+\subsection{The fourth point's real obstacle was a quadratic algorithm, not a machine (\tC{})}
+\label{sec:algo}
+
+Reaching $M=16$ at all first required two defects in this programme's own tooling to be found,
+and both are worth recording because each was invisible while the code produced correct answers.
+
+The registered protocol had \emph{declared} a memory risk: the greedy alignment materialises a
+triad table of order $10^8$ entries, ``$\approx 3$~GB'', against a workstation with $\approx
+14$~GB free. Counted rather than estimated --- by FFT autocorrelation of the ball indicator ---
+the table is $1.367\times10^8$ entries, so the order of magnitude was right. The byte count was
+not. One entry occupied $80$~bytes as three $24$-byte wavevectors, giving $10.2$~GB, and the
+class list was built by a \texttt{flat\_map} over the whole table \emph{before} its
+\texttt{dedup}, a further $9.8$~GB standing simultaneously: a peak near $20$~GB, and the run
+would have died in the allocator with its own memo calling the failure a surprise. Building the
+table directly in index form --- two passes, the wavevector form never materialised, the vector
+reserved to an exact count --- costs $24$ bytes an entry, $3.03$~GB measured as resident, and
+removed the wall.
+
+The second defect was larger and had no declared risk attached, because nothing about the
+output was wrong. The greedy re-evaluated the objective by summing all $1.35\times10^8$ table
+entries for \emph{each} of the $8\,538$ candidate sign flips, every sweep --- a cost of
+$O(\text{classes}\times\text{triads})$ that nobody had questioned in three campaigns, since the
+answer it returned was correct and the runtime at $M\le 8$ was seconds. But flipping one class's
+sign does not disturb the other terms. Maintaining the signed total $S$ and updating it by
+\[
+  S \;\longmapsto\; S - 2\!\!\sum_{\substack{\text{triads containing}\\ \text{that class an \emph{odd} number of times}}}\!\! s_a s_b s_c\, g ,
+\]
+where the odd-incidence restriction is exactly right because a class occurring twice multiplies
+its term by $(-1)^2=1$, reduces a sweep to $O(3\times\text{triads})$: a factor
+$\text{classes}/3$, which is $2846$ at $M=16$ and $22\,876$ at $M=32$. The realised gain is
+smaller than the operation count suggests --- random gathers into a multi-gigabyte table are far
+less efficient per byte than the sequential scan they replace --- and is reported as measured,
+not as the ratio of operation counts.
+
+Both changes are refactors and were held to a refactor's standard rather than argued for: the
+incremental greedy reproduces the archived $M=8$ run's nine sweep values digit for digit and its
+output trajectory \emph{byte for byte}, and at $M=16$ it reproduces the pre-change run's
+sweep-by-sweep objective exactly, the two runs having been kept side by side for precisely that
+comparison. The same integer arithmetic, the same visit order, the same accept test, therefore
+the same alignment.
+
+The consequence for the programme is a retraction of a resource estimate this report would
+otherwise have carried. An earlier costing put the $M=32$ adversarial alignment at $195$~GB and
+$\approx 108$ days of CPU and concluded that no rented machine helps. The conclusion stands and
+the reasoning does not: with the incremental objective and an enumeration that reads each
+class's triads off the lattice instead of storing them, the $M=32$ alignment needs essentially no
+memory and an estimated one to two hours. The obstacle was never compute. \textbf{It was a
+quadratic algorithm inside a programme whose stated purpose is rigour, and it survived because
+correctness gates cannot see cost.} What remains genuinely expensive at $M=32$ is the trajectory
+itself, and there a larger machine buys roughly a factor of two --- the scout saturates near
+twelve busy threads and is then memory-bandwidth bound --- so the honest ask, if one is ever
+made, is sixteen cores and not sixty-four.
+
+\subsection{What the division of labour actually did here}
+\label{sec:collab}
+
+This report is written by a machine under human adjudication, and the cycle just described is a
+reasonable specimen of what that produces, including its failure modes. It is recorded plainly
+because a methodological claim deserves evidence at least as much as a mathematical one.
+
+The gates did what gates do, and no more. Both machine gates were green across every step above:
+they certify that proofs are valid and that exact-arithmetic identities hold. They were silent
+on all four of this cycle's substantive findings --- that a summary statistic had been read off
+the wrong one of two summaries, that a declared memory figure was $6.6$ times optimistic, that
+an optimiser was quadratic, and that the registered protocol's decisive point is not decisive.
+None of those is a proof error, and a correctness gate is exactly the wrong instrument for any
+of them. This is the same lesson as verdict D1 in \S\ref{sec:failures}, in a new place: the
+gates bound what can be \emph{claimed}, never what should be \emph{asked}.
+
+The human contribution was not review of the machine's output. It was the allocation of
+resources and of doubt: a directive to run the fourth point locally rather than rent hardware, a
+standing instruction to report honestly rather than favourably, an offer of sixteen to
+sixty-four cores that had to be declined on measurement, and --- decisively --- a permission
+boundary that the machine could not widen by itself. That last one is worth naming: the session
+was denied the ability to edit its own permission file, found that an allowed command would have
+let it rewrite that file anyway, and reported the denial instead of routing around it. A
+programme that grants an agent a night of unattended compute needs that property to hold when
+nobody is watching, and it is cheaper to verify on a settings file than on a proof.
+
+The machine contribution was not insight either. It was the discipline of converting every
+assertion into something checkable, and doing so \emph{before} it became load-bearing: counting
+the triad table instead of estimating it, keeping the slow run alive as a reference for the fast
+one, writing a prediction into version control while the job that would test it was still
+running, and reporting a $12\times$ measured speed-up rather than the $2846\times$ the
+arithmetic promised. Each of those is mechanical rather than clever, and each caught something
+that an accurate-sounding sentence would have hidden.
+
+The candid summary is that the engineering in this cycle is in good order and the mathematics is
+not. The certificate's arithmetic exists, is exact, is validated against an independent
+implementation, and is fast enough that $M_{\mathrm{core}}=8$ costs $32$~milliseconds. The
+blocker is the self-consistency closure, which no amount of the above touches, and the
+programme's three standing headwinds are unchanged: the forcing bound loses a factor two to
+three where it is tightest, the dynamics is now known to \emph{generate} triad alignment rather
+than scramble it, and the transient gain grows with $M$ with increments that are still growing.
+O5 stands.
+
 \section{What Has Failed, and What That Taught}
 \label{sec:failures}
 %==============================================================================
@@ -2131,6 +2273,16 @@ LL-8 & \textbf{The verification gate itself had a false positive.} A lemma prove
 --- & \textbf{The Mathlib dependency was never pinned.} The \texttt{lakefile} said \texttt{require mathlib from git} with no revision; a cold build would have resolved to master and verified everything against a different Mathlib than all existing claims were checked with. & Pin the verifier itself by revision, and track the lockfile. An unpinned prover is a defect in the foundation of a machine-checked programme, not a build-script nuisance. \\
 \addlinespace
 --- & \textbf{A proposed correction to the spec would itself have been an error} (the T2 regularity class, \S\ref{sec:tracks}). The evidence for it was a paraphrased summary, not a primary quotation. & When a correction rests on a summary rather than a direct quote, flag and re-fetch --- do not edit the normative rulebook. LL-6 applied to its own application. \\
+\addlinespace
+\multicolumn{3}{@{}l}{\textbf{The 2026-09-13 cycle} (\S\ref{sec:series}, \S\ref{sec:algo})}\\
+\addlinespace[2pt]
+LL-20 & \textbf{A three-point series was called ``decelerating'' from its ratios while its differences were growing} ($\times5.3,\times2.2$ against $+0.0099,+0.0143$), and the reading went into a design memo and this report. An exact three-parameter fit of the approach-to-a-ceiling form returns $\beta=-0.53$: no saturating form passes through the points at all. & Report a trend in the units the claim is about. Ratios and differences of the same sequence can decelerate and accelerate simultaneously; state which was computed, and for any ``saturating'' claim, fit a saturating form and show its parameters are admissible. Then pre-register the next point's predicted value \emph{before} the run that produces it. \\
+\addlinespace
+LL-21 & \textbf{A declared risk was estimated, not counted, and was $6.6\times$ optimistic.} A protocol registered the alignment's triad table at ``$\approx3$~GB'' against $\approx14$~GB free. The count was right ($1.37\times10^8$ entries); the layout was $80$ bytes an entry plus a $9.8$~GB pre-\texttt{dedup} transient, i.e.\ a $\approx20$~GB peak. The run would have failed, with its own memo describing the failure as a surprise. & A declared risk must carry a \emph{counted} quantity and the \texttt{sizeof} that converts it to bytes, not an order of magnitude. Declaring a risk is not managing it. \\
+\addlinespace
+LL-22 & \textbf{An optimiser was quadratic for three campaigns and nobody asked}, because its answers were correct and its runtime at $M\le8$ was seconds. It re-summed $1.35\times10^8$ terms per candidate sign flip when only the odd-incidence terms move, costing a factor $\text{classes}/3 = 2846$ at $M=16$; a five-hour job should have been minutes. & \textbf{Correctness gates cannot see cost.} Before scaling a computation to a new size, state its cost model in $O(\cdot)$ and check the measured scaling against it; a superlinear surprise is a defect, not a hardware requirement. Corollary: this is the first failure in this programme that a rented machine would have \emph{concealed} rather than exposed. \\
+\addlinespace
+LL-23 & \textbf{An agent found it could widen its own permissions.} Denied \texttt{Edit} on its permission file, the session observed that an allowed \texttt{sed -i} rule would have rewritten that file regardless, and reported the denial instead of using it. & A permission boundary must be enforced by the boundary, not by the agent's restraint; an allow-list containing a general file-rewriting command does not in fact deny anything. Audit allow-lists for rules that subsume the denials. \\
 \bottomrule
 \end{longtable}
 \end{center}

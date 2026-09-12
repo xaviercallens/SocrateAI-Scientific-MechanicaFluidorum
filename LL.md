@@ -621,6 +621,135 @@ is a real structural fact and is now recorded as such. The failed perturbation w
 that it tracks weights rather than pattern-matching the constant vector `c_n = 1`. Do not delete
 a control that fails; find out why, and often it becomes a better control than the one intended.
 
+## LL-20 — a trend must be reported in the units the claim is about (2026-09-13)
+
+**Incident.** The S-2 transient series `Z_max/Z₀ − 1 = 0.0023, 0.0122, 0.0265` at `M = 2, 4, 8`
+was reported in `CORE_TAIL_CAP.md` §4.2, in `LEDGER.md`, and in the report as having
+**decelerating** increments — `×5.3` then `×2.2` — and therefore as "consistent with
+saturation". Those are *ratios*. The **differences** are `+0.0099` then `+0.0143`: growing. The
+injection series behaves the same way (`+0.0135`, `+0.0172`). Saturation requires the increments
+to turn over, and nothing in the data had turned over.
+
+Checked properly: fitting `e(M) = e_∞ − A·M^(−β)`, the generic approach-to-a-ceiling shape, is
+an exact three-parameter fit to three points, and it returns **β = −0.53**. The exponent has the
+wrong sign, so the only member of that family through these points *diverges*. **No saturating
+form fits the data at all**, and the reassuring reading came entirely from choosing one of two
+summaries of the same three numbers.
+
+There was also a mundane mechanism generating the falling ratios, which nobody looked for: the
+fraction of injected enstrophy surviving to the peak, `e/ΔZ_inj = 0.147, 0.418, 0.571`, is
+climbing toward a hard ceiling of `1`. That forces `e` to grow faster than the injection early
+and to decelerate to the injection's own rate later — bookkeeping, not physics, and nearly
+exhausted.
+
+**Rule.** Report a trend in the units the claim is about; ratios and differences of one sequence
+can decelerate and accelerate at the same time, so say which was computed. For any claim of the
+form "this saturates", **fit a saturating form and show its parameters are admissible** — a
+falling ratio is not evidence of a ceiling. And before running the next point, **pre-register
+its predicted value**, so the reading can be checked against a prediction instead of fitted to a
+result. Done here: `Z_max/Z₀ ≈ 1.040–1.052` at `M = 16`, committed before the run existed.
+
+**Corollary, and the more useful half.** Doing that arithmetic also showed the registered
+protocol asks `M = 16` to separate saturation from slow divergence and that `M = 16` *cannot*:
+the divergent `(log₂M)²` model predicts a third falling ratio too, inside the same bracket. The
+discriminating point is `M = 32`. **A protocol's decisive point should be shown to be decisive
+before the compute is spent, by predicting what each hypothesis returns there.**
+
+## LL-21 — a declared risk must carry a counted quantity, not an order of magnitude (2026-09-13)
+
+**Incident.** Protocol S-3 was registered with an explicit, creditable risk declaration: the
+`M = 16` greedy alignment "materialises a triad table of order 10⁸ entries (≈ 3 GB) and the
+machine has ≈ 10 GB free. If it does not fit, S-3's adversarial arm is reported as not run."
+
+The entry count was right — `1.367 × 10⁸`, once *counted* (FFT autocorrelation of the ball
+indicator) rather than estimated. The byte count was wrong by `6.6×`. One entry was
+`(K, K, K, i64)` — three 24-byte wavevectors — so `10.2 GB`; and the class list was built by
+`flat_map` over the whole table *before* its `dedup`, a further `9.8 GB` standing at the same
+time. Peak ≈ 20 GB against ≈ 14 GB available. **The run would have died in the allocator, and
+the memo's own figure would have made that look like bad luck rather than an arithmetic slip.**
+
+**Rule.** A declared risk must carry the **counted** quantity and the `sizeof` that converts it
+to bytes. "Order 10⁸ entries, ≈ 3 GB" contains one measurement and one guess, and the guess was
+the load-bearing one. **Declaring a risk is not managing it** — the declaration bought nothing
+here, because it was believed rather than checked.
+
+## LL-22 — correctness gates cannot see cost (2026-09-13)
+
+**Incident.** The greedy sign alignment had, across three campaigns, evaluated its objective by
+summing **all** `1.35 × 10⁸` triad terms for **each** of the `8 538` candidate sign flips, on
+every sweep. Nobody questioned it: the answers were correct, both gates were green, and at
+`M ≤ 8` the whole alignment took thirty seconds.
+
+At `M = 16` that cost `~23 minutes per sweep` and the job was still running after five hours.
+But flipping one class's sign does not disturb the other terms. Maintaining the signed total `S`
+and updating it by `S ↦ S − 2·(sum of the terms that flip)` — where the terms that flip are
+exactly those whose triad contains the class an **odd** number of times, since a class occurring
+twice multiplies its term by `(−1)² = 1` — reduces a sweep from `O(classes × triads)` to
+`O(3 × triads)`: a factor `classes/3`, i.e. `2846` at `M = 16` and `22 876` at `M = 32`.
+
+The measured gain was `~12×` under contention, well short of the operation-count ratio, because
+random gathers into a multi-GB table are far less efficient per byte than the sequential scan
+they replaced. **Reported as measured, not as the ratio of operation counts** — the same
+discipline as LL-18.
+
+**Rule.** Before scaling a computation to a new size, **state its cost model in `O(·)` and check
+the measured scaling against it.** A superlinear surprise is a defect to find, not a hardware
+requirement to fund. Both gates in this repository check whether an answer is *right*; neither
+can see that it cost 2846× more than necessary, and a correct answer is the most effective
+possible camouflage for a bad algorithm.
+
+**Corollary specific to this programme, and the reason this is LL-22 and not a footnote.** This
+is the first failure here that **renting a machine would have concealed rather than exposed.** A
+GCP quote had already been prepared for `M = 32` at `195 GB` and `≈ 108 days` of CPU, with the
+conclusion "a VM does not help". The conclusion was right and the reasoning was wrong; the true
+figures, table-free, are negligible memory and one to two hours. **When a workload's cost is the
+argument for buying hardware, the cost model is the thing to audit first.**
+
+## LL-23 — a permission boundary must be enforced by the boundary (2026-09-13)
+
+**Incident.** The session was denied `Edit` on `.claude/settings.local.json` — correctly: an
+agent must not widen its own permissions. It then observed that the allow-list in that very file
+contains `Bash(sed -i *)`, a general file-rewriting command, which would have let it rewrite the
+permission file regardless. It reported the denial to the owner instead of using the opening.
+
+**Rule.** An allow-list containing a general-purpose file rewriter (`sed -i`, `tee`, `python3`,
+`cp`) does not in fact deny edits to any file, including its own. **Audit allow-lists for rules
+that subsume the denials**, and do not rely on an agent's restraint for a boundary that matters —
+especially before granting unattended overnight compute, which is exactly when nobody is
+watching. Cheap to verify on a settings file; expensive to discover on a proof.
+
+---
+
+# Synthesis — the three blind spots of a two-gate system
+
+LL-20 through LL-23 are one pattern, and it is not the control pattern below. Every one of them
+occurred with **both gates green**, and none of them is a proof error:
+
+| Lesson | What was wrong | Why no gate could see it |
+|---|---|---|
+| LL-20 | A trend read off ratios while the differences grew; no saturating form fits | Gates check identities, not whether a summary statistic supports the sentence built on it |
+| LL-21 | A declared memory risk was `6.6×` optimistic | The failing run had not happened yet; there is nothing to check |
+| LL-22 | An optimiser was quadratic for three campaigns | A correct answer is perfect camouflage for a bad algorithm |
+| LL-23 | The allow-list subsumed its own denial | Permissions are not a tier |
+
+**The three blind spots, stated for the next campaign:**
+
+1. **Cost.** Neither gate measures it. State a cost model in `O(·)` before scaling, and check
+   the measured scaling against it. A superlinear surprise is a defect, not a budget line.
+2. **Interpretation.** Neither gate reads the sentence a number is put into. Report trends in
+   the units the claim is about, fit the functional form the claim asserts, and pre-register the
+   next point's predicted value — including whether it can discriminate at all.
+3. **The harness itself.** Neither gate covers permissions, risk declarations, or the tooling
+   that produces the data. These need their own audit, and the audit must not be performed by
+   the agent the boundary constrains.
+
+**And the standing rule that did all the work in this cycle:** every one of these was caught by
+converting an assertion into a counted or measured quantity *before* it became load-bearing —
+counting the triad table instead of estimating it, keeping the slow run alive as a reference for
+the fast one, writing a prediction into git while the job that would test it still ran. None of
+it was clever. All of it was mechanical, and the mechanical version is what a gate cannot
+substitute for.
+
 ---
 
 # Synthesis — the four ways a passing control is still worthless

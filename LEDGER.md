@@ -1214,11 +1214,33 @@ against ≈ 14 GB available** — the run would have died, and the memo's own `�
 6.6× optimistic. The scout now builds the table only in index form (**3.06 GB**) and caches the
 alignment (`--phases-out` / `--phases-in`), so it is paid once rather than six times. **The
 change is a refactor and is held to that standard: re-running the archived `M = 8` fine
-adversarial run reproduces `S2f_M8_advm_a.csv` byte for byte, alignment included.** Corrected
-cost, and the compute brief §3 is corrected in place to match: **S-3 is an overnight job**
-(≈ 4–5 h alignment, extrapolated from the measured `M = 8` alignment, then ≈ 6 h of
-trajectories), not the "afternoon" that brief first reported by counting trajectories only.
-**Nothing has been run; no number here is an S-3 result.**
+adversarial run reproduces `S2f_M8_advm_a.csv` byte for byte, alignment included.**
+
+**The alignment's real obstacle was a quadratic algorithm, not the machine (LL-22).** The greedy
+re-summed all `1.35e8` triad terms for **each** of the `8538` candidate sign flips, every sweep —
+`O(classes × triads)`, unquestioned across three campaigns because the answers were correct and
+`M ≤ 8` took 30 s. Flipping one class's sign does not disturb the other terms: maintaining the
+signed total and updating it by `S ↦ S − 2·(sum of the terms that flip)`, restricted to triads
+containing that class an **odd** number of times (a class appearing twice multiplies its term by
+`(−1)² = 1`), gives `O(3 × triads)` — a factor `classes/3` = **2846** at `M = 16`, 22876 at
+`M = 32`. **Verified as a refactor:** reproduces the archived `M = 8` run's nine sweep values
+digit for digit and its CSV byte for byte, and reproduces the pre-change `M = 16` run's
+sweep-by-sweep objective exactly (the slow run was kept alive alongside the fast one for that
+comparison). Measured speed-up **~12× under contention** — well short of the operation-count
+ratio, because random gathers into a 3 GB table are far less efficient per byte than the
+sequential scan they replace; reported as measured, per LL-18.
+
+**Corrected costs, superseding the figures first entered here.** `M = 16` alignment: the old
+algorithm ran ~23 min/sweep and needed **19+** sweeps, not the 9 that `M = 8` needed — so the
+"≈ 4–5 h" extrapolation was itself optimistic and the true figure was ~7.5 h; the incremental
+version does the same work in **~2 min/sweep**. S-3 is therefore **≈ 40 min of alignment plus
+≈ 6 h of trajectories**, not the overnight job recorded a few hours earlier, and not the
+"afternoon" the compute brief first reported by counting trajectories only. **`M = 32`
+adversarial is also no longer blocked**: the earlier `195 GB / ~108 days` costing was for the
+quadratic algorithm; with the incremental objective and per-class enumeration off the lattice
+instead of a stored table, it is negligible memory and an estimated 1–2 h. The conclusion "a VM
+does not help" stands; its reasoning is retracted. **Nothing of S-3 has been run; no number here
+is an S-3 result.**
 
 ## Deep Think brief issued (2026-09-12)
 

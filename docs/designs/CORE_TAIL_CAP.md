@@ -301,7 +301,43 @@ afternoon" counted the trajectories only and omitted this entirely; S-3 is an ov
 Because the alignment is deterministic and all six adversarial runs need the same phases, the
 scout now takes `--phases-out` / `--phases-in`, so it is paid once rather than six times.
 
-#### 4.3.2 Pre-registration: what S-3 is predicted to return, and why it may not decide anything
+#### 4.3.2 The extrapolation above was optimistic twice over, and the cause was algorithmic
+
+Recorded because the correction runs in both directions, which is the whole reason to log an
+extrapolation as an extrapolation. Measured: the old algorithm ran **23 min per sweep** at
+`M = 16` (close to the predicted 30) but needed **19+ sweeps, not 9** — `M = 16`'s landscape
+admits far more small improvements than `M = 8`'s, and the sweep count is data, not a constant.
+True cost of the run as launched: ≈ 7.5 h, not 4–5.
+
+That number is now irrelevant, because the cost model itself was wrong. **The greedy re-summed
+all `1.35 × 10⁸` triad terms for each of the `8 538` candidate flips, every sweep** —
+`O(classes × triads)`, unquestioned across three campaigns because the answers were correct and
+`M ≤ 8` finished in thirty seconds. But flipping one class's sign leaves the other terms alone.
+Maintain the signed total and update it,
+
+> `S  ↦  S − 2 · (sum of the terms that flip)`,
+
+where the terms that flip are exactly those whose triad contains that class an **odd** number of
+times — a class occurring twice multiplies its term by `(−1)² = 1` and does not move. A sweep
+becomes `O(3 × triads)`: a factor `classes/3`, **2846** at `M = 16` and `22 876` at `M = 32`.
+
+**Held to a refactor's standard, not argued.** Same integer arithmetic, same visit order, same
+strict-improvement test, therefore the same alignment — and checked as such: the archived `M = 8`
+run reproduces digit for digit on all nine sweep values and byte for byte in its CSV, and at
+`M = 16` the incremental run reproduces the pre-change run's sweep-by-sweep objective exactly,
+the slow run having been deliberately kept alive alongside the fast one for that comparison.
+Measured gain **~12× under contention** — well short of the operation-count ratio, because random
+gathers into a 3 GB table are much less efficient per byte than the sequential scan they replace.
+Reported as measured, per LL-18; the 2846× is the arithmetic, not the clock.
+
+**Corrected S-3 cost: ≈ 40 min alignment + ≈ 6 h trajectories.** And a retraction of §4 of the
+compute brief: the `M = 32` adversarial arm was costed at `195 GB` and `≈ 108 days` and declared
+to need "a new alignment algorithm before a machine". It does — this is that algorithm, and with
+per-class enumeration off the lattice replacing the stored table, `M = 32` needs negligible
+memory and an estimated 1–2 h. The brief's conclusion that a VM does not help stands; its
+reasoning is withdrawn. The obstacle was never compute.
+
+#### 4.3.3 Pre-registration: what S-3 is predicted to return, and why it may not decide anything
 
 Written **while the `M = 16` alignment is still running and before any S-3 trajectory exists**,
 so that the reading of §4.3 can be checked against a prediction rather than fitted to a result.
