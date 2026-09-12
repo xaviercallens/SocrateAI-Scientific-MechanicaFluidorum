@@ -1,5 +1,20 @@
 # Workflow revision — the symmetry-quotient programme
 
+> **SUPERSEDED IN PART, 2026-09-12.** Gates G2 and G4 are both resolved by the Deep Think
+> adjudication of that date and the fourth trip that executed its D-1 order:
+> **kinematic phase mixing is KILLED**, with the adversarial mechanism exhibited rather than
+> argued (LEDGER, "KINEMATIC PHASE MIXING — KILLED"). Phase A (map the symmetry kernel) and
+> Phase D (the foreign-tree audit) are **complete**; Phase B's instrument did its job and is
+> retired with the track; **Phase C is void as written**, since it was contingent on a
+> super-null cancellation that does not exist.
+>
+> What carries forward unchanged: every standing rule of §5, the tier assignments of §2, and the
+> §6 honesty about where the difficulty lives. The successor programme — **dynamic invariant
+> regions and suppression of the sweeping effect** — is the owner's pivot, and its first
+> obligation is the one this document's §4 already names: **the objects must be defined by the
+> owner before any Lean is written** (E-1), which is precisely what retired the earlier
+> "invariant region" task.
+
 **Status: PROPOSAL, for the owner's approval (gate G1).** Supersedes the phase structure of
 `DUAL_SCALE_WORKFLOW.md` (adjudicated 2026-09-10) in the light of what the first executed work
 packages found; every standing rule, tier definition, and adjudicated verdict of that document

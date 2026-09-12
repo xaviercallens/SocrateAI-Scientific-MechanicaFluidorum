@@ -987,6 +987,58 @@ it cannot be mistaken for the audit result. **Preventive measure still open:** w
 isolation for the concurrent stream — this is the third incident in this family, each caught by
 a gate or a read, each costing a full review cycle.
 
+## KINEMATIC PHASE MIXING — **KILLED** (2026-09-12), with positive evidence
+
+Deep Think adjudication of 2026-09-12: *"Kinematic Phase Mixing is mathematically declared a
+DEAD END. No uniform oscillatory bound exists for ALL states because adversarial phase-aligned
+states will always maximize the disparity factor. Bounds must be derived DYNAMICALLY from the
+PDE restricting access to such states."* D-1 ordered the fourth trip as the final diagnostic,
+and the track to be recorded KILLED when it failed.
+
+**It did not merely fail — the stated mechanism was EXHIBITED.** The adjudication's reasoning is
+itself a testable claim, so it was tested rather than assumed
+(`tests/tier_b_adversarial_alignment.py`, Gate 1, exact integers and rationals; range extended
+to `M = 4` as registered amendment 6, because two points cannot establish a trend).
+
+**The reduction that made an exact search possible.** Purely imaginary amplitudes give a
+**parity-odd** state — the exact complement of the proved parity stratum, so
+`production_terms_eq_zero_of_even` cannot apply — and then every production term becomes
+`t = −i·b_p b_q b_r·G_int(p,q)` with `G_int ∈ ℤ`. The cancellation ratio is then a **pure integer
+optimisation over sign vectors**, searchable exactly with no floats.
+
+| `M` | random-phase null | **adversarial** | ratio | random-sign control | chirp (registered candidate) |
+|---|---|---|---|---|---|
+| 2 | 0.0364 | **0.1545** | 4.2× | 0.0517 | 0.0150 |
+| 3 | 0.0170 | **0.1920** | 11.2× | 0.0284 | 0.0177 |
+| 4 | 0.0083 | **0.2355** | 28.4× | 0.0083 | 0.0056 |
+
+Every adversarial state verified divergence-free, conjugate-symmetric and zero-mean, exactly.
+
+**Three things hold at once, and together they are the kill.** (i) **The coherence control
+passes** — after three trips, a deterministic construction finally exceeds the null by a wide
+margin, so the observable *can* detect coherence. (ii) **The search's own control holds** —
+random signs in the same construction sit at the null, so the greedy alignment is measuring
+structure, not noise. (iii) **The trend is opposite** — the null's cancellation *improves* as
+the ball grows (halving each step) while the adversarial ratio *rises*, so the gap widens
+monotonically: 4.2× → 11.2× → 28.4×.
+
+**Therefore: no kinematic bound uniform in `M` can hold**, because states that defeat the
+cancellation exist at every truncation tested and get relatively *better* as the truncation
+grows. This is positive evidence for the kill rather than absence of evidence — the distinction
+this programme has insisted on since the `𝒟(M)` null-model result.
+
+**Recorded honestly against the record:** the registered redesign candidate — **chirp phases —
+FAILED**, sitting at or below the null at every `M`. It is logged as a failed candidate, not
+quietly dropped. What succeeded was the adversarial construction, which the adjudication itself
+named.
+
+**Consequence for the programme.** The vulnerability stays isolated to the non-local factor
+`(|r|²−|q|²)`, and the attack on it must now come from **dynamics restricting access to
+adversarial states**, not from kinematic cancellation over all states. The next phase —
+dynamic invariant regions and suppression of the sweeping effect — is the owner's pivot, and
+**its objects must be defined before any Lean is written** (rule E-1, which retired the previous
+"invariant region" attempt for exactly this reason).
+
 ## Deep Think brief issued (2026-09-12)
 
 `docs/briefs/2026-09-12-deep-think-brief-actions-and-recommendations.md` — self-contained state

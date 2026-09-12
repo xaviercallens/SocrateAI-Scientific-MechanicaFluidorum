@@ -206,6 +206,38 @@ ray) must show `ρ` near 1, or the instrument cannot detect coherence and measur
 > certify that the observable detects coherence, with any director scheme. The redesign
 > candidates are in the G2 packet; nothing further is run until G2 decides. The F2/F3
 > quarantine stands.
+>
+> **FOURTH RUN (2026-09-12) — THE CONTROL PASSES, AND WHAT IT DETECTS KILLS THE TRACK.**
+> Executed on the Deep Think adjudication's D-1 order. `tests/tier_b_adversarial_alignment.py`,
+> exact integers and rationals, range extended to `M = 4` as registered amendment 6 (two points
+> cannot establish a trend, and the trend is the decision-relevant quantity).
+>
+> The registered redesign candidate **chirp phases failed** — `ρ` at or below the null at every
+> `M` (`0.0150`, `0.0177`, `0.0056`). Recorded as a failed candidate, not quietly dropped.
+>
+> What worked is the direct test of Deep Think's *stated mechanism*. Purely imaginary amplitudes
+> make the state **parity-odd** — the exact complement of the proved parity stratum, so that
+> theorem cannot apply — and then every production term reduces to
+> `t = −i·b_p b_q b_r·G_int(p,q)` with `G_int` an **integer**. The cancellation ratio becomes a
+> pure integer optimisation over sign vectors, exactly searchable. Greedy alignment gives:
+>
+> | `M` | null | adversarial | ratio | random-sign control |
+> |---|---|---|---|---|
+> | 2 | 0.0364 | **0.1545** | 4.2× | 0.0517 |
+> | 3 | 0.0170 | **0.1920** | 11.2× | 0.0284 |
+> | 4 | 0.0083 | **0.2355** | 28.4× | 0.0083 |
+>
+> Each adversarial state was verified divergence-free, conjugate-symmetric and zero-mean,
+> exactly. **The trend is the decisive part**: the null's cancellation *improves* as the ball
+> grows (halving each step) while the adversarial state's *does not* — it rises. Random signs in
+> the same construction stay at the null, so the search measures something real.
+>
+> **Reading.** After three trips the coherence control finally passes, and what it detects is
+> that coherent states defeating the cancellation exist at every truncation tested, with the gap
+> widening. Deep Think's mechanism is **exhibited, not merely argued**: this is positive
+> evidence, not absence of evidence. **Kinematic phase mixing is dead** — see the LEDGER record.
+> The F2/F3 quarantine is lifted only in the sense that the observable is now understood; the
+> track it was built to serve is closed.
 > 3. **Parity is now Tier A**: for parity-even states (`u(−k) = u(k)`), the production term
 >    sum vanishes identically — `FourierDynamicsZ3.production_terms_eq_zero_of_even`, proved
 >    by the negation involution.
