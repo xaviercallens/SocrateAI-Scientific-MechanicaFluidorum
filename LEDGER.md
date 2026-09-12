@@ -1039,6 +1039,73 @@ dynamic invariant regions and suppression of the sweeping effect — is the owne
 **its objects must be defined before any Lean is written** (rule E-1, which retired the previous
 "invariant region" attempt for exactly this reason).
 
+## Tier A — the disparity decomposition: the pivot's first exact object (2026-09-12)
+
+`lean_src/FourierDynamicsZ3.lean` §12; definitions proposed for owner adoption in
+`docs/designs/DYNAMIC_ACCESS.md` §2.1. Footprints exactly `[propext, Classical.choice, Quot.sound]`:
+
+| Claim | Theorem | Date |
+|---|---|---|
+| The production term of one ordered triad factors as `disparity · (contraction · bilinear)`, `disparity(p,q) = \|r\|² − \|q\|²` | `productionTerm_eq` | 2026-09-12 |
+| **Exact sweeping suppression**: a same-shell triad (`disparity = 0`) produces no enstrophy, whatever the amplitudes | `productionTerm_eq_zero_of_same_shell` | 2026-09-12 |
+| The zero-disparity fiber vanishes identically | `productionFiber_zero` | 2026-09-12 |
+| **The disparity decomposition**: `2P = −i·Σ_δ P_δ` over the disparities occurring on the ball — a partition, nothing dropped or double-counted | `enstrophy_production_decomposition` | 2026-09-12 |
+
+**Why this is the right first object for the pivot.** The Deep Think adjudication isolated the
+vulnerability to the non-local factor `|r|²−|q|²` and named "suppression of the sweeping effect"
+as the next phase. The decomposition makes both exact: same-shell advection — the discrete face
+of Kraichnan sweeping — is suppressed *exactly* by the algebra (`δ = 0` fiber ≡ 0), suppression
+is linear in `|δ|` near it, and the dangerous production is the **non-local-in-scale** part,
+large `|δ|`. "How much production comes from large disparity" is now a well-posed question.
+
+**Two Lean negative controls, both confirmed to fail:** claiming the `δ = 1` fiber vanishes
+(NC-V — only the zero-weight fiber does); dropping the filter from the fiber, which over-counts
+the sum once per distinct disparity (NC-W). Seventeen demonstrated negatives on the dynamics and
+helical files combined.
+
+## Dynamic access — the pivot's first exact contact, and both registered hypotheses false (2026-09-12)
+
+`tests/tier_b_dynamic_access.py` (Gate 1); registration and amendments in
+`docs/designs/DYNAMIC_ACCESS.md` §3. Forward Euler on Gaussian-rational Galerkin states, exact;
+`M = 2`, `ν = 1/20`, horizon `1/8`, two step sizes, two initial conditions (the exhibited
+adversarial state; a random-phase null).
+
+**An instrument finding first, recorded against the registration.** The first version lacked a
+scheme-fidelity criterion; at the original amplitudes the Euler injection term `dt²‖F‖²` was
+**11–100× the physical dissipation** per step, so energy rose in every run and `ρ` wandered
+under the integrator's own dynamics. Amendment 7 added the criterion (a step counts only if
+injection ≤ 1/10 of dissipation) and an amplitude-scaled regime (`λ = 1/20`, injection ratio
+`∼ λ²`). The `λ = 1` runs are now **disqualified by their own criterion** — the control on the
+criterion works — and the `λ = 1/20` runs qualify at every step.
+
+**The exact dynamic regression of Task 2.2 held at every step of every run:** since
+`Re⟨u,B⟩ = 0` is Tier A, `E' − E + 2·dt·ν·D − dt²‖F‖² = 0` exactly, and it was.
+
+**Result in the qualified regime** (both step sizes agree to four decimals; energy decays
+`3.105 → 2.993`):
+
+| initial condition | `ρ(0)` | `ρ(1/8)` | direction | registered hypothesis |
+|---|---|---|---|---|
+| adversarial | 0.1545 | 0.1889 | rose, monotone | **H-scramble FALSE** |
+| random-phase null | 0.0005 | 0.0187 | rose, monotone | **H-quiet FALSE** |
+
+**Both registered failure modes fired**, including the one the registration called "worse": the
+dynamics *creates* alignment from a null state. The physics makes it unsurprising in hindsight
+— the quadratic nonlinearity correlates triad phases in one step, and nonzero energy transfer
+requires exactly that coherence — but it had to be measured, not assumed, and it retires a
+candidate definition: **a dynamic invariant region cannot be a neighbourhood of random-phase
+states or any small-`ρ` set**, because `ρ` grows under the dynamics from both ends.
+
+**What the pivot should measure instead**, proposed in the memo: the production-to-dissipation
+ratio `P/(νD)` along trajectories — the enstrophy balance itself — since `ρ` was the right
+observable for the kinematic question and is the wrong one for the dynamic one. Longer horizons
+are **not accessible exactly** (denominators reached 22 000 bits at eight steps): the next
+contact belongs to `exploration/` at Tier C, calibrated against this exact run first.
+
+**Scope.** Eight Euler steps at `M = 2`, weakly nonlinear: a direction of travel, no bearing on
+the limit or Hypothesis U; O5 stands. Verdict on the pivot's premise is the owner's; the data
+say the flow moves toward the adversarial region on this horizon, not away from it.
+
 ## Deep Think brief issued (2026-09-12)
 
 `docs/briefs/2026-09-12-deep-think-brief-actions-and-recommendations.md` — self-contained state

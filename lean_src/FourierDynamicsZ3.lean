@@ -839,6 +839,79 @@ theorem production_terms_eq_zero_of_even (M : ℕ) (u : Wavevector → Fin 3 →
   · intro pq _
     simp
 
+/-! ### 12. The disparity decomposition — the pivot's first exact object
+
+The kinematic track was killed (LEDGER, 2026-09-12) with the vulnerability isolated to the
+factor `|r|² − |q|²`. The successor programme — dynamics restricting access to adversarial
+states, and the **sweeping effect** — needs its objects defined before anything is proved about
+them (rule E-1). This section defines the first one exactly and proves the two facts that are
+free.
+
+The **disparity** of a triad is the integer `δ(p,q) = |r|² − |q|²`, the weight that carries
+the entire enstrophy obstruction. Grouping the production by disparity gives the
+**disparity decomposition**: the production is a sum of fiber sums `P_δ`, one per integer value
+the disparity takes on the ball. Two facts:
+
+* **exact sweeping suppression** — the `δ = 0` fiber, the triads whose two swapped members share
+  a sphere (same-shell advection, the discrete face of Kraichnan sweeping), contributes
+  **exactly nothing**. Sweeping cannot produce enstrophy, by the algebra alone;
+* the decomposition is a partition, so every unit of production is accounted to exactly one
+  disparity — which is what makes "how much comes from large disparity" a well-posed question.
+
+Proposed for owner adoption as the pivot's vocabulary (`docs/designs/DYNAMIC_ACCESS.md`). -/
+
+/-- The disparity of an ordered triad: the integer weight `|r|² − |q|²` with `r = −(p+q)`. -/
+def disparity (pq : Wavevector × Wavevector) : ℤ :=
+  k_sq (-(pq.1 + pq.2)) - k_sq pq.2
+
+/-- The production term of one ordered triad — the summand of `enstrophy_production_identity`. -/
+noncomputable def productionTerm (u : Wavevector → Fin 3 → ℂ) (pq : Wavevector × Wavevector) :
+    ℂ :=
+  (ksqC (-(pq.1 + pq.2)) - ksqC pq.2)
+    * (fourier_dot pq.2 (u pq.1)
+       * AbstractAlgebraicConservation.dot (u pq.2) (u (-(pq.1 + pq.2))))
+
+/-- The production fiber at disparity `δ`: the sum over triads of exactly that disparity. -/
+noncomputable def productionFiber (M : ℕ) (u : Wavevector → Fin 3 → ℂ) (δ : ℤ) : ℂ :=
+  ∑ pq ∈ (triadSet M).filter (fun pq => disparity pq = δ), productionTerm u pq
+
+theorem productionTerm_eq (u : Wavevector → Fin 3 → ℂ) (pq : Wavevector × Wavevector) :
+    productionTerm u pq
+      = ((disparity pq : ℤ) : ℂ)
+        * (fourier_dot pq.2 (u pq.1)
+           * AbstractAlgebraicConservation.dot (u pq.2) (u (-(pq.1 + pq.2)))) := by
+  unfold productionTerm disparity ksqC
+  push_cast
+  ring
+
+/-- **Exact sweeping suppression.** A same-shell triad carries no enstrophy production: its
+weight is zero, so its term is zero, whatever the amplitudes. -/
+theorem productionTerm_eq_zero_of_same_shell (u : Wavevector → Fin 3 → ℂ)
+    {pq : Wavevector × Wavevector} (h : disparity pq = 0) : productionTerm u pq = 0 := by
+  rw [productionTerm_eq, h]
+  simp
+
+/-- The zero-disparity fiber vanishes identically. -/
+theorem productionFiber_zero (M : ℕ) (u : Wavevector → Fin 3 → ℂ) :
+    productionFiber M u 0 = 0 := by
+  unfold productionFiber
+  refine Finset.sum_eq_zero fun pq hpq => ?_
+  exact productionTerm_eq_zero_of_same_shell u (Finset.mem_filter.mp hpq).2
+
+/-- **The disparity decomposition.** The production is the sum of its fibers over the disparities
+that actually occur on the ball — a partition, so nothing is counted twice or dropped. -/
+theorem enstrophy_production_decomposition (M : ℕ) (s : GalerkinState M) :
+    2 * enstrophyProduction M s.toFourierState.u
+      = (-Complex.I) * ∑ δ ∈ (triadSet M).image disparity,
+          productionFiber M s.toFourierState.u δ := by
+  rw [enstrophy_production_identity M s]
+  congr 1
+  unfold productionFiber
+  rw [Finset.sum_fiberwise_of_maps_to (s := triadSet M) (t := (triadSet M).image disparity)
+    (g := disparity) (fun pq hpq => Finset.mem_image_of_mem disparity hpq)
+    (productionTerm s.toFourierState.u)]
+  exact Finset.sum_congr rfl fun pq _ => rfl
+
 #print axioms neg_mem_ball
 #print axioms fourier_dot_conj
 #print axioms pairing_leray_drop
@@ -850,6 +923,9 @@ theorem production_terms_eq_zero_of_even (M : ℕ) (u : Wavevector → Fin 3 →
 #print axioms fourier_dot_neg_left
 #print axioms triadSet_neg_closed
 #print axioms production_terms_eq_zero_of_even
+#print axioms productionTerm_eq_zero_of_same_shell
+#print axioms productionFiber_zero
+#print axioms enstrophy_production_decomposition
 #print axioms pairing_self_eq_ofReal
 #print axioms pairing_galerkinRHS
 #print axioms energyRateZ3_eq

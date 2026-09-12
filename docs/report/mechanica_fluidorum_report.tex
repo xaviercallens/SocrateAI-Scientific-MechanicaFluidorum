@@ -64,7 +64,7 @@ Revised After the External Audit of 13 August 2026}}
 
 \date{13 August 2026 \quad$\vert$\quad revised 12 September 2026\\[0.3em]
 \small Repository state: commit \texttt{af2c96e} \quad$\vert$\quad All verification gates PASS (exit 0)\\[0.2em]
-\small 12 Lean files, 244 kernel-compiled theorems, zero \texttt{sorry} \quad$\vert$\quad 20 exact-arithmetic harnesses}
+\small 12 Lean files, 258 kernel-compiled theorems, zero \texttt{sorry} \quad$\vert$\quad 22 exact-arithmetic harnesses}
 
 \begin{document}
 \maketitle
@@ -1960,6 +1960,46 @@ verified there concerns constructed data or manufactured forces; nothing touches
 global regularity, or the uniformity question this programme has isolated --- the negative
 directions are now machine-checked territory, and the open problem is exactly where it was.
 
+\subsection{The kinematic track killed with positive evidence, and the pivot's first exact contact}
+\label{sec:pivot}
+
+The review gate of \S\ref{sec:kernelmap} was decided by an external adjudication: kinematic
+phase mixing was declared a dead end on the argument that adversarial phase-aligned states will
+always maximize the disparity factor, and bounds must come from dynamics restricting access to
+such states. That argument is itself a testable claim, and it was tested rather than assumed.
+Purely imaginary amplitudes make a state parity-odd --- the exact complement of the proved
+parity stratum --- and every production term then collapses to a sign product times an
+integer, so the cancellation ratio becomes a pure integer optimisation over sign vectors,
+searchable exactly. Greedy alignment reaches ratios of $0.15$, $0.19$, $0.24$ at $M=2,3,4$
+against nulls of $0.036$, $0.017$, $0.008$: the null's cancellation improves as the ball grows
+while the adversarial ratio rises, the gap widening from $4\times$ to $28\times$. Every such
+state is a genuine Galerkin state, random signs in the same construction stay at the null, and
+the coherence control that had tripped three times passes at last --- on states that kill the
+track. No kinematic bound uniform in $M$ can hold. The registered redesign candidate, chirp
+phases, failed at every $M$ and is recorded as such.
+
+The pivot's first object is now formal (\tA{}): the \emph{disparity decomposition}. Grouping
+the production sum by the integer $\delta=|r|^2-|q|^2$ partitions it into fibers $P_\delta$,
+and the $\delta=0$ fiber --- same-shell advection, the discrete face of Kraichnan sweeping ---
+vanishes identically, whatever the amplitudes. Sweeping cannot produce enstrophy by the algebra
+alone; the dangerous production is non-local in scale, at large $|\delta|$, and ``how much comes
+from large disparity'' is now a well-posed question.
+
+The first \emph{dynamical} contact is exact and short: forward Euler on Gaussian-rational
+states, with a scheme-fidelity criterion added after the first attempt showed the integrator
+injecting energy at $11$--$100$ times the physical dissipation (those runs are disqualified by
+their own criterion, which is the control on it). In the qualified weakly-nonlinear regime the
+energy-step identity --- a dynamic regression of the energy theorem --- held exactly at every
+step, both step sizes agree to four decimals, and both registered hypotheses are \emph{false}:
+from the adversarial state the ratio rises monotonically, and from a random-phase state it rises
+by a factor of forty. The dynamics does not scramble triad alignment on this horizon; it
+generates it, as nonzero energy transfer requires. One candidate definition is thereby retired
+before any proof was attempted against it: an invariant region cannot be a neighbourhood of
+random-phase states, and the right observable along trajectories is the production-to-dissipation
+ratio, not the cancellation geometry. Longer horizons are not reachable exactly and belong to
+floating-point exploration calibrated on this run. None of this bears on the limit or on
+Hypothesis~U; obstruction O5 stands.
+
 \section{What Has Failed, and What That Taught}
 \label{sec:failures}
 %==============================================================================
@@ -2022,16 +2062,16 @@ LL-8 & \textbf{The verification gate itself had a false positive.} A lemma prove
 \texttt{DyadicRiccati.lean} & The $\alpha=1/2$ threshold as an integrability threshold & \tA{} & 14 \\
 \texttt{FourierStateZ3.lean} & 3-D Fourier state space, Leray projector (\textsc{draft}) & \tA{} & 24 \\
 \texttt{FourierDynamicsZ3.lean} & The operator $B$ of \eqref{eq:Bop}; $B\neq0$ witness; $F1$, $F4$
-closed; \textbf{energy conservation}; \textbf{enstrophy production} \eqref{eq:enstrophy}; the balance laws \eqref{eq:energybalance}--\eqref{eq:enstrophybalance}; the parity kernel & \tA{} & 40 \\
+closed; \textbf{energy conservation}; \textbf{enstrophy production} \eqref{eq:enstrophy}; the balance laws \eqref{eq:energybalance}--\eqref{eq:enstrophybalance}; the parity kernel; the disparity decomposition & \tA{} & 44 \\
 \texttt{HelicalBasis.lean} & Helical basis, five facts; resonance $=$ collinearity; the closed
-form \eqref{eq:closed}, its converse, the gauge separation, and the expansion's frame factors & \tA{} & 78 \\
+form \eqref{eq:closed}, its converse, the gauge separation, the expansion's frame factors, and the director reduction with the ball's point-group symmetry & \tA{} & 88 \\
 \midrule
-\multicolumn{2}{@{}l}{\textbf{Tier A subtotal}} & & \textbf{236} \\
+\multicolumn{2}{@{}l}{\textbf{Tier A subtotal}} & & \textbf{250} \\
 \midrule
 \texttt{MillenniumReduction.lean} & Conditional reduction skeleton & \tC{} & 8 \\
  & \quad (\textsc{demoted} 2026-08-13, verdict B1) & & \\
 \midrule
-\multicolumn{2}{@{}l}{\textbf{Total kernel-compiled, no axiom outside \texttt{\{propext, Classical.choice, Quot.sound\}}}} & & \textbf{244} \\
+\multicolumn{2}{@{}l}{\textbf{Total kernel-compiled, no axiom outside \texttt{\{propext, Classical.choice, Quot.sound\}}}} & & \textbf{258} \\
 \bottomrule
 \end{tabular}
 \end{center}
