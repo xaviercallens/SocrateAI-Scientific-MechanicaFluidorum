@@ -62,9 +62,9 @@ Revised After the External Audit of 13 August 2026}}
 \small SocrateAI Scientific Programme\\
 \small\texttt{SocrateAI-Scientific-MechanicaFluidorum}}
 
-\date{13 August 2026 \quad$\vert$\quad revised 10 September 2026\\[0.3em]
+\date{13 August 2026 \quad$\vert$\quad revised 12 September 2026\\[0.3em]
 \small Repository state: commit \texttt{af2c96e} \quad$\vert$\quad All verification gates PASS (exit 0)\\[0.2em]
-\small 12 Lean files, 238 kernel-compiled theorems, zero \texttt{sorry} \quad$\vert$\quad 17 exact-arithmetic harnesses}
+\small 12 Lean files, 244 kernel-compiled theorems, zero \texttt{sorry} \quad$\vert$\quad 20 exact-arithmetic harnesses}
 
 \begin{document}
 \maketitle
@@ -1889,6 +1889,77 @@ naming the true mechanism is open. The earlier verdict is untouched and mildly r
 produced by a symmetry of a negation-symmetric lattice carries no information about turbulence, and
 it now looks less specific to the physics than when it was first read.
 
+\subsection{The symmetry kernel of the production sum, mapped the hard way}
+\label{sec:kernelmap}
+
+With the production sum in exact closed form, the adjudicated attack asks whether it cancels for
+generic states faster than a random-phase null --- \emph{phase mixing}. A pre-registered
+measurement was built: the $\ell^1$ cancellation ratio of the sum over the ball, exact rational
+end to end (the sum is polynomial in the amplitudes, so no float is ever needed), with
+deterministic state families, twenty seeded nulls, and a coherence control required to pass
+before anything is interpreted. The control tripped three times, and each trip became a theorem.
+
+\emph{Trip one.} The all-real coherent family came out exactly zero. Mechanism, kernel-checked
+the same day: real amplitudes plus conjugate symmetry make the state parity-even, and the
+production terms cancel pairwise under global negation (\tA{}). In passing, the same pairing
+shows the real part of the term sum vanishes for \emph{every} conjugate-symmetric state ---
+which is precisely why the physical production is real --- and that invariant is now asserted by
+the instrument on every run.
+
+\emph{Trip two.} A non-real aligned phase came out exactly zero as well, and parity does not
+explain it. The construction gave every mode's amplitude one fixed director $d$; for such states
+each triad's six orderings collapse to $2c^3\det[a,b,d]\cdot E$ with
+$E=2(a\!\cdot\! d)(b\!\cdot\! d)(B{-}A)+(b\!\cdot\! d)^2(B{-}C)+(a\!\cdot\! d)^2(C{-}A)$, and the
+observed zero reduces to the identity
+\[
+  \sum_{\text{triads of ball } M}\det[a,b,d]\,E \;=\; 0 \qquad\text{identically in } d,
+\]
+verified exactly at $M=2,3$ (all ten coefficients of the cubic form vanish, over $91$ and
+$1178$ triads) and proved for every $M$ by equivariance: the ball is invariant under signed
+permutations, the summand transforms with the determinant sign, so each axis reflection forces
+every monomial odd in each variable and a transposition kills the lone survivor $d_0d_1d_2$.
+Removing a single point from the ball breaks the identity --- the cubic symmetry is
+load-bearing. Notably, the stratum does \emph{not} vanish per triad, and random-phase director
+states have genuinely nonzero production: only \emph{alignment} collapses onto the doomed sum.
+
+\emph{Trip three.} With directors varied per mode --- the registered repair --- the tilted
+coherent control still fell to the null's level and below it at $M=3$. This time the mechanism
+is structural in the observable itself: the sum is trilinear, every triad splits its members
+two-and-one across the conjugate halves, and negation sends each term to minus its own
+conjugate; together these force \emph{any} single-phase family to collapse to
+$T = 2i\,\mathrm{Im}(c\,X)$ for a single $c$-independent number $X$. Verified exactly: $X$
+solved from two phase tilts predicts a third tilt's sum to the last digit, and $X$ is purely
+real at both truncations. So the registered control-family \emph{class} was structurally
+incapable of certifying coherence --- a corollary being that the ratio is blind to any global
+phase, so coherence for a trilinear observable can only mean \emph{relative} phase structure
+across modes. Per the registration, the observable itself is now at the programme's review gate,
+with redesign candidates (chirp phases, two-phase interference sweeps, windowed ratios,
+evolved-state ensembles) awaiting decision; the null comparisons remain quarantined.
+
+Three trips, three mechanisms --- parity, cubic equivariance, trilinear collapse --- and one
+standing lesson, now three for three in this programme: an unexplained exact zero is a symmetry
+not yet found, and it must be found before anything else is believed.
+
+\subsection{The external formal landscape, audited (Tier L, proposed)}
+\label{sec:externalaudit}
+
+A publicly released Lean~4 development attributed to OpenAI states and proves the \emph{negative}
+directions of the Clay problem's menu: forced Navier--Stokes breakdown on $\mathbb{R}^3$ and on
+the torus (options C and D, with a force constructed as the residual of a pre-built singular
+candidate), and unforced Euler blowup for a constructed compact smooth datum with a quantitative
+singularity package. This programme audited the tree under its own rules before citing a line of
+it: a full rebuild (517 modules, zero errors, Lean 4.34.0-rc2), then axiom footprints on the four
+headline theorems --- all exactly \texttt{\{propext, Classical.choice, Quot.sound\}} --- with a
+built-in negative control (the repository's four intentional challenge placeholders, adapted from
+DeepMind's formal-conjectures statements, must and do show \texttt{sorryAx}), and an import scan
+proving the proof tree never touches the placeholder modules. One structural caveat travels with
+any citation: placeholder and proof share fully-qualified names in modules that can never be
+co-imported, so the equivalence of the proved statements to the challenge statements is a human
+side-by-side audit, not a kernel fact. The asymmetry matters more than the results: everything
+verified there concerns constructed data or manufactured forces; nothing touches Statement~A,
+global regularity, or the uniformity question this programme has isolated --- the negative
+directions are now machine-checked territory, and the open problem is exactly where it was.
+
 \section{What Has Failed, and What That Taught}
 \label{sec:failures}
 %==============================================================================
@@ -1951,16 +2022,16 @@ LL-8 & \textbf{The verification gate itself had a false positive.} A lemma prove
 \texttt{DyadicRiccati.lean} & The $\alpha=1/2$ threshold as an integrability threshold & \tA{} & 14 \\
 \texttt{FourierStateZ3.lean} & 3-D Fourier state space, Leray projector (\textsc{draft}) & \tA{} & 24 \\
 \texttt{FourierDynamicsZ3.lean} & The operator $B$ of \eqref{eq:Bop}; $B\neq0$ witness; $F1$, $F4$
-closed; \textbf{energy conservation}; \textbf{enstrophy production} \eqref{eq:enstrophy}; the balance laws \eqref{eq:energybalance}--\eqref{eq:enstrophybalance} & \tA{} & 37 \\
+closed; \textbf{energy conservation}; \textbf{enstrophy production} \eqref{eq:enstrophy}; the balance laws \eqref{eq:energybalance}--\eqref{eq:enstrophybalance}; the parity kernel & \tA{} & 40 \\
 \texttt{HelicalBasis.lean} & Helical basis, five facts; resonance $=$ collinearity; the closed
-form \eqref{eq:closed}, its converse, and the gauge separation & \tA{} & 75 \\
+form \eqref{eq:closed}, its converse, the gauge separation, and the expansion's frame factors & \tA{} & 78 \\
 \midrule
-\multicolumn{2}{@{}l}{\textbf{Tier A subtotal}} & & \textbf{230} \\
+\multicolumn{2}{@{}l}{\textbf{Tier A subtotal}} & & \textbf{236} \\
 \midrule
 \texttt{MillenniumReduction.lean} & Conditional reduction skeleton & \tC{} & 8 \\
  & \quad (\textsc{demoted} 2026-08-13, verdict B1) & & \\
 \midrule
-\multicolumn{2}{@{}l}{\textbf{Total kernel-compiled, no axiom outside \texttt{\{propext, Classical.choice, Quot.sound\}}}} & & \textbf{238} \\
+\multicolumn{2}{@{}l}{\textbf{Total kernel-compiled, no axiom outside \texttt{\{propext, Classical.choice, Quot.sound\}}}} & & \textbf{244} \\
 \bottomrule
 \end{tabular}
 \end{center}

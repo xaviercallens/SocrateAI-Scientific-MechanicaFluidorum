@@ -910,6 +910,44 @@ general-`M` proof recorded; the X-reduction exact and twice-verified), a hardene
 the F2/F3 quarantine intact — and the lesson now three-for-three: **an unexplained exact zero in
 this system is a symmetry not yet found, and must be found before anything else is believed.**
 
+## WP-0b COMPLETE — the foreign-tree audit PASSES its pre-registered criteria (2026-09-12)
+
+All three parts landed and were verified from the transcripts, archived with provenance in
+`docs/proposals/` (`openai-audit-main.transcript.txt`, `openai-audit-placeholders.transcript.txt`,
+`openai-audit-PROVENANCE.md`):
+
+| part | criterion | result |
+|---|---|---|
+| proof tree (4 headline theorems) | footprints exactly `[propext, Classical.choice, Quot.sound]` | **PASS, all four exact** |
+| placeholders (built-in negative control) | `sorryAx` present in all four | **PASS** |
+| import scan | zero proof-tree imports of the challenge modules | **PASS** (empty scan) |
+
+**Tier L rows proposed for owner confirmation** (per Tier L governance, rows are owner-adopted):
+
+| proposed row | statement, as kernel-verified | source | caveats |
+|---|---|---|---|
+| **L-9 (proposed)** | Forced Navier–Stokes breakdown on ℝ³ and on 𝕋³ (Clay options C and D shapes): smooth decaying data and force with no global smooth solution, force constructed as the residual of a pre-built singular candidate | `openai/NavierStokesAndEuler@8937a8f`, `NavierStokes.ComparatorBridge.navier_stokes_breakdown_R3` / `…_periodic`; kernel transcript archived | **F-NAME**: equivalence to the DeepMind-derived challenge *statements* is human-audited, not kernel-linked; the force is a manufactured residual (their own construction); nothing about unforced NS or Statement A |
+| **L-10 (proposed)** | Unforced Euler blowup on ℝ³ for a constructed compact smooth datum, with the quantitative singularity package (local existence below `T*`, C¹ blow-up at `T*`, divergent vorticity integral) | same tree, `Euler.euler_breakdown_R3`, `Euler.exists_compact_smooth_euler_singularity` | F-NAME as above; a specific constructed datum, no genericity claim |
+
+A Tier L row never discharges a Lean obligation, and neither row touches Hypothesis U — the
+review's asymmetry analysis stands: the negative directions are now machine-checked territory;
+the open problem remains exactly the uniformity this programme has isolated.
+
+## E-3 FILED — concurrent rewrite of `FourierStateZ3.lean` + a roadmap citing nonexistent artifacts (2026-09-12)
+
+`docs/escalations/2026-09-12-E3-concurrent-rewrite-and-roadmap.md`. Found on disk, unstaged and
+untouched by this session: a 94/63-line unprovenanced rewrite of committed, gate-verified Tier A
+proofs (statements unchanged, one docstring deleted); an untracked roadmap (2026-09-11) that
+plans to discharge `sorry`s **in a tree that has none**, references **`EulerCensorship.lean`,
+which does not exist**, revives the **smooth filter** the Q1 adjudication discarded, and frames
+the programme as a near-complete regularity proof contra O5. Owner triage requested.
+
+**Gate outcome against the modified tree (2026-09-12): ALL GATES PASS** — 20 harnesses, ledger
+consistency, and Gate 2 with the rewritten `FourierStateZ3.lean` showing its 10 certificates
+clean, zero `sorry`. So the concurrent rewrite is churn, not breakage: the statements and
+footprints are intact, and the escalation's substance is the missing provenance, the deleted
+docstring, and the roadmap's fabricated references — not compilation.
+
 **Audit flags — BOTH CLOSED 2026-09-10.** F1′ by `B_witness_ne_zero` / `B_not_identically_zero`
 (rows above). F4 by `mem_ball_iff`: `k ∈ ball M ↔ k_sq k ≤ M²`. The non-obvious direction is that
 `k_sq k ≤ M²` already forces every coordinate into `[−M, M]`, because each `(kᵢ)²` is one
