@@ -1156,11 +1156,69 @@ disagreement `1.3e-5`), archived in `exploration/scout_runs/`:
 
 Read as data: the greedy alignment starts above the enstrophy balance and is destroyed by the
 nonlinear phase rotation on a time `t_φ` that shrinks with `M`; the resulting transient
-enstrophy gain is small and **grows with `M`** on the two points measured (`×5.5` from `M = 2`
-to `4`); the two signs are strongly asymmetric under viscosity; by `t = 1` all initial
-conditions at a given `M` decay alike. `M = 8` and the `M = 16` null are running; their rows
-are appended to `CORE_TAIL_CAP.md` §4.1 when the halving check passes. **No verdict is drawn**;
-whether the growth in `M` saturates is exactly the question the next point answers.
+enstrophy gain is small and **grows with `M`**; the two signs are strongly asymmetric under
+viscosity; by `t = 1` all initial conditions at a given `M` decay alike.
+
+### Tier B — the certificate's arithmetic primitive, built and measured (2026-09-13)
+
+`tests/tier_b_core_forcing_bound.py`, Gate 1. Registration: `CORE_TAIL_CAP.md` §3 (objects
+PROPOSED, E-1) and §5 (the evaluator's design). **Nothing is adopted here**; this is the
+arithmetic the Core-Tail certificate needs, checked before any Lean is written against it.
+
+| Claim | Result | Status |
+|---|---|---|
+| A rigorous square-root upper bound needs no floating point: `sqrt_upper(a/b) = (isqrt(a·b·4ⁿ)+1)/(b·2ⁿ)` satisfies `y² ≥ a/b` by `(isqrt N + 1)² > N` | every comparison in the certificate is then between exact `Fraction`s; `n` buys tightness, never validity | **Tier B** |
+| (L) Leray is a contraction, `‖P_k v‖² ≤ ‖v‖²`; (CS) `\|q·v\|² ≤ k_sq(q)‖v‖²` | hold exactly at every `(k, p)` of every tested state | Tier B |
+| **(DF) On a divergence-free state `q·u_p = k·u_p` exactly** (`q = k−p`, `p·u_p = 0`) | exact Gaussian-rational identity at every `(k, p)` — this is what makes T-2′ available | Tier B |
+| T-2 as proposed, `‖B(u,u)_k‖ ≤ Σ_{p+q=k} \|q\|‖u_p‖‖u_q‖` | **holds** at every mode of every tested state, `M = 2, 3, 4` | Tier B |
+| **T-2′ proposed as an amendment**: `‖B(u,u)_k‖ ≤ \|k\|·Σ_{p+q=k}‖u_p‖‖u_q‖` — the weight is constant in the summation variable, so it factors out of the self-consistency inequality | **holds** everywhere tested; nearly **2× tighter** than T-2 on the coherent stratum at `M = 3` (0.2125 vs 0.1111) | **PROPOSED, awaiting owner adoption (E-1); not citable yet** |
+| Tightness of the bound, `‖B_k‖²/bound²` | random states `0.073 / 0.034 / 0.010` at `M = 2/3/4` — the `M^-3` incoherence artifact, not a property of the bound; **coherent two-wavevector states `1/4` at `M = 2`, `1/9` at `M = 3`** | Tier B |
+
+**The consequence recorded for the programme:** even at its tightest the forcing bound loses a
+factor 2–3 in norm, and a self-consistency argument compounds that — the envelope parameters
+must carry at least that margin, and the certificate covers correspondingly fewer states.
+
+**Negative controls, reported per LL-12 because one class failed to fail.** NC-A (drop `|q|`),
+NC-B (`|p|` for `|q|`), NC-C (round the roots down) do **not** break the inequality at either
+stratum: each removes a factor smaller than the bound's own slack, so a true inequality stays
+true — a measurement, not a defect. NC-D (reverse the inequality) fails everywhere. **NC-E
+(quarter the bound) fails on 864 modes at `M = 2` and 240 at `M = 3`** and is the control that
+certifies the checker can fail; its constant was fixed after the tightness was measured,
+because a sensitivity control must be calibrated to the measured slack to fail at all.
+
+**The scaled evaluator (`tests/core_forcing_rs`), validated and sized.** Rust, `rayon`,
+fixed-point rationals `n / 2^40` on `i128` with declared rounding directions — **no floating
+point in the crate at all**. Cross-checked against a two-sided exact-rational reference
+exported by the Python checker at `M = 4`: 0 results below the lower bracket, 0 above the upper
+bracket, 0 modes where the round-down sum exceeds the round-up sum. Measured throughput on the
+local 8-core i7 while three scouts were running: `M = 8` (2 109 modes, 4.4 × 10⁶
+mode-evaluations) **32 ms**; `M = 16` (17 077 modes, 2.9 × 10⁸) **1.85 s**. **Consequence: the
+certificate's forcing evaluation is not a compute problem at any `M` this programme
+contemplates.** Not wired into `scripts/verify.sh` — that would make `cargo` a Gate 1
+dependency, an owner decision. Compute plan: `docs/briefs/2026-09-13-compute-plan-local-vs-gcp.md`.
+
+**Sampling amendment and the `M = 8` point** (`CORE_TAIL_CAP.md` §4.2): the registered
+interval 0.01 is coarser than the `M = 8` dephasing time, so the transient observables are
+re-read from every-step runs (`exploration/scout_runs/S2f_*`, halving pairs agreeing to
+`≤ 2e-7`), same initial states. Resolved series at `M = 2, 4, 8`: initial excess
+`P/(νD₂) = 1.60, 2.84, 4.12` (~`M^0.7`); dephasing time `0.059, 0.017, 0.004` (~`M^-2`);
+`Z_max/Z₀ = 1.0023, 1.0122, 1.0265` — grows with `M` with **decelerating** increments
+(`×5.3`, then `×2.2`). Three points do not separate saturation from a slow power law; the
+fourth (`M = 16` adversarial) is outside S-2 as registered. **No verdict is drawn.**
+
+**Protocol S-3 registered, and its declared blocker removed — no run yet** (`CORE_TAIL_CAP.md`
+§4.3 and §4.3.1). S-3 adds the fourth point and nothing else. Its declared risk was that the
+`M = 16` greedy alignment would not fit in memory; counted exactly rather than estimated, the
+triad table is `1.367 × 10⁸` entries, and as the scout was coded that was **≈ 20 GB peak
+against ≈ 14 GB available** — the run would have died, and the memo's own `≈ 3 GB` figure was
+6.6× optimistic. The scout now builds the table only in index form (**3.06 GB**) and caches the
+alignment (`--phases-out` / `--phases-in`), so it is paid once rather than six times. **The
+change is a refactor and is held to that standard: re-running the archived `M = 8` fine
+adversarial run reproduces `S2f_M8_advm_a.csv` byte for byte, alignment included.** Corrected
+cost, and the compute brief §3 is corrected in place to match: **S-3 is an overnight job**
+(≈ 4–5 h alignment, extrapolated from the measured `M = 8` alignment, then ≈ 6 h of
+trajectories), not the "afternoon" that brief first reported by counting trajectories only.
+**Nothing has been run; no number here is an S-3 result.**
 
 ## Deep Think brief issued (2026-09-12)
 

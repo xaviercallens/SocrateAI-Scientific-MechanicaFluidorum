@@ -26,3 +26,10 @@ step-halving check agrees; the calibration certifies the *right-hand side*, not 
 
 *The full transcript was produced in the session scratchpad; the numbers above are copied from
 it verbatim.*
+
+**Re-run after the 2026-09-13 parallelisation of `b_fft`** (transform-level parallelism
+replacing intra-transform parallelism; see `docs/briefs/2026-09-13-compute-plan-local-vs-gcp.md`
+§1.1). All four worst-case errors are **unchanged to every printed digit**
+(`2.348e-16`, `2.389e-16`, `2.397e-16`, `2.389e-16`), and a 200-step `M = 16` trajectory is
+**bit-identical** before and after. The optimisation reordered work, not arithmetic; the
+calibration above therefore still certifies the current binary.

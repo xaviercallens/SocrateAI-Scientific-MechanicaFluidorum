@@ -23,3 +23,8 @@ exploration/triad_frustration_rs/target/
 exploration/triad_frustration_rs/Cargo.lock
 exploration/dual_scale_scout_rs/target/
 exploration/dual_scale_scout_rs/Cargo.lock
+
+# The Tier B forcing evaluator: build output only. Its Cargo.lock is deliberately NOT ignored
+# -- it pins the exact dependency revisions a certificate was computed against, the same
+# reason lean_src/lake-manifest.json is tracked.
+tests/core_forcing_rs/target/

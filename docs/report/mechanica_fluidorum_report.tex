@@ -64,7 +64,7 @@ Revised After the External Audit of 13 August 2026}}
 
 \date{13 August 2026 \quad$\vert$\quad revised 12 September 2026\\[0.3em]
 \small Repository state: commit \texttt{af2c96e} \quad$\vert$\quad All verification gates PASS (exit 0)\\[0.2em]
-\small 12 Lean files, 258 kernel-compiled theorems, zero \texttt{sorry} \quad$\vert$\quad 22 exact-arithmetic harnesses}
+\small 12 Lean files, 258 kernel-compiled theorems, zero \texttt{sorry} \quad$\vert$\quad 23 exact-arithmetic harnesses}
 
 \begin{document}
 \maketitle
@@ -1999,6 +1999,100 @@ random-phase states, and the right observable along trajectories is the producti
 ratio, not the cancellation geometry. Longer horizons are not reachable exactly and belong to
 floating-point exploration calibrated on this run. None of this bears on the limit or on
 Hypothesis~U; obstruction O5 stands.
+
+\subsection{The Core--Tail turn: a calibrated scout, and the transient it measures (\tC{})}
+\label{sec:coretail}
+
+The adjudication that followed adopted the disparity decomposition and the trajectory ratio
+$P/(\nu D)$ as the programme's observables and redirected the effort toward a
+\emph{computer-assisted} proof: numerically certified bounds on a core $|k|\le M_{\mathrm{core}}$
+in interval arithmetic, and an analytic bound on the tail $|k|>M_{\mathrm{core}}$. One
+correction was filed with the acknowledgement and is recorded here because it changes the
+target statement. A tail that ``decays super-exponentially assuming the core is bounded'' is
+not a theorem in three dimensions: the tail is \emph{forced} by the core through exactly the
+disparate triads isolated above, and a bounded core does nothing to that forcing. What is
+provable is the self-consistent envelope of rigorous numerics --- assume $|u_k|\le Ce^{-a|k|}$
+beyond the core, show that $\nu|k|^2$ dominates the forcing by the boxed core and the enveloped
+tail, and close --- with an exponential (Gevrey) rate, constants supplied by the certificate,
+and one virtue that is precisely the one wanted against O5: the tail inequality never mentions
+the outer truncation $M$, so a closed envelope is uniform in $M$ for the solutions it covers.
+The objects (core box, envelope, per-mode balance, convolution forcing bound, self-consistency
+inequality) are proposed exactly and await adoption before any Lean is written against them.
+
+The floating-point scout that the certificate will be built from is Rust: pseudo-spectral,
+\texttt{rustfft} with the $2/3$ rule at $N\ge 3M+1$ so that every aliased product lands outside
+the retained band, \texttt{rayon} over the transforms, fourth-order Runge--Kutta, on a CPU-only
+workstation by directive. Its right-hand side is calibrated rather than asserted: fed the exact
+rational trajectory of the preceding subsection, both its engines --- the FFT and a direct
+$O(M^6)$ convolution --- reproduce all eight steps of both initial conditions to $2.4\times
+10^{-16}$ relative, and agree with each other to round-off at $M=4$. Everything the scout says
+beyond that is read only where a step-halving partner agrees within $2\%$.
+
+The first registered protocol asks the one scout-level question that bears on uniformity:
+at fixed initial energy and viscosity, does the \emph{transient} enstrophy amplification of
+adversarial states grow with $M$? Its outcome at $M=2,4,8$ --- every long run readable over
+the whole horizon by step-halving (worst disagreement $1.3\times10^{-5}$), the transient
+itself re-read from every-step runs after the registered sampling interval proved coarser than
+the $M=8$ dephasing time, an amendment recorded before the numbers were read --- is reported
+as data. The production-positive adversarial state starts above the enstrophy balance ---
+$P/(\nu D_2)$ equals $1.6$, $2.8$, $4.1$ at $M=2,4,8$, with $D_2=\sum|k|^4|u_k|^2$ the
+dissipation the enstrophy balance is decided against --- and loses it within a fraction of a
+time unit: the production changes sign at $t=0.059$, $0.017$, $0.004$ respectively, then
+oscillates with decaying amplitude. The alignment that the greedy search builds is a kinematic
+coincidence of triad phases, and the nonlinear phase rotation destroys it on a time scale that
+falls roughly as $M^{-2}$ --- set by the fastest triads, whose rate grows as $M^2|u_k|$ ---
+while the initial excess grows only as about $M^{0.7}$. The transient gain is therefore small
+--- $Z_{\max}/Z_0=1.0023$, $1.0122$, $1.0265$ --- and it \emph{grows with $M$}, but the
+growth decelerates: $\times5.3$ from $M=2$ to $4$, $\times2.2$ from $4$ to $8$. Three points
+are consistent with saturation and with a slow power law alike; the fourth point that would
+separate them needs the greedy alignment on $17\,000$ modes and is not part of the registered
+protocol. Two further readings: the production-negative twin of each adversarial state (the
+same amplitudes with $P\to-P$ at $t=0$, related to it by time reversal of the inviscid part)
+keeps its sign three to ten times longer and \emph{removes} $10\%$ and $24\%$ of $Z_0$ at
+$M=2,4$ before dephasing, so viscosity breaks the reversal symmetry in the direction that
+spends coherence to lower enstrophy --- the sweeping-suppression question in dynamical form;
+and once the alignment is spent, all initial conditions at a given $M$ decay alike, the memory
+of the phase configuration gone from the enstrophy by $t=1$. What this supplies to the
+certificate is the shape it must cover: a transient of duration $\lesssim 0.3$ in which the
+enstrophy exceeds $Z_0$ by a factor that is small on the points measured and increasing,
+decreasingly, in $M$. It supplies nothing about the limit; O5 stands.
+
+The certificate's arithmetic was then built and, more usefully, \emph{measured}. It rests on a
+single primitive --- a rigorous upper bound on the nonlinear forcing of one mode --- and on a
+reconciliation of two constraints that look incompatible: rigorous numerics normally means
+interval arithmetic with directed rounding, which is floating point, while this programme bans
+floating point from every Tier~B artifact. They are reconciled by rounding in exact rationals:
+$\operatorname{sqrt\_upper}(a/b) = (\lfloor\sqrt{ab\,4^n}\rfloor + 1)/(b\,2^n)$ has square
+exceeding $a/b$ because $(\lfloor\sqrt N\rfloor+1)^2 > N$ for every integer $N$, so every
+irrational the bound needs is replaced by a self-certifying rational and every comparison in
+the certificate is between two exact fractions. The precision $n$ buys tightness, never
+validity.
+
+Two things came out of measuring it. First, a structural improvement: on a divergence-free
+state $p\cdot u_p = 0$, so $q\cdot u_p = k\cdot u_p$ exactly when $q = k-p$ --- verified as an
+exact Gaussian-rational identity at every pair --- and the forcing bound may therefore carry
+the \emph{fixed} factor $|k|$ in place of the varying $|q|$. That is not cosmetic: a weight
+constant in the summation variable factors out of the self-consistency inequality, reducing it
+to an unweighted convolution of the envelope against itself, which is the only form in which
+the envelope's summability can be used. Second, and less welcome, the bound is loose. Tightness
+$\|B_k\|^2/\text{bound}^2$ on random states falls as $M^{-3}$ --- an artifact of incoherence,
+since a random sum of $N\sim M^3$ terms has magnitude $\sqrt N$ against a bound of $N$ --- so
+the bound can only be measured on coherent states, supported on two wavevectors and their
+conjugates, where the sum has a handful of terms that can align. There the worst tightness is
+exactly $1/4$ at $M=2$ and $1/9$ at $M=3$, improved to $0.21$ at $M=3$ by the $|k|$ form. Even
+at its tightest the bound loses a factor of two to three in norm, a loss a self-consistency
+argument compounds; the envelope parameters must carry that margin, and the certificate will
+cover correspondingly fewer states. Recording this before any Lean was written against the
+bound is the entire point of building the arithmetic first.
+
+One methodological note belongs with it, in the spirit of \S\ref{sec:failures}. Three of the
+five negative controls --- drop the $|q|$ factor, use $|p|$ instead, round the roots the wrong
+way --- do \emph{not} break the inequality. That is not a broken control but a measurement:
+each removes a factor smaller than the bound's own slack, so a true inequality stays true. The
+control that certifies the checker can fail is the one that quarters the bound, violated on
+$864$ modes at $M=2$ and $240$ at $M=3$; its constant was fixed after the tightness was
+measured, because a sensitivity control must be calibrated to the measured slack to be capable
+of failing at all. The controls that failed to fail are kept and reported, not replaced.
 
 \section{What Has Failed, and What That Taught}
 \label{sec:failures}
