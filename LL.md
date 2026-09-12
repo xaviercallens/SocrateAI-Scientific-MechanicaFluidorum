@@ -655,6 +655,81 @@ the divergent `(log₂M)²` model predicts a third falling ratio too, inside the
 discriminating point is `M = 32`. **A protocol's decisive point should be shown to be decisive
 before the compute is spent, by predicting what each hypothesis returns there.**
 
+**SEQUEL, same day, and it cuts against this lesson's own conclusion.** The fourth point arrived
+that evening: `Z_max/Z₀ = 1.0324` at `M = 16`. The increments of every series **turned over**
+(`+0.0099, +0.0145, +0.0057`), and the admissibility test above, redone on `M = 4, 8, 16`,
+returns **`β = +1.347`** — admissible, where twelve hours earlier on `M = 2, 4, 8` it returned
+`β = −0.53` and supported a confidently divergent reading.
+
+So the rule survives and the *reading* did not. Both readings were exact three-parameter fits to
+three points, and the two disagreed in sign. **The lesson is therefore stronger than first
+written: the admissibility test is necessary and nowhere near sufficient, and an exact fit to as
+many points as parameters carries almost no information about the next point.** Report it with
+its parameter count attached, always, and never let it settle a question that one more point can
+reverse. Recorded here in both directions on purpose — the first version of this lesson would
+otherwise read as vindicated, and it was half refuted within a day.
+
+## LL-24 — pre-register the factors of a product, never the composite (2026-09-13)
+
+**Incident.** The pre-registered bracket for S-3 was `Z_max/Z₀ ≈ 1.040–1.052`, committed in
+`ba76c30` before any `M = 16` number existed. **Measured: `1.0324` — falsified, below the
+bracket.** The bracket had exactly two factors and exactly one of them failed:
+
+| factor | predicted | measured | verdict |
+|---|---|---|---|
+| survival fraction `e/ΔZ_inj` | 0.63–0.71 | **0.6441** | correct |
+| injection `ΔZ_inj/Z₀` | 0.0634–0.0738 | **0.0503** | **the miss** |
+
+The injection's local exponent was assumed to decline smoothly to `≈0.50`. It fell to `0.104` —
+the injection simply stopped growing.
+
+**Root cause, and it was avoidable from committed data.** `ΔZ_inj` is a *product*: the initial
+production excess times the alignment's lifetime. Both factors were separately measurable in the
+archive, and both were already known:
+
+- `t_φ` follows `M^-2` **exactly** — `0.004/4 = 0.001`, measured `0.001`;
+- the excess grows `×1.219`, not the `×1.62` that the memo's own `M^0.7` description implies.
+
+A decelerating driver against a lifetime collapsing as `M^-2` gives a **saturating product**.
+The prediction instead extrapolated the composite's own local exponent, discarding the structure
+that would have got it right.
+
+**Rule.** When an observable is a product (or quotient) of separately measurable factors,
+**pre-register the factors and multiply them.** Extrapolating the composite throws away exactly
+the information that makes the prediction worth making, and it degrades a diagnosable failure
+into an undiagnosable one. Note what the decomposition bought even in failure: the miss localised
+to one factor, so the post-mortem produced a better model instead of an argument.
+
+**And the corollary that keeps this honest.** A falsified pre-registration is a *success of the
+method*, and must be reported as loudly as a confirmed one — louder, since the confirmed ones are
+the ones nobody checks. The value of a pre-registration is entirely in its being binding when it
+goes against you.
+
+## LL-25 — never summarise a file a background job is still writing (2026-09-13)
+
+**Incident.** Three ultra-fine transient runs were launched in the background and the summary
+tool was run across all of them as soon as the first notifications arrived. The `M = 8` row came
+back `Z_max/Z₀ = 1.0171` against an archived `1.0265`, and the discrepancy was briefly treated as
+a real disagreement between two trajectories — a serious finding, since it would have implied the
+refactored alignment was not reproducing.
+
+**It was a partially written file.** The `M = 8` job had not finished; the CSV held rows only to
+`t ≈ 0.001`, so the "maximum" was a maximum over a truncated window. Once complete it returned
+`1.0267`, agreeing with the archive to `2×10⁻⁴`. **Finer sampling cannot lower a maximum** — that
+impossibility is what exposed it, and it is the only reason it was caught in under a minute
+rather than written up.
+
+**Rule.** Before reading any aggregate — max, integral, argmax, "worst" — **verify the input is
+complete**: check the expected row count, or that the producing process has exited, not merely
+that a notification arrived for *some* job. This is LL-18 (ambiguous instrument state) in a new
+costume: a truncated file and a converged file are indistinguishable to a tool that just reads
+rows.
+
+**Corollary worth keeping.** The catch came from a *monotonicity impossibility*, not from care:
+a refinement that lowers a maximum is arithmetically impossible, so the reading had to be wrong.
+**Keep a list of such impossibilities for your instruments** — they are the cheapest available
+detector of a broken measurement, and they fire before any interpretation has been built.
+
 ## LL-21 — a declared risk must carry a counted quantity, not an order of magnitude (2026-09-13)
 
 **Incident.** Protocol S-3 was registered with an explicit, creditable risk declaration: the
@@ -722,7 +797,7 @@ watching. Cheap to verify on a settings file; expensive to discover on a proof.
 
 # Synthesis — the three blind spots of a two-gate system
 
-LL-20 through LL-23 are one pattern, and it is not the control pattern below. Every one of them
+LL-20 through LL-25 are one pattern, and it is not the control pattern below. Every one of them
 occurred with **both gates green**, and none of them is a proof error:
 
 | Lesson | What was wrong | Why no gate could see it |
@@ -731,6 +806,8 @@ occurred with **both gates green**, and none of them is a proof error:
 | LL-21 | A declared memory risk was `6.6×` optimistic | The failing run had not happened yet; there is nothing to check |
 | LL-22 | An optimiser was quadratic for three campaigns | A correct answer is perfect camouflage for a bad algorithm |
 | LL-23 | The allow-list subsumed its own denial | Permissions are not a tier |
+| LL-24 | A product observable's composite was extrapolated instead of its factors; the pre-registered bracket was falsified | Gates check identities, not the structure of a forecast |
+| LL-25 | An aggregate was read off a file a background job was still writing | A truncated file and a finished one look identical to a row reader |
 
 **The three blind spots, stated for the next campaign:**
 

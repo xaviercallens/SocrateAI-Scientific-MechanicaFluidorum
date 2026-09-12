@@ -392,6 +392,76 @@ separate saturation from slow divergence, the registered `M = 16` point is predi
 insufficient and `M = 32` is the first one that bites** — and per §4 of the compute brief, the
 `M = 32` adversarial arm needs a new alignment algorithm before it needs a machine.
 
+#### 4.3.4 S-3's first result: the prediction of §4.3.3 is FALSIFIED (2026-09-13; data, no verdict)
+
+The `M = 16` greedy alignment converged at sweep 42 (`best = 17176873794444224`, 81 min with the
+incremental objective of §4.3.2; phases archived as `exploration/scout_runs/S3_M16_phases.txt`),
+and the every-step transient pair ran immediately. **The pre-registered bracket was
+`Z_max/Z₀ ≈ 1.040–1.052`, committed in `ba76c30` before any S-3 number existed. The measured
+value is `1.0324`. The prediction is falsified, below the bracket.**
+
+**Readability, and a sampling amendment the `M = 16` point needed.** The halving pair
+(`S3f_M16_advm_a/_b`, `dt = 2.5e-4 / 1.25e-4`) agrees over the whole window — worst disagreement
+`9.95e-5` in `E` and `6.09e-4` in `Z`, both far inside the 2 % rule — and both members return
+identical transient observables. But `t_peak` at `M = 16` is `0.001`, i.e. **four samples**, so
+the §4.2 amendment was re-applied one level deeper: the whole series was re-measured on a uniform
+ultra-fine grid (`dt = 6.25e-5`, every step, `S3ff_M{2,4,8,16}_advm`). `Z_max/Z₀` is unchanged
+at `M = 16` (`1.0324`, robust to 16× finer sampling) and `M = 8` reproduces its archived value to
+`2×10⁻⁴`, so the archived sampling was adequate below `M = 16`; only the `M = 16` **injection**
+needed the finer grid (`0.0484 → 0.0503`, a 4 % under-integration on four samples). All numbers
+below are from the uniform grid.
+
+| `M` | `P/(νD₂)` at `t=0` | `t_φ` | `Z_max/Z₀` | `t_peak` | `ΔZ_inj/Z₀` |
+|---|---|---|---|---|---|
+| 2 | +1.604 | 0.059 | 1.0023 | 0.022 | +0.0154 |
+| 4 | +2.840 | 0.017 | 1.0122 | 0.011 | +0.0292 |
+| 8 | +4.115 | 0.004 | 1.0267 | 0.003 | +0.0468 |
+| **16** | **+5.016** | **0.001** | **1.0324** | **0.001** | **+0.0503** |
+
+**Every series has now turned over**, which is what §4.2's reading and §4.3.3's correction to it
+were both waiting on:
+
+```
+                        differences
+Z_max/Z₀ − 1 :  +0.0099, +0.0145, +0.0057
+ΔZ_inj/Z₀    :  +0.0138, +0.0176, +0.0035
+P/(νD₂) at 0 :  +1.236,  +1.275,  +0.901
+t_φ          :  follows M^-2 exactly (0.004/4 = 0.001, measured 0.001)
+```
+
+**The LL-20 admissibility test, redone.** Fitting `e(M) = e_∞ − A·M^(−β)` to the last three
+points (`M = 4, 8, 16`) now returns **`β = +1.347`** for `Z_max/Z₀ − 1` and **`+2.330`** for the
+injection — **admissible**, where the same fit on `M = 2, 4, 8` returned `β = −0.53` and was
+inadmissible. Implied ceilings `Z_max/Z₀ → 1.0361` and `ΔZ_inj/Z₀ → 0.0512`.
+
+**This is stated with the loudest possible caveat, because it is the same shape of evidence that
+was wrong one point ago.** `β = +1.347` is an exact three-parameter fit to three points. Twelve
+hours ago the identical procedure on the identical observable returned an inadmissible exponent
+and a confident divergent reading, and the fourth point overturned it. **It is not a verdict, it
+is not a tier promotion, and `M = 32` is the test.** Tier C throughout; O5 stands.
+
+##### Post-mortem of the falsified prediction, recorded because the diagnosis is a better model
+
+The registered bracket had two factors. One was right and one was wrong:
+
+- **survival fraction `e/ΔZ_inj`: predicted 0.63–0.71, measured 0.6441** — correct;
+- **injection `ΔZ_inj/Z₀`: predicted 0.0634–0.0738, measured 0.0503** — wrong, and this is the
+  whole miss. Its local exponent was assumed to fall to `≈0.50`; it fell to `0.104`, i.e. the
+  injection stopped growing.
+
+**The error was extrapolating the composite when the components were in hand.** `ΔZ_inj` is
+driven by the initial excess times the alignment's lifetime, and both were separately measurable
+in the archive: `t_φ` follows `M^-2` *exactly*, and the excess grows `×1.219`, not the `×1.62`
+that §4.2's own `M^0.7` description implies. A decelerating driver multiplied by a lifetime
+collapsing as `M^-2` gives a saturating product — **derivable before the run, from data already
+committed.** The prediction instead extrapolated `ΔZ_inj`'s own local exponent and assumed it
+would decline smoothly.
+
+The standing amendment, now `LL.md` LL-24: **when an observable is a product of separately
+measurable factors, pre-register the factors and multiply; never extrapolate the composite.**
+The pre-registration did its job — it converted a comfortable reading into a test, the test
+failed, and the failure localised to one factor rather than leaving a vague disagreement.
+
 ---
 
 ## 5. The certificate's arithmetic, built and measured (Tier B)

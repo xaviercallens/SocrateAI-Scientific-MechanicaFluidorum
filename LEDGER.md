@@ -1239,8 +1239,45 @@ version does the same work in **~2 min/sweep**. S-3 is therefore **≈ 40 min of
 adversarial is also no longer blocked**: the earlier `195 GB / ~108 days` costing was for the
 quadratic algorithm; with the incremental objective and per-class enumeration off the lattice
 instead of a stored table, it is negligible memory and an estimated 1–2 h. The conclusion "a VM
-does not help" stands; its reasoning is retracted. **Nothing of S-3 has been run; no number here
-is an S-3 result.**
+does not help" stands; its reasoning is retracted.
+
+### Tier C — S-3's first result, and a falsified pre-registration (2026-09-13)
+
+`CORE_TAIL_CAP.md` §4.3.4. `M = 16` alignment converged at sweep 42 (`best =
+17176873794444224`, 81 min), phases archived as `exploration/scout_runs/S3_M16_phases.txt`.
+
+**The pre-registered bracket was `Z_max/Z₀ ≈ 1.040–1.052`, committed in `ba76c30` before any S-3
+number existed. Measured: `1.0324`. THE PREDICTION IS FALSIFIED, below the bracket.** Halving
+pair readable over the whole window (worst `9.95e-5` in `E`, `6.09e-4` in `Z`); series
+re-measured on a uniform ultra-fine grid (`dt = 6.25e-5`, every step) because `t_peak` at
+`M = 16` is four samples — `Z_max/Z₀` unchanged under 16× finer sampling, `M = 8` reproduces its
+archived value to `2e-4`, only the `M = 16` injection was under-integrated (4 %).
+
+| `M` | `P/(νD₂)`\|₀ | `t_φ` | `Z_max/Z₀` | `ΔZ_inj/Z₀` |
+|---|---|---|---|---|
+| 2 | +1.604 | 0.059 | 1.0023 | +0.0154 |
+| 4 | +2.840 | 0.017 | 1.0122 | +0.0292 |
+| 8 | +4.115 | 0.004 | 1.0267 | +0.0468 |
+| **16** | **+5.016** | **0.001** | **1.0324** | **+0.0503** |
+
+**Every series has now turned over** — increments of `Z_max/Z₀ − 1`: `+0.0099, +0.0145, +0.0057`;
+injection: `+0.0138, +0.0176, +0.0035`; initial excess: `+1.236, +1.275, +0.901`; and `t_φ`
+follows `M^-2` exactly. The LL-20 admissibility fit on `M = 4, 8, 16` returns **`β = +1.347`**
+(admissible; implied ceiling `Z_max/Z₀ → 1.0361`) where the same fit on `M = 2, 4, 8` returned
+`β = −0.53` (inadmissible).
+
+**Stated with the loudest caveat in this ledger: `β = +1.347` is an exact three-parameter fit to
+three points, and the identical procedure on the identical observable was refuted by the next
+point twelve hours earlier. NOT a verdict, NOT a tier promotion. `M = 32` is the test.** Tier C
+throughout; O5 stands.
+
+**Post-mortem (LL-24).** The bracket had two factors; the survival fraction was right (predicted
+0.63–0.71, measured 0.6441) and the injection was wrong (predicted 0.0634–0.0738, measured
+0.0503, its exponent falling to 0.104 rather than the assumed 0.50). The error was extrapolating
+a **composite** when its factors were in hand: `ΔZ_inj` is the initial excess times the
+lifetime, `t_φ` follows `M^-2` exactly, and the excess grew `×1.219` not `×1.62` — a saturating
+product, derivable from committed data before the run. Standing rule: pre-register the factors
+of a product observable and multiply them, never the composite.
 
 ## Deep Think brief issued (2026-09-12)
 
