@@ -457,7 +457,7 @@ fn phases_adversarial(m: i64) -> std::collections::HashMap<K, C> {
 ///
 /// This returns the SAME alignment as the table version — same class set and order, same sweep
 /// order, same accept test — and is checked by reproducing it exactly at M = 8 and M = 16.
-fn phases_adversarial_free(m: i64) -> std::collections::HashMap<K, C> {
+fn phases_adversarial_free(m: i64, ckpt: &str) -> std::collections::HashMap<K, C> {
     let bv = ball(m);
     let side = (2 * m + 1) as usize;
     let lin = |k: &K| -> Option<usize> {
@@ -530,7 +530,31 @@ fn phases_adversarial_free(m: i64) -> std::collections::HashMap<K, C> {
         }).sum()
     };
 
+    // CHECKPOINTING (2026-09-13). At M = 32 this loop runs 20-50 h, and the intended host is a
+    // PREEMPTIBLE spot instance -- so without this the job may simply never finish, and locally
+    // it is one OOM away from losing everything (LL-26, which cost 1.5 h of trajectory the same
+    // day). The signs vector is the entire state: dumped after each completed sweep, written to
+    // a temp file and renamed so a kill mid-write cannot corrupt it. Resume is EXACT rather than
+    // approximate -- the greedy visits i = 0..n-1 in order and accepts strict improvements, so
+    // restarting at the top of a sweep from saved signs is precisely what an uninterrupted run
+    // would do next. Only the running total is recomputed on load, in one cheap pass.
     let mut signs: Vec<i64> = vec![1; n];
+    let mut sweep0 = 0usize;
+    if !ckpt.is_empty() {
+        if let Ok(text) = std::fs::read_to_string(ckpt) {
+            let mut it = text.lines();
+            let hdr = it.next().unwrap_or("");
+            let parts: Vec<&str> = hdr.split_whitespace().collect();
+            assert!(parts.len() >= 4 && parts[1] == format!("M={}", m),
+                "checkpoint {} is for another M", ckpt);
+            sweep0 = parts[2].trim_start_matches("sweep=").parse().unwrap();
+            let v: Vec<i64> = it.filter_map(|l| l.trim().parse().ok()).collect();
+            assert_eq!(v.len(), n, "checkpoint has {} signs, expected {}", v.len(), n);
+            assert!(v.iter().all(|&x| x == 1 || x == -1), "checkpoint holds a non-sign");
+            signs = v;
+            eprintln!("   [align/free] RESUMED from {} after sweep {}", ckpt, sweep0);
+        }
+    }
     let mut s: i128 = bv.par_iter().map(|p| {
         let mut acc: i128 = 0;
         for q in &bv {
@@ -539,8 +563,16 @@ fn phases_adversarial_free(m: i64) -> std::collections::HashMap<K, C> {
         acc
     }).sum();
     let mut best = s.abs();
+    let save = |sweep: usize, best: i128, signs: &Vec<i64>| {
+        if ckpt.is_empty() { return; }
+        let mut t = format!("# M={} sweep={} best={}\n", m, sweep, best);
+        for &x in signs { t.push_str(&format!("{}\n", x)); }
+        let tmp = format!("{}.tmp", ckpt);
+        std::fs::write(&tmp, t).expect("write checkpoint");
+        std::fs::rename(&tmp, ckpt).expect("rename checkpoint");   // atomic
+    };
     let t0 = std::time::Instant::now();
-    for sweep in 1.. {
+    for sweep in (sweep0 + 1).. {
         let mut improved = false;
         for i in 0..n {
             let s_new = s - 2 * contrib(i, &signs);
@@ -551,6 +583,7 @@ fn phases_adversarial_free(m: i64) -> std::collections::HashMap<K, C> {
                 improved = true;
             }
         }
+        save(sweep, best, &signs);
         eprintln!("   [align/free] sweep {} done, best={} ({:.1} s elapsed){}", sweep, best,
             t0.elapsed().as_secs_f64(), if improved { "" } else { " -- converged" });
         if !improved { break; }
@@ -657,7 +690,8 @@ fn scout(args: &[String]) {
     let align = get("--align", "table");
     let phases = if ic == "adv" {
         if pin.is_empty() {
-            let p = if align == "free" { phases_adversarial_free(m) } else { phases_adversarial(m) };
+            let ckpt = get("--ckpt", "");
+            let p = if align == "free" { phases_adversarial_free(m, &ckpt) } else { phases_adversarial(m) };
             if !pout.is_empty() { phases_write(&pout, m, &p); }
             p
         } else {
