@@ -759,6 +759,14 @@ everything**, and that risk was never priced when the overnight plan was made.
 4. Ask for headroom in the terms the owner can act on. "Close some Chrome windows" is a real and
    sufficient remedy here, and is cheaper than any of the alternatives.
 
+**Sequel, the next morning: the reaper struck again, and this time it cost twelve minutes.**
+The `M = 32` alignment — resident set `0.02 GB` — was killed at sweep 14 by the same desktop
+pressure, 3.7 h in. The checkpoint added the previous evening held `sweep=13`; the restart
+printed `RESUMED … after sweep 13` and continued to sweep 77 and beyond without incident. Loss:
+the one in-progress sweep. The rule that follows is not "checkpoint long jobs" — that was
+already the rule — but **checkpoint them the first time, before the incident that proves you
+should have**; the first kill cost 1.5 h precisely because the mechanism did not yet exist.
+
 **Recorded because it nearly went the other way.** The first reflex on seeing four
 simultaneous OOM kills was to suspect the new table-free pass, whose `par_iter().map(HashSet)
 .reduce(...)` looks like it could materialise thousands of sets. Checking the actual RSS before
