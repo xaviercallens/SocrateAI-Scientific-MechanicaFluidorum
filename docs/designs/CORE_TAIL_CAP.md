@@ -528,6 +528,61 @@ readable* at `M = 16`.
 > The trajectory arm that made `M = 32` look like a three-day job was answering a question the
 > protocol does not ask.
 
+#### 4.3.6 Pre-registration of the `M = 32` transient — factor by factor this time (2026-09-13, 23:20)
+
+Written while the `M = 32` alignment is at sweep 86 and **before any `M = 32` trajectory
+exists**. §4.3.3's prediction for `M = 16` failed because it extrapolated a *composite*
+(`ΔZ_inj`) whose factors were in hand and were separately predictable (LL-24). This one
+predicts the factors and multiplies. Inputs are the uniform-grid `S3ff` series of §4.3.4.
+
+**The factors, each bracketed on its own trend:**
+
+| factor | `M = 2, 4, 8, 16` | trend | **predicted at `M = 32`** |
+|---|---|---|---|
+| initial excess `P/(νD₂)`\|₀ | 1.604, 2.840, 4.115, 5.016 | local exponent falling `0.82 → 0.54 → 0.29`, ~0.27/doubling | `[4.85, 5.38]` |
+| dephasing time `t_φ` | 0.059, 0.017, 0.004, 0.001 | `M⁻²` exactly | **`0.00025`** |
+| injection `ΔZ_inj/Z₀` | 0.0154, 0.0292, 0.0468, 0.0503 | exponent collapsed `0.92 → 0.68 → 0.10`; **may go negative** | `[0.0453, 0.0539]` |
+| survival fraction `e/ΔZ_inj` | 0.149, 0.418, 0.571, 0.644 | increments halving `+0.27, +0.15, +0.07` | `[0.663, 0.699]` |
+
+**Route A — product of factors:** `e(32) = surv × inj ∈ [0.0300, 0.0377]`, i.e.
+
+> **`Z_max/Z₀|_{M=32} ∈ [1.030, 1.038]`.**
+
+Note that the *lower* end is below `e(16) = 0.0324`: **a decrease from `M = 16` to `M = 32` is
+inside the bracket**, because the injection's exponent has fallen to `0.10` and its natural next
+value straddles zero. That is a real prediction, not a hedge — if the excursion *shrinks*, this
+bracket contains it and the divergent reading is dead outright.
+
+**Route B — the admissible saturating fit** (`β = 1.347` on `M = 4, 8, 16`): next increment
+`+0.0022`, `e(32) = 0.0346`, **`Z_max/Z₀ = 1.0346`**. Inside Route A's bracket; the two routes
+agree.
+
+**Route C — the rival, already falsified at `M = 16`, kept for contrast:** `c(log₂M)²` with `c`
+refitted at `M = 16` gives **`1.0506`**.
+
+**Discrimination check — the step that decides whether the run is worth spending.** Saturating
+bracket `[1.0300, 1.0377]` against divergent `1.0506`: a gap of `0.0129`, against a measurement
+precision on `Z_max/Z₀` of `~1e-4` from the halving check. **Separated by two orders of magnitude
+of precision. `M = 32` discriminates**, where §4.3.3 correctly predicted `M = 16` would not.
+
+**What each outcome would mean, fixed in advance:**
+
+| measured `Z_max/Z₀` at `M = 32` | reading |
+|---|---|
+| in `[1.030, 1.038]` | both saturating routes confirmed; the injection has saturated; the excursion's ceiling is `≈ 1.036 ± 0.002` on this family. **Still Tier C, still not a verdict** — it bounds the transient of one adversarial construction, not the dynamics' own worst case (`DYNAMIC_ACCESS.md` §3). |
+| `< 1.030` | excursion shrinking with `M`; strongest possible saturation signal on this family; the injection has turned negative |
+| in `(1.038, 1.045)` | saturating routes too pessimistic, divergent route too optimistic; neither model survives; a third increment fit is needed and I have no candidate registered |
+| `≥ 1.045` | the divergent reading revives; the `M = 16` turnover was a fluctuation; **the two reversals in a row would themselves be the finding** |
+
+**Protocol for the run:** the every-step transient only — horizon `0.01`, `dt = 2.5e-5` and its
+`1.25e-5` halving partner (≈ 16 samples to the predicted `t_peak ≈ 2.5e-4`), read only where
+both `E` and `Z` agree within 2 %, exactly as `S3ff`. No horizon-6 arm: §4.3.4 showed it is not
+readable at `M = 16` and it is not what the question asks. Estimated cost `~24` min.
+
+**Withdrawal clause.** If the alignment's convergence is *not* awaited and a stopping rule is
+used instead, that rule must be recorded here *before* the trajectory runs, and the prediction
+above stands unchanged — it is a prediction about the greedy family, not about sweep 86.
+
 ##### The long-horizon arm at `M = 16` is NOT READABLE past `t ≈ 0.85`, and is reported as such
 
 The horizon-6 halving pairs completed (`S3_M16_adv{m,p}_{a,b}`, `dt = 2.5e-4 / 1.25e-4`, 601 rows
