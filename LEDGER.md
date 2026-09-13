@@ -1277,6 +1277,27 @@ number, and doubles as the check against the table version's 42-sweep sequence. 
 its own author: a cost quoted from a model instead of a clock. No `M = 32` claim, and no VM
 request, until it lands.**
 
+### Cross-stream — RunuX proof kernel reviewed, two fixes merged (2026-09-13; no tier here)
+
+`docs/briefs/2026-09-13-runux-interval-arith-review.md` and the overnight brief §5. Not a claim
+about this programme; recorded because that stream's kernel is proposed as the foundation of a
+regularity certificate and the standing rule is that **engineering transfers, certificates do
+not** (LeanFlow solves bi-Helmholtz + hyperviscosity, not the sharp truncation adopted here).
+
+- **[PR #8](https://github.com/xaviercallens/runux-ai-runtime/pull/8) `ca6028f`** —
+  `interval_arith::sqrt` lost containment on subnormals (`8.095e-320 → 4.37e-157` against a true
+  `2.85e-160`; 60/20 000); its 13 tests passed with the widening deleted (dyadic inputs only).
+  Fixed by argument reduction into `[1,4)` then self-certification; 0 failures / 72 094; the old
+  construction pinned by a test that asserts it does *not* bracket.
+- **[PR #9](https://github.com/xaviercallens/runux-ai-runtime/pull/9) `278a790`** — the advisor's
+  Kolmogorov scale was dimensionally wrong (`ε = ν·u²` is `[L⁴T⁻³]`); fixed with `ε = 2νZ` and a
+  length-rescaling invariance control the legacy form demonstrably fails. Plus a
+  `ReadabilityAdvisor` — integrator-agnostic prediction of the step-halving horizon from a short
+  pilot — validated on this programme's six `M = 16` pairs: with `E` and `Z` and a pilot of 0.2,
+  correct "not readable to 6" on both hard cases, conservative on the null, suggested `dt`
+  `5.6e-5` against a hand estimate of `6.25e-5`. With `E` alone, one false *yes*; hence
+  `predict_all`.
+
 ### Tier C — S-3's first result, and a falsified pre-registration (2026-09-13)
 
 `CORE_TAIL_CAP.md` §4.3.4. `M = 16` alignment converged at sweep 42 (`best =

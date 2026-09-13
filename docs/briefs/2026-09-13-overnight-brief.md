@@ -176,7 +176,8 @@ Generate-and-Verify architecture, shipped in `v0.4.0-leanflow` with "13/13 tests
   predicts the readable horizon from a short pilot. Validated on our six pairs: with both `E`
   and `Z` and a pilot of 0.2, correct "not readable to 6" on both hard cases, conservative on the
   null, suggested `dt` for the worst pair `5.6e-5` against a hand estimate of `6.25e-5`. With
-  `E` alone it produced a false *yes* on one pair — hence `predict_all`. PR pending.
+  `E` alone it produced a false *yes* on one pair — hence `predict_all`. **Merged as
+  [PR #9](https://github.com/xaviercallens/runux-ai-runtime/pull/9)** (`278a790`), 35/35.
 
 **Does the RunuX AI module help our GCP phase? No.** It optimises the ~24-minute trajectory and
 leaves the 20–50-hour alignment untouched; its preconditioner targets a Newton–Krylov solve we
@@ -225,5 +226,5 @@ a proof error. A two-gate system is blind to cost, to interpretation, and to its
 ## 9. State of the record
 
 MechanicaFluidorum: both gates green at `3c8011f`, released **`v1.5.0`**, 193 kernel-verified
-theorems / 12 files / 23 harnesses; master pushed through `825f27c`. RunuX: `main` at `ca6028f`
-with the kernel fix; `feat/readability-advisor` pushed, PR pending.
+theorems / 12 files / 23 harnesses; master pushed through `f33c8cc`. RunuX: `main` at `278a790`
+with both the kernel fix (PR #8) and the advisor changes (PR #9).
