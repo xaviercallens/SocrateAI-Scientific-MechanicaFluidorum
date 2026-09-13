@@ -1241,8 +1241,21 @@ quadratic algorithm; with the incremental objective and per-class enumeration of
 instead of a stored table, it is negligible memory and an estimated 1–2 h. The conclusion "a VM
 does not help" stands; its reasoning is retracted.
 
-**⚠ CORRECTION, same evening: the "1–2 h" above is an unmeasured extrapolation and must not be
-cited.** The table-free algorithm now exists (`--align free`), its memory claim holds, and it is
+**✅ RESOLVED BY MEASUREMENT (`CORE_TAIL_CAP.md` §4.3.5).** The table-free alignment converged at
+`M = 16` at sweep 42 with **all 42 objective values identical to the table version and a
+byte-identical phases file**, in `3 087 s` = `73.5 s`/sweep on `0.2 MB` — against the table
+version's `117 s`/sweep on `3.03 GB`. **It is smaller and faster**; the table version is retained
+only as the independent check. Measured basis for `M = 32`: **`20 min`/sweep, `1.4 MB`**, total
+**`20–50 h` local / `10–25 h` on 16 vCPU** (sweep count is data: 9 at `M = 8`, 42 at `M = 16`).
+Three estimates were made for this in one day — `195 GB`/`108 days` (right for the quadratic
+algorithm, obsolete), `1–2 h` (too optimistic), `~6 h`/sweep (too pessimistic) — and only the
+fourth has a clock behind it. **Further: the discriminating observable needs a horizon of `~0.01`
+at `M = 32`, not 6, so the trajectory arm is ~24 min, not the ~73 h the compute brief costed.
+`M = 32` costs its alignment and essentially nothing else — ≈ \$3–8 at spot against an authorised
+\$50.**
+
+**⚠ SUPERSEDED — the correction below is kept for the record. "1–2 h" was an unmeasured
+extrapolation and was not citable; it has now been replaced by the measurement above.** The table-free algorithm now exists (`--align free`), its memory claim holds, and it is
 **bit-identical to the archived `M = 8` run** — all nine sweep values and the output CSV. Its
 *time* claim is unverified: the only measurement is at `M = 8`, where the inner parallel loop is
 2 109 elements long and rayon overhead dominates, and naive scaling of that measurement gives

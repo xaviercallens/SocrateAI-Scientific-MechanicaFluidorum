@@ -337,6 +337,10 @@ per-class enumeration off the lattice replacing the stored table, `M = 32` needs
 memory and an estimated 1–2 h. The brief's conclusion that a VM does not help stands; its
 reasoning is withdrawn. The obstacle was never compute.
 
+> **✅ MEASURED, and both earlier estimates were wrong — see §4.3.5. The figure below is
+> superseded.** The `M = 16` table-free run converged at sweep 42 in `3 087 s` (`73.5 s`/sweep)
+> and is **byte-identical to the table version's phases file**, all 42 sweep values included.
+>
 > **⚠ The "1–2 h" in the paragraph above is an UNMEASURED extrapolation and is flagged as such
 > pending the `M = 16` measurement now running.** The memory claim is solid — the table-free
 > algorithm is built (`--align free`), holds `O((2M+1)³)` bytes, and is **bit-identical to the
@@ -474,6 +478,41 @@ The standing amendment, now `LL.md` LL-24: **when an observable is a product of 
 measurable factors, pre-register the factors and multiply; never extrapolate the composite.**
 The pre-registration did its job — it converted a comfortable reading into a test, the test
 failed, and the failure localised to one factor rather than leaving a vague disagreement.
+
+#### 4.3.5 `M = 32` costed from a clock, and it is reachable — but not the way anyone assumed
+
+**The table-free alignment is validated and it is the better algorithm outright.** At `M = 16` it
+converged at sweep 42 with **all 42 objective values identical** to the table version and a
+**byte-identical phases file**, in `3 087 s` (`73.5 s`/sweep) on `0.2 MB` of state — against the
+table version's `117 s`/sweep on `3.03 GB`. It is smaller *and* faster, because a 0.2 MB dense
+state lives in cache while a 3 GB table is a random-gather graveyard. The table version is
+retained only as the independent check.
+
+**Three estimates of the `M = 32` alignment have now been made in this memo; the first two were
+wrong in opposite directions and are both retracted.**
+
+| estimate | basis | verdict |
+|---|---|---|
+| `195 GB`, `~108 days` | the quadratic algorithm | correct for that algorithm, obsolete |
+| `negligible memory, 1–2 h` | a cost model, no clock | **too optimistic** |
+| `~6 h per sweep` (the worry) | the `M = 8` clock, rayon-overhead-dominated | **too pessimistic** |
+| **`20 min`/sweep, `1.4 MB`** | **the `M = 16` clock, cost ∝ classes × \|ball\|** | **measured basis** |
+
+Sweep count is data, not a constant — 9 at `M = 8`, 42 at `M = 16` — so the total is bracketed,
+not predicted: **`20–50 h` locally** for 60–150 sweeps, or **`10–25 h` on 16 vCPU**.
+
+**And the cost picture changes shape once the readability finding below is taken seriously.** The
+discriminating observable is `Z_max/Z₀`, which peaks at `t_peak = 0.022, 0.011, 0.003, 0.001` —
+roughly `M^{-1.5}` — so at `M = 32` it peaks near `4×10⁻⁴` and needs a horizon of `~0.01`, not 6.
+At the brief's measured `~1.8 s`/step that is **~400 steps ≈ 12 min, plus a halving partner ≈ 24
+min total.** The horizon-6 trajectories costed at `~73 h` in the compute brief are for the
+long-horizon observables — which S-3 does not need, and which §4.3.4 has just shown are *not even
+readable* at `M = 16`.
+
+> **Therefore: `M = 32` costs its alignment and essentially nothing else.** On 16 vCPU that is
+> ~10–25 h ≈ **\$3–8 at spot pricing** (confirm before provisioning), against an authorised \$50.
+> The trajectory arm that made `M = 32` look like a three-day job was answering a question the
+> protocol does not ask.
 
 ##### The long-horizon arm at `M = 16` is NOT READABLE past `t ≈ 0.85`, and is reported as such
 
