@@ -1319,7 +1319,12 @@ of a product observable and multiply them, never the composite.
 completed and fail the 2 % reading rule beyond `t ≤ 0.85` (`advm`) and `t ≤ 0.67` (`advp`), with
 `5.3 %` / `9.0 %` disagreement in `E` at `t = 6`. Ordinary RK4 error accumulating over 24 000+
 steps, not instability — but the step sizes that were adequate over the *whole* horizon at
-`M = 8` (`2.8e-4`) are adequate at `M = 16` only for the transient. **S-3's registered question is
+`M = 8` (`2.8e-4`) are adequate at `M = 16` only for the transient. **The null arm shows `M` is
+not the explanation:** at identical `M = 16`, `ν`, `E₀` and `dt`, the random-phase null is
+readable over the **entire** horizon (`1.03e-4` in `E`, `6.10e-4` in `Z` at `t = 6`). The
+integrator's difficulty tracks the **coherence of the initial data** — the greedy-aligned state
+is tuned to maximise nonlinear transfer, which is what demands small steps — not the mode count.
+An earlier entry here attributed it to `M` alone; corrected. **S-3's registered question is
 unaffected** (`Z_max/Z₀` peaks at `t = 0.001`, where the pair agrees to `1e-4`), so §4.3.4 stands;
 but **the `Z(1)/Z₀` column is reported as not readable at `M = 16`** rather than quoted with a
 caveat. Recovering it needs `dt = 6.25e-5 / 3.125e-5` (96k + 192k steps, ≈ 15 h) and is an owner

@@ -540,10 +540,25 @@ each) and **fail the reading rule beyond `t ≈ 0.85`**:
 
 The disagreement accumulates smoothly — `1e-4` at `t = 0.1`, `1.4e-2` by `t = 0.67`, crossing the
 2 % rule near `t = 0.85` — so this is ordinary RK4 error accumulating over tens of thousands of
-steps, not an instability. But it means the registered step sizes, which were adequate over the
-*whole* horizon at `M = 8` (worst disagreement `2.8e-4`), are adequate at `M = 16` only for the
-transient. At fixed `dt` the truncation error grows with `M`, and halving `dt` from the `M = 8`
-protocol was not enough to compensate.
+steps, not an instability. The registered step sizes, adequate over the *whole* horizon at
+`M = 8` (worst disagreement `2.8e-4`), are adequate at `M = 16` only for the transient.
+
+**But `M` is not the whole explanation, and the null arm shows it.** The `M = 16` null pair, at
+*identical* `M`, `ν`, `E₀` and `dt`, is **readable over the entire horizon** — worst disagreement
+`1.03e-4` in `E` and `6.10e-4` in `Z` at `t = 6`, two orders of magnitude inside the rule:
+
+| `M = 16` run, all at `dt = 2.5e-4 / 1.25e-4` | readable to |
+|---|---|
+| adversarial, `λ = −0.05` | `t ≤ 0.85` |
+| adversarial, `λ = +0.05` | `t ≤ 0.67` |
+| **random-phase null** | **`t ≤ 6.0`** |
+
+So the integrator's difficulty tracks the **coherence of the initial data**, not the mode count
+alone: the greedy-aligned state has phase relationships tuned to maximise nonlinear transfer,
+which is exactly the regime that demands small steps, while the incoherent null decays smoothly
+and integrates cleanly at seven times the horizon. An earlier draft of this subsection wrote
+"at fixed `dt` the truncation error grows with `M`" as the explanation; that is at best half of
+it, and is corrected here.
 
 **Consequences, applied rather than argued around.**
 
