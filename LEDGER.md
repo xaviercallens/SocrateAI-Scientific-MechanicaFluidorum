@@ -1241,6 +1241,18 @@ quadratic algorithm; with the incremental objective and per-class enumeration of
 instead of a stored table, it is negligible memory and an estimated 1–2 h. The conclusion "a VM
 does not help" stands; its reasoning is retracted.
 
+**The `i128` accumulator was NECESSARY, confirmed at `M = 32`.** Introduced on a hypothetical
+("a badly-cancelling pattern *could* wrap"), and at `M = 16` the converged objective `1.718e16`
+is `537×` *below* `i64::MAX`, so `i64` would have survived there. At `M = 32` the objective after
+one sweep is `3.712e20` — **40× ABOVE `i64::MAX`**. An `i64` sum would have wrapped silently on
+sweep 1, optimised a meaningless quantity, converged anyway, produced a phases file, and passed
+every gate in this repository. **The failure it prevented would have been silent.**
+
+**`M = 32` alignment, in flight and measured:** 68 532 classes (volume estimate was 68 629, 0.14 %
+off), dense state 1.4 MB, **RSS 0.02–0.08 GB** against the table algorithm's ~195 GB; sweep 1 in
+`1 478 s` while sharing the box (≈ 13 min/sweep solo, against the ~20 min predicted from the
+`M = 16` clock). Checkpointed per sweep, so it is interruptible and portable to a spot instance.
+
 **✅ RESOLVED BY MEASUREMENT (`CORE_TAIL_CAP.md` §4.3.5).** The table-free alignment converged at
 `M = 16` at sweep 42 with **all 42 objective values identical to the table version and a
 byte-identical phases file**, in `3 087 s` = `73.5 s`/sweep on `0.2 MB` — against the table

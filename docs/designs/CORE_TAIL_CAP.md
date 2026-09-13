@@ -330,6 +330,20 @@ Measured gain **~12× under contention** — well short of the operation-count r
 gathers into a 3 GB table are much less efficient per byte than the sequential scan they replace.
 Reported as measured, per LL-18; the 2846× is the arithmetic, not the clock.
 
+**The `i128` accumulator was necessary, not defensive — confirmed by measurement at `M = 32`.**
+When it was introduced the justification was hypothetical ("a badly-cancelling sign pattern
+*could* wrap"), and at `M = 16` the converged objective is `1.718×10¹⁶`, a comfortable `537×`
+*below* `i64::MAX`, so an `i64` accumulator would in fact have survived there. At `M = 32` the
+objective after a single sweep is
+
+> `371 214 251 287 064 965 664 ≈ 3.71×10²⁰`, which is **40× ABOVE `i64::MAX`**.
+
+An `i64` sum would have wrapped silently on the first sweep and the entire `M = 32` alignment
+would have optimised a meaningless wrapped quantity — while still converging, still producing a
+phases file, and still passing every gate in this repository. Recorded as a case where a cheap
+defensive choice, taken on an argument rather than a number, turned out to be load-bearing two
+sizes later; and as a reminder that the failure it prevented would have been **silent**.
+
 **Corrected S-3 cost: ≈ 40 min alignment + ≈ 6 h trajectories.** And a retraction of §4 of the
 compute brief: the `M = 32` adversarial arm was costed at `195 GB` and `≈ 108 days` and declared
 to need "a new alignment algorithm before a machine". It does — this is that algorithm, and with
