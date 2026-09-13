@@ -475,6 +475,41 @@ measurable factors, pre-register the factors and multiply; never extrapolate the
 The pre-registration did its job — it converted a comfortable reading into a test, the test
 failed, and the failure localised to one factor rather than leaving a vague disagreement.
 
+##### The long-horizon arm at `M = 16` is NOT READABLE past `t ≈ 0.85`, and is reported as such
+
+The horizon-6 halving pairs completed (`S3_M16_adv{m,p}_{a,b}`, `dt = 2.5e-4 / 1.25e-4`, 601 rows
+each) and **fail the reading rule beyond `t ≈ 0.85`**:
+
+| pair | readable horizon | disagreement at `t = 6` |
+|---|---|---|
+| `advm` (λ = −0.05) | **`t ≤ 0.85`** | `5.3 %` in `E`, `4.4 %` in `Z` |
+| `advp` (λ = +0.05) | **`t ≤ 0.67`** | `9.0 %` in `E`, `2.1 %` in `Z` |
+
+The disagreement accumulates smoothly — `1e-4` at `t = 0.1`, `1.4e-2` by `t = 0.67`, crossing the
+2 % rule near `t = 0.85` — so this is ordinary RK4 error accumulating over tens of thousands of
+steps, not an instability. But it means the registered step sizes, which were adequate over the
+*whole* horizon at `M = 8` (worst disagreement `2.8e-4`), are adequate at `M = 16` only for the
+transient. At fixed `dt` the truncation error grows with `M`, and halving `dt` from the `M = 8`
+protocol was not enough to compensate.
+
+**Consequences, applied rather than argued around.**
+
+- **S-3's registered question is unaffected and answered.** It asks about `Z_max/Z₀`, which peaks
+  at `t = 0.001` inside a window where the pair agrees to `1e-4`. §4.3.4 stands in full.
+- **The `Z(1)/Z₀` column of §4.2 cannot be filled at `M = 16`.** `t = 1` lies outside the readable
+  horizon, so it is **reported as not readable**, not quoted with a caveat. The `M = 2, 4, 8` rows
+  of that column remain as archived.
+- **No unilateral refinement.** Recovering the horizon would need `dt = 6.25e-5 / 3.125e-5`, i.e.
+  96 000 + 192 000 steps, ≈ 15 h for the pair. Since S-3's question is already answered, spending
+  that is an owner decision, not a gap to quietly close. Flagged here as the cost if the
+  long-horizon row is wanted.
+
+**And a methodological note that belongs with LL-21.** The protocol registered a step size but
+never registered a *readability criterion for the step size itself* — the reading rule was stated
+for the data and silently assumed of the integrator. The rule caught it anyway, which is the
+system working; the amendment is that a protocol extending to a new `M` should predict its
+own step-halving disagreement, not just its physical observables.
+
 ---
 
 ## 5. The certificate's arithmetic, built and measured (Tier B)

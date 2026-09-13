@@ -1290,6 +1290,16 @@ lifetime, `t_φ` follows `M^-2` exactly, and the excess grew `×1.219` not `×1.
 product, derivable from committed data before the run. Standing rule: pre-register the factors
 of a product observable and multiply them, never the composite.
 
+**The `M = 16` long-horizon arm is NOT READABLE past `t ≈ 0.85`.** The horizon-6 halving pairs
+completed and fail the 2 % reading rule beyond `t ≤ 0.85` (`advm`) and `t ≤ 0.67` (`advp`), with
+`5.3 %` / `9.0 %` disagreement in `E` at `t = 6`. Ordinary RK4 error accumulating over 24 000+
+steps, not instability — but the step sizes that were adequate over the *whole* horizon at
+`M = 8` (`2.8e-4`) are adequate at `M = 16` only for the transient. **S-3's registered question is
+unaffected** (`Z_max/Z₀` peaks at `t = 0.001`, where the pair agrees to `1e-4`), so §4.3.4 stands;
+but **the `Z(1)/Z₀` column is reported as not readable at `M = 16`** rather than quoted with a
+caveat. Recovering it needs `dt = 6.25e-5 / 3.125e-5` (96k + 192k steps, ≈ 15 h) and is an owner
+decision, not a gap to close unilaterally.
+
 ## Deep Think brief issued (2026-09-12)
 
 `docs/briefs/2026-09-12-deep-think-brief-actions-and-recommendations.md` — self-contained state
