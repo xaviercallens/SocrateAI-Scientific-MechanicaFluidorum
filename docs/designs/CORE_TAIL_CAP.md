@@ -583,6 +583,44 @@ readable at `M = 16` and it is not what the question asks. Estimated cost `~24` 
 used instead, that rule must be recorded here *before* the trajectory runs, and the prediction
 above stands unchanged — it is a prediction about the greedy family, not about sweep 86.
 
+#### 4.3.7 `M = 32`: the alignment converged, and the first registered factor is already wrong (2026-09-14, 04:30)
+
+Recorded **before the transient has run** — the two trajectories were launched at 04:29 and this
+is written while they integrate — so that the factor-level result stands in the sequence where
+it belongs rather than being read back through the final number.
+
+**Convergence was awaited; no stopping rule was used.** The greedy converged at **sweep 113**
+(`best = 455 471 686 189 347 441 312 ≈ 4.55×10²⁰`, 49× above `i64::MAX`), after 18.7 h from the
+sweep-13 resume plus 3.7 h before the OOM kill. Sweep counts across the series: **9, 42, 113** —
+the landscape's depth grows faster than its size, and every bracket on it so far has been low.
+Phases archived as `exploration/scout_runs/S4_M32_phases.txt` (68 532 signs).
+
+**The initial excess — a kinematic property of the converged state, exact, no dynamics — is
+outside its registered bracket:**
+
+| | `M = 2` | 4 | 8 | 16 | **32** |
+|---|---|---|---|---|---|
+| `P/(νD₂)`\|₀ | 1.604 | 2.840 | 4.115 | 5.016 | **6.604** |
+| local exponent | | +0.824 | +0.535 | +0.286 | **+0.397** |
+
+Registered: `[4.85, 5.38]`, on an exponent falling ~0.27 per doubling toward zero. Measured
+`6.604`: the exponent **rose** from `0.286` to `0.397`. Three consecutive falls, then a rise. The
+extrapolation "the excess is saturating" had exactly the evidential shape LL-20 warns about, and
+the fourth increment reversed it — the third time in two days that a monotone trend on three
+points has failed to continue.
+
+**What this does and does not disturb, fixed before `Z_max/Z₀` is known.** Route A's bracket
+`[1.030, 1.038]` was built from `survival × injection`, not from the initial excess directly, so
+it is *not yet* falsified — but the injection bracket `[0.0453, 0.0539]` assumed the driver was
+saturating, and the driver is `32 %` larger than the top of its bracket. If the injection scales
+with it, `ΔZ_inj/Z₀` lands near `0.06–0.07` and `Z_max/Z₀` near **`1.040–1.048`** — the region
+the outcome table labels "*both models die*". That is a live possibility and is noted here, in
+advance, as the reading I now consider most likely. The registered bracket is **not** amended:
+amending a pre-registration after one factor is known is exactly the thing pre-registration
+exists to prevent.
+
+`Z₀ = 1.1413×10⁵`, `D₂ = 9.531×10⁷` at `t = 0`; `t_φ` predicted `0.00025`.
+
 ##### The long-horizon arm at `M = 16` is NOT READABLE past `t ≈ 0.85`, and is reported as such
 
 The horizon-6 halving pairs completed (`S3_M16_adv{m,p}_{a,b}`, `dt = 2.5e-4 / 1.25e-4`, 601 rows
