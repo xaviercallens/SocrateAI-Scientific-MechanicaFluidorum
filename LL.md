@@ -886,6 +886,49 @@ isn't. The failure is informative about the object itself: the triad co-occurren
 this programme is searching over is close to dense, not locally sparse, which is worth knowing
 independently of whether this particular optimisation shipped.
 
+## LL-28 — a screen designed by a panel inherits the panel's model of the code, not the code (2026-09-14)
+
+**Context.** On the owner's recommendation (after karpathy/autoresearch), the choice of alignment
+optimiser was made by a fixed-budget screen: ten one-change hypotheses, an immutable exact
+evaluator, a mechanical keep/discard rule, all committed before the first row. The design was
+produced by three independent proposer agents (Sonnet; optimisation, cost, controls lenses) and an
+Opus judge, from a written description of the optimiser. `SPECTRAL_ALIGNMENT.md` §3.2(C).
+
+**What the panel got wrong, and who caught it.**
+1. *Before the run, by reading the code against the proposals:* two proposers predicted an effect
+   from `--rank delta`, which is provably identical to the default ranking on this problem; one
+   cost argument assumed annealing removes halving retries, which it does not; and checking the
+   tabu hypothesis against the loop exposed a **real bug** — tabu filtered improvers before the
+   convergence test, so a tabu run could report `converged` with improving flips remaining.
+   None of these was visible from the description the panel was given.
+2. *After the run, by the controls:* the damping negative control (`cap = 1.0`) was vacuous,
+   because the cap never binds — in 59 of 70 steps every improver flipped anyway. The judge built
+   the control on the *documented* mechanism ("flip a damped fraction ρ"), not the *operative* one
+   ("flip all improvers, halve on failure"). And the registered seed-spread rule — "if two random
+   starts differ by more than ε, downgrade every 'better' to 'tie'" — fired for a reason it was
+   not written for (random starts are 12–39 % worse: a rugged landscape, not near-degenerate noise),
+   and suppressed the screen's headline: three one-flag schedules reach **the greedy's exact
+   optimum**, which the baseline misses by 40 signs.
+3. *The load instrument* (1-min load average at row start) measured the previous row's 8-core
+   polish in a sequential screen — an instrument that could not see what it was named for.
+
+**What held.** Every identity and exact-value control passed; the corrupted-signs control was
+demonstrated to fail correctly; the criterion code was demonstrated to fail on a mutant; and
+because the decision metric is a deterministic evaluation count and an exact integer, the 20 %
+wall-clock drift that voided the timings voided nothing that decided anything.
+
+**Rules.**
+- A multi-agent design review is a review of the *description*. Before a panel's output becomes
+  binding, the author checks each hypothesis and each control against the code path it
+  exercises — that is where the bug was.
+- A control's perturbation must be shown to bite on the *operative* mechanism, measured from a
+  trace (LL-19, one level down: not "can this control fail?" but "does this knob act at all?").
+- A conditional rule ("if X, downgrade Y") must test the premise it encodes directly — here, the
+  spread of converged near-optima — never a proxy another phenomenon can trip.
+- When a registered rule misfires, run it as registered, report both readings, and add the
+  alternative as an explicitly post-hoc row that cannot win. Changing the rule after seeing the
+  table is the thing pre-registration exists to prevent; hiding the misfire is worse.
+
 ---
 
 # Synthesis — the three blind spots of a two-gate system
