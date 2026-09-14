@@ -457,7 +457,7 @@ fn phases_adversarial(m: i64) -> std::collections::HashMap<K, C> {
 ///
 /// This returns the SAME alignment as the table version — same class set and order, same sweep
 /// order, same accept test — and is checked by reproducing it exactly at M = 8 and M = 16.
-fn phases_adversarial_free(m: i64, ckpt: &str) -> std::collections::HashMap<K, C> {
+fn phases_adversarial_free(m: i64, ckpt: &str, start: &str) -> std::collections::HashMap<K, C> {
     let bv = ball(m);
     let side = (2 * m + 1) as usize;
     let lin = |k: &K| -> Option<usize> {
@@ -555,6 +555,20 @@ fn phases_adversarial_free(m: i64, ckpt: &str) -> std::collections::HashMap<K, C
             eprintln!("   [align/free] RESUMED from {} after sweep {}", ckpt, sweep0);
         }
     }
+    // `--phases-start`: seed the greedy from a sign vector produced elsewhere (the spectral
+    // optimiser of docs/designs/SPECTRAL_ALIGNMENT.md), mapped by WAVEVECTOR so the file's
+    // order never matters; classes absent from the file stay +1. The sweeps that follow are the
+    // exact polish, and their count is the measurement the memo's section 3.3 asks for. Not
+    // combined with a checkpoint: a checkpoint already carries the signs.
+    if sweep0 == 0 && !start.is_empty() {
+        let ph = phases_read(start, m);
+        let mut seeded = 0usize;
+        for (k, c) in &ph {
+            let ci = cls(k);
+            if ci != u32::MAX { signs[ci as usize] = c.im as i64; seeded += 1; }
+        }
+        eprintln!("   [align/free] seeded {} of {} classes from {}", seeded, n, start);
+    }
     let mut s: i128 = bv.par_iter().map(|p| {
         let mut acc: i128 = 0;
         for q in &bv {
@@ -563,6 +577,7 @@ fn phases_adversarial_free(m: i64, ckpt: &str) -> std::collections::HashMap<K, C
         acc
     }).sum();
     let mut best = s.abs();
+    eprintln!("   [align/free] initial exact |S| = {} (before any sweep)", best);
     let save = |sweep: usize, best: i128, signs: &Vec<i64>| {
         if ckpt.is_empty() { return; }
         let mut t = format!("# M={} sweep={} best={}\n", m, sweep, best);
@@ -857,6 +872,293 @@ fn calibrate(path: &str) {
     }
 }
 
+// ------------------------------------------------------------------ spectral alignment
+// docs/designs/SPECTRAL_ALIGNMENT.md. The greedy's integer objective S(sigma) is the scout's
+// t=0 production P up to a sigma-independent constant (measured, memo section 2), so its
+// gradient can be had from the FFT engine in O(N log N) instead of O(#triads).
+//
+// A fact the whole thing rests on, stated once: a triad with a repeated class has p = q (p = -q
+// gives r = 0, excluded), and its weight contains q.(p x d_p) = p.(p x d_p) = 0. So no triad
+// with a repeated class has nonzero weight, P is EXACTLY multilinear in the signs, and the real
+// derivative dP/dsigma_j equals the exact single-flip delta. (It also means the "safe
+// over-approximation" of CORE_TAIL_CAP.md 4.3.9 was exact: the density finding is genuine.)
+
+/// (Ra)_k = a_{-k} on the full grid. Turns the adjoint's correlations into convolutions.
+fn reflect_grid(grid: &Grid, a: &[C]) -> Vec<C> {
+    let n = grid.n;
+    let mut out = vec![C::new(0.0, 0.0); n * n * n];
+    for i in 0..n { for j in 0..n { for l in 0..n {
+        let k = K([grid.wave(i), grid.wave(j), grid.wave(l)]);
+        out[grid.idx_of(&k.neg())] = a[(i * n + j) * n + l];
+    }}}
+    out
+}
+
+/// The three pieces of dP/du for P = sum_k |k|^2 Re<u_k, B_k(u)>, B = Leray N, N bilinear:
+///   DP[h] = T(h,u,u) + T(u,h,u) + T(u,u,h), with
+///   T(h,u,u) = Re sum_k |k|^2 <h_k, B_k>                       (h CONJUGATED: Hermitian pairing)
+///   T(u,h,u) = Re sum_p sum_m h_p^m Y_p^m,  Y_p^m = sum_q q_m sum_i A^i_{p+q} u^i_q,
+///                                            A^i_k = -i |k|^2 u^i_{-k}           (bilinear in h)
+///   T(u,u,h) = Re sum_q sum_i h_q^i Z_q^i,  Z_q^i = -i sum_m q_m sum_p u^m_p ghat^i_{p+q},
+///                                            ghat^i_k = |k|^2 u^i_{-k}          (bilinear in h)
+/// The Leray in B drops out of the last two by self-adjointness, because u is divergence-free.
+/// Each sum over p+q=k (or k-q=p, after reflecting one field) is a convolution: inverse
+/// transforms, pointwise products, forward transforms -- b_fft's convention exactly, so the
+/// two engines cannot disagree about normalisation. Returns (B, Y, Z) on the ball; the caller
+/// applies the pairings. `drop_adjoint` and `no_reflect` are the NEGATIVE CONTROLS of the memo
+/// section 4: each must make the gradient check fail.
+fn grad_p_fft(s: &State, grid: &Grid, drop_adjoint: bool, no_reflect: bool)
+    -> (Vec<[C; 3]>, Vec<[C; 3]>, Vec<[C; 3]>) {
+    let n = grid.n;
+    let n3 = (n * n * n) as f64;
+    let b = b_fft(s, grid);
+    let zero3 = vec![[C::new(0.0, 0.0); 3]; s.modes.len()];
+    if drop_adjoint { return (b, zero3.clone(), zero3); }
+    let u: Vec<Vec<C>> = (0..3).map(|i| grid.to_grid(s, i)).collect();
+    let uref: Vec<Vec<C>> = if no_reflect { u.clone() } else { u.iter().map(|g| reflect_grid(grid, g)).collect() };
+    let wave_at = |idx: usize| -> [i64; 3] {
+        [grid.wave(idx / (n * n)), grid.wave((idx / n) % n), grid.wave(idx % n)]
+    };
+    // Physical-space fields, all independent -> one parallel loop of fifteen inverse transforms:
+    //   slots 0..3   ghat^i_k     = |k|^2 u^i_{-k}
+    //   slots 3..6   uref^i_k     = u^i_{-k}
+    //   slots 6..15  Dcheck^{im}_q = -q_m u^i_{-q}      (i = (slot-6)/3, m = (slot-6)%3)
+    let phys: Vec<Vec<C>> = (0..15).into_par_iter().map(|slot| {
+        let mut g: Vec<C> = if slot < 3 {
+            uref[slot].iter().enumerate().map(|(idx, &v)| {
+                let w = wave_at(idx); v * ((w[0] * w[0] + w[1] * w[1] + w[2] * w[2]) as f64)
+            }).collect()
+        } else if slot < 6 {
+            uref[slot - 3].clone()
+        } else {
+            let (i, m) = ((slot - 6) / 3, (slot - 6) % 3);
+            uref[i].iter().enumerate().map(|(idx, &v)| v * (-(wave_at(idx)[m] as f64))).collect()
+        };
+        grid.fft3(&mut g, true);
+        g
+    }).collect();
+    let (gh, rest) = phys.split_at(3);
+    let (ur, dch) = rest.split_at(3);
+    let mi = C::new(0.0, -1.0);
+    // Y^m(x) = sum_i A^i(x) Dcheck^{im}(x),  A^i = -i ghat^i         -> three forward transforms
+    let y: Vec<Vec<C>> = (0..3).into_par_iter().map(|m| {
+        let mut g: Vec<C> = (0..n * n * n).map(|idx| {
+            let mut acc = C::new(0.0, 0.0);
+            for i in 0..3 { acc = acc + mi * gh[i][idx] * dch[3 * i + m][idx]; }
+            acc
+        }).collect();
+        grid.fft3(&mut g, false);
+        for x in g.iter_mut() { *x = *x / n3; }
+        g
+    }).collect();
+    // E^{im}(x) = ghat^i(x) uref^m(x);  Z^i_q = -i sum_m q_m E^{im}_q  -> nine forward transforms
+    let e: Vec<Vec<C>> = (0..9).into_par_iter().map(|slot| {
+        let (i, m) = (slot / 3, slot % 3);
+        let mut g: Vec<C> = (0..n * n * n).map(|idx| gh[i][idx] * ur[m][idx]).collect();
+        grid.fft3(&mut g, false);
+        for x in g.iter_mut() { *x = *x / n3; }
+        g
+    }).collect();
+    let yy: Vec<[C; 3]> = s.modes.iter().map(|k| {
+        let idx = grid.idx_of(k); [y[0][idx], y[1][idx], y[2][idx]]
+    }).collect();
+    let zz: Vec<[C; 3]> = s.modes.iter().map(|k| {
+        let idx = grid.idx_of(k);
+        let mut out = [C::new(0.0, 0.0); 3];
+        for i in 0..3 {
+            let mut acc = C::new(0.0, 0.0);
+            for m in 0..3 { acc = acc + e[3 * i + m][idx] * (k.0[m] as f64); }
+            out[i] = mi * acc;
+        }
+        out
+    }).collect();
+    (b, yy, zz)
+}
+
+/// dP/dsigma_j for every half-ball class j, from the (B, Y, Z) pieces of the gradient and the
+/// chain rule through u_j = f lam sigma_j w_j, u_{-j} = f lam sigma_j conj(w_j), w_j = i(j x d_j).
+/// `flam` = f * lam carries the SIGN of lambda: lambda < 0 in every registered protocol, and
+/// without it every flip decision would be inverted.
+fn dp_dsigma(s: &State, hb: &[K], bb: &[[C; 3]], yy: &[[C; 3]], zz: &[[C; 3]], flam: f64) -> Vec<f64> {
+    hb.iter().map(|k| {
+        let d = direction_varied(k);
+        let cr = k.cross(&d);
+        let w = [C::new(0.0, cr.0[0] as f64), C::new(0.0, cr.0[1] as f64), C::new(0.0, cr.0[2] as f64)];
+        let wc = [w[0].conj(), w[1].conj(), w[2].conj()];
+        let (i, im) = (s.index[k], s.index[&k.neg()]);
+        let ks = k.sq() as f64;
+        let mut acc = C::new(0.0, 0.0);
+        for c in 0..3 {
+            acc = acc + (w[c].conj() * bb[i][c] + wc[c].conj() * bb[im][c]) * ks;
+            acc = acc + w[c] * yy[i][c] + wc[c] * yy[im][c];
+            acc = acc + w[c] * zz[i][c] + wc[c] * zz[im][c];
+        }
+        acc.re * flam
+    }).collect()
+}
+
+/// DAMPED JACOBI SIGN ASCENT -- docs/designs/SPECTRAL_ALIGNMENT.md section 3.2 (A).
+///
+/// The greedy's decision rule ("flip j if it increases |P|") applied to ALL classes at once
+/// from ONE FFT gradient, instead of one class at a time from one triad enumeration each.
+/// Because P is exactly multilinear in the signs (see the note above grad_p_fft), the single-
+/// flip change is exactly delta_j = -2 sigma_j dP/dsigma_j. Flipping a SET of classes is not
+/// additive (cross terms), which is why undamped Jacobi oscillates on a dense coupling; so:
+///   - flip only the top fraction rho of the improvers, largest |delta| first;
+///   - recompute P exactly after the flips (one RHS) and ACCEPT only if |P| grew, else revert
+///     and halve rho; when rho shrinks to a single class the step is an exact greedy step and
+///     progress is guaranteed;
+///   - stop when no single flip improves |P| -- the same local-optimality condition the greedy
+///     stops at, so the exact greedy polish that follows should need ~one confirming sweep.
+/// Float throughout; the result is a sign vector whose objective is then recomputed EXACTLY by
+/// the greedy path (`--align free --phases-start`), so float error can only make the search
+/// worse, never the record wrong. This is a DIFFERENT adversarial family from the greedy's
+/// (a different local optimum of the same objective) and is reported as one.
+fn phases_adversarial_jacobi(m: i64, lam: f64, e0: f64, rho0: f64, max_iter: usize)
+    -> std::collections::HashMap<K, C> {
+    let hb = half_ball(m);
+    let n = hb.len();
+    let grid = Grid::new(m);
+    let model = Model { nu: 0.0, engine: Engine::Fft, grid: None };
+    let mut signs: Vec<i64> = vec![1; n];
+    let build = |signs: &Vec<i64>| -> (State, f64) {
+        let phases: std::collections::HashMap<K, C> =
+            hb.iter().zip(signs).map(|(k, &sg)| (*k, C::new(0.0, sg as f64))).collect();
+        let mut s = make_state(m, &phases, lam);
+        let f = (e0 / s.energy()).sqrt();
+        for row in s.u.iter_mut() { for c in 0..3 { row[c] = row[c] * f; } }
+        (s, f)
+    };
+    let (mut s, f) = build(&signs);
+    let flam = f * lam;
+    let mut p = model.production(&s, &b_fft(&s, &grid)).re;
+    let mut rho = rho0;
+    let t0 = std::time::Instant::now();
+    eprintln!("   [align/jacobi] M={} n={} grid={}^3 start |P|={:.6e} rho0={}", m, n, grid.n, p.abs(), rho0);
+    let mut it = 0usize;
+    let mut flips_total = 0usize;
+    while it < max_iter {
+        it += 1;
+        let (bb, yy, zz) = grad_p_fft(&s, &grid, false, false);
+        let dp = dp_dsigma(&s, &hb, &bb, &yy, &zz, flam);
+        // exact single-flip gain in |P|: |P + delta_j| - |P|
+        let mut gain: Vec<(f64, usize)> = (0..n).map(|j| {
+            let delta = -2.0 * (signs[j] as f64) * dp[j];
+            ((p + delta).abs() - p.abs(), j)
+        }).filter(|&(g, _)| g > 0.0).collect();
+        if gain.is_empty() {
+            eprintln!("   [align/jacobi] iter {} converged: no single flip improves |P| ({:.1} s, {} flips total)",
+                it, t0.elapsed().as_secs_f64(), flips_total);
+            break;
+        }
+        gain.sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap());
+        // damped step with exact acceptance
+        loop {
+            let take = ((rho * n as f64).ceil() as usize).clamp(1, gain.len());
+            let mut trial = signs.clone();
+            for &(_, j) in &gain[..take] { trial[j] = -trial[j]; }
+            let (st, _) = build(&trial);
+            let pt = model.production(&st, &b_fft(&st, &grid)).re;
+            if pt.abs() > p.abs() {
+                signs = trial; s = st;
+                let improvers = gain.len();
+                p = pt;
+                flips_total += take;
+                eprintln!("   [align/jacobi] iter {:>4}: |P|={:.9e} flipped {:>6}/{:<6} improvers rho={:.4} ({:.1} s)",
+                    it, p.abs(), take, improvers, rho, t0.elapsed().as_secs_f64());
+                rho = (rho * 1.25).min(0.5);
+                break;
+            }
+            if take == 1 {
+                // A single exact-delta flip cannot fail to improve unless float error at the
+                // 1e-16 level says otherwise; treat that as convergence.
+                eprintln!("   [align/jacobi] iter {} converged: best single flip does not improve |P| in float ({:.1} s)",
+                    it, t0.elapsed().as_secs_f64());
+                it = max_iter; break;
+            }
+            rho /= 2.0;
+        }
+    }
+    eprintln!("   [align/jacobi] final |P|={:.9e} after {} iterations, {} flips, {:.1} s", p.abs(), it, flips_total, t0.elapsed().as_secs_f64());
+    hb.iter().zip(&signs).map(|(k, &sg)| (*k, C::new(0.0, sg as f64))).collect()
+}
+
+/// gradcheck --M m --phases-in f [--lambda l] [--E0 e] [--drop-adjoint] [--no-reflect]
+/// Prints dP/dsigma_j for every half-ball class j, plus Euler's identity for a homogeneous
+/// cubic form -- sum_j sigma_j dP/dsigma_j = 3P -- checked against the scout's own production,
+/// which needs no external oracle at all. The per-class values are then compared in Python
+/// against the exact-integer dS/dsigma_j (exploration/alignment_spectral/gradcheck.py): the
+/// ratio must be one constant over j, the memo's 8.8586e-8 at M = 8.
+fn gradcheck(args: &[String]) {
+    let get = |name: &str, default: &str| -> String {
+        args.iter().position(|a| a == name).map(|i| args[i + 1].clone()).unwrap_or(default.to_string())
+    };
+    let m: i64 = get("--M", "8").parse().unwrap();
+    let lam: f64 = get("--lambda", "-0.05").parse().unwrap();
+    let e0: f64 = get("--E0", "144").parse().unwrap();
+    let drop_adjoint = args.iter().any(|a| a == "--drop-adjoint");
+    let no_reflect = args.iter().any(|a| a == "--no-reflect");
+    // `--ic null --seed s` builds a state with genuinely COMPLEX coefficients (circle phases).
+    // Needed for the reflection control: on the sign family u_{-k} = -u_k, so the reflection
+    // is a sign flip that every adjoint term contains twice -- `--no-reflect` cannot fail there
+    // (LL-19: a control that cannot fail is not a control). On a complex field it can.
+    let ic = get("--ic", "adv");
+    let seed: u64 = get("--seed", "1").parse().unwrap();
+    let phases = if ic == "null" { phases_random(m, seed) } else { phases_read(&get("--phases-in", ""), m) };
+    let mut s = make_state(m, &phases, lam);
+    let f = (e0 / s.energy()).sqrt();
+    for row in s.u.iter_mut() { for c in 0..3 { row[c] = row[c] * f; } }
+    let grid = Grid::new(m);
+    let t0 = std::time::Instant::now();
+    let (bb, yy, zz) = grad_p_fft(&s, &grid, drop_adjoint, no_reflect);
+    let t_grad = t0.elapsed().as_secs_f64();
+    let model = Model { nu: 0.0, engine: Engine::Fft, grid: None };
+    let p = model.production(&s, &bb).re;
+    // The three slots paired with h = u itself, over ALL modes. Each must equal P on any
+    // divergence-free real field (homogeneity of the cubic form, slot by slot) -- an oracle-free
+    // check that separates the three terms, so a wrong adjoint or a wrong reflection shows up
+    // in T2/T3 individually rather than hiding in a sum.
+    let (mut t1, mut t2, mut t3) = (0.0, 0.0, 0.0);
+    for (i, k) in s.modes.iter().enumerate() {
+        let ks = k.sq() as f64;
+        for c in 0..3 {
+            t1 += (s.u[i][c].conj() * bb[i][c]).re * ks;
+            t2 += (s.u[i][c] * yy[i][c]).re;
+            t3 += (s.u[i][c] * zz[i][c]).re;
+        }
+    }
+    eprintln!("   [gradcheck] slot-wise Euler, h = u:  T1/P = {:.15}  T2/P = {:.15}  T3/P = {:.15}",
+        t1 / p, t2 / p, t3 / p);
+    if ic == "null" {
+        eprintln!("   [gradcheck] M={} ic=null seed={} grid={}^3 gradient {:.3} s | P = {:.12e}{}",
+            m, seed, grid.n, t_grad, p,
+            if drop_adjoint { "  [NEGATIVE CONTROL: adjoint dropped]" } else if no_reflect { "  [NEGATIVE CONTROL: reflection dropped]" } else { "" });
+        return;   // the per-class sigma pairing is meaningless for circle phases
+    }
+    let mut euler = 0.0;
+    for k in half_ball(m) {
+        let d = direction_varied(&k);
+        let cr = k.cross(&d);
+        // du_k/dsigma_k = f lam w,  du_{-k}/dsigma_k = f lam conj(w),  w = i (k x d_k)
+        let w = [C::new(0.0, cr.0[0] as f64), C::new(0.0, cr.0[1] as f64), C::new(0.0, cr.0[2] as f64)];
+        let wc = [w[0].conj(), w[1].conj(), w[2].conj()];
+        let (i, im) = (s.index[&k], s.index[&k.neg()]);
+        let ks = k.sq() as f64;
+        let mut acc = C::new(0.0, 0.0);
+        for c in 0..3 {
+            acc = acc + (w[c].conj() * bb[i][c] + wc[c].conj() * bb[im][c]) * ks;   // T(h,u,u), h conjugated
+            acc = acc + w[c] * yy[i][c] + wc[c] * yy[im][c];                          // T(u,h,u), bilinear
+            acc = acc + w[c] * zz[i][c] + wc[c] * zz[im][c];                          // T(u,u,h), bilinear
+        }
+        let dp = acc.re * f * lam;
+        euler += phases[&k].im * dp;
+        println!("{} {} {} {:.17e}", k.0[0], k.0[1], k.0[2], dp);
+    }
+    eprintln!("   [gradcheck] M={} grid={}^3 gradient {:.3} s | P = {:.12e} | sum_j sigma_j dP/dsigma_j = {:.12e} | ratio/3P = {:.15}{}",
+        m, grid.n, t_grad, p, euler, euler / (3.0 * p),
+        if drop_adjoint { "  [NEGATIVE CONTROL: adjoint dropped]" } else if no_reflect { "  [NEGATIVE CONTROL: reflection dropped]" } else { "" });
+}
+
 fn scout(args: &[String]) {
     let get = |name: &str, default: &str| -> String {
         args.iter().position(|a| a == name).map(|i| args[i + 1].clone()).unwrap_or(default.to_string())
@@ -879,9 +1181,14 @@ fn scout(args: &[String]) {
     let phases = if ic == "adv" {
         if pin.is_empty() {
             let ckpt = get("--ckpt", "");
+            let e0_for_align: f64 = get("--E0", "144").parse().unwrap();
+            let rho0: f64 = get("--rho", "0.1").parse().unwrap();
+            let max_iter: usize = get("--max-iter", "10000").parse().unwrap();
+            let start = get("--phases-start", "");
             let p = match align.as_str() {
-                "free" => phases_adversarial_free(m, &ckpt),
+                "free" => phases_adversarial_free(m, &ckpt, &start),
                 "dirty" => phases_adversarial_dirty(m, &ckpt),
+                "jacobi" => phases_adversarial_jacobi(m, lam, e0_for_align, rho0, max_iter),
                 _ => phases_adversarial(m),
             };
             if !pout.is_empty() { phases_write(&pout, m, &p); }
@@ -924,6 +1231,7 @@ fn main() {
     match args.get(1).map(|s| s.as_str()) {
         Some("calibrate") => calibrate(&args[2]),
         Some("scout") => scout(&args[2..]),
+        Some("gradcheck") => gradcheck(&args[2..]),
         _ => eprintln!("usage: calibrate <json> | scout --M m --ic adv|null --nu x --dt x --steps n [--every e] [--lambda l] [--engine fft|direct] [--seed s] [--align table|free|dirty] [--ckpt f] [--phases-out f | --phases-in f]"),
     }
 }

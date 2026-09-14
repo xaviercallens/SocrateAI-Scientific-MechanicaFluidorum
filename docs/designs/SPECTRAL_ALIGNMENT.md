@@ -76,13 +76,19 @@ shape the scout's RHS already performs (15 transforms per RHS). The Leray projec
 self-adjoint, so it commutes through. One gradient ≈ 3 RHS-equivalents ≈ **45 FFTs**.
 `∂P/∂σ_j` follows by the chain rule through `u_j` and `u_{−j} = conj(u_j)`.
 
-**Cost, from the scout's measured RHS time** (0.196 s at `M = 16`, `64³` grid):
+**Cost — MEASURED (2026-09-14, `gradcheck`, this workstation, solo):**
 
-| `M` | grid | one gradient | one exact greedy sweep | ratio |
-|---|---|---|---|---|
-| 16 | 64³ | ~0.6 s | 11 s | 18× |
-| 32 | 128³ | ~5 s | 12 min | 150× |
-| 64 | 256³ | ~40 s | ~13 h | **~1 000×** |
+| `M` | grid | one gradient | ratio per doubling | `O(N log N)` predicts | one exact greedy sweep | ratio |
+|---|---|---|---|---|---|---|
+| 8 | 32³ | **0.021 s** | | | 0.5 s | 24× |
+| 16 | 64³ | **0.195 s** | 9.3× | 9.6× | 11 s | 56× |
+| 32 | 128³ | **1.750 s** | 9.0× | 9.3× | 12 min | **410×** |
+| 64 | 256³ | ~16 s (extrapolated on the confirmed model) | | 9.1× | ~13 h | ~3 000× |
+
+The model was written down first and the two measured doublings sit on it; the `M = 64` row is
+the only extrapolation and is labelled as one. (The memo's earlier pre-measurement guess was
+~5 s at `M = 32`; the measured figure is 1.75 s, since the adjoint reuses transforms rather than
+costing three full RHS evaluations.)
 
 Memory at `M = 64`: `256³` complex `f64` = 268 MB per array, ~20 arrays ≈ **5–6 GB**. Fits the
 workstation; comfortable on a 64 GB VM.
@@ -127,6 +133,42 @@ polish sweep count is the residual risk** and is measured at `M = 8, 16, 32` bef
 claimed about `M = 64`.
 
 ## 4. Validation, all fixed before implementation
+
+**Status 2026-09-14 — items 1, 2, 4 done; item 3 done at `M = 8, 16` (`M = 32` running); 5
+pending.** The gradient is implemented
+(`grad_p_fft`, `gradcheck` in the scout). Control 1: at `M = 8` on the random pattern, the ratio
+`dP/dσ_j ÷ dS/dσ_j` is **one constant over all 1 054 classes to `8.4×10⁻¹³` relative**, mean
+`8.858612370757×10⁻⁸` — the §2 constant to every digit. Control 2: dropping the adjoint makes
+the ratio wildly non-constant (all 1 054 classes off, spread `±5×10⁻⁵`) — **fails as required**.
+The reflection control as first designed was **vacuous on the sign family** (`u_{−k} = −u_k`, so
+the reflection is a sign flip that every adjoint term contains twice) — caught, and replaced by a
+slot-wise Euler check `T1/P, T2/P, T3/P` with `h = u` on a genuinely complex field (`--ic
+null`): all three read `1` to `8×10⁻¹⁵` with the full gradient; dropping the reflection gives
+`T2/P = −0.84`, `T3/P = −8.3`; dropping the adjoint gives `T2 = T3 = 0`. Item 4: measured, table
+in §3.1. Reproduction: `exploration/alignment_spectral/README.md`.
+
+**Item 3, measured (`--align jacobi`, `ρ₀ = 0.1`, from all-`+1`, then `--align free
+--phases-start` for the exact polish):**
+
+| `M` | Jacobi iterations | wall | `|P|` Jacobi | `|P|` greedy | `|S|` exact, Jacobi | `|S|` greedy | ratio | signs differing | polish sweeps |
+|---|---|---|---|---|---|---|---|---|---|
+| 8 | 16 | 0.4 s | `7.286794014×10⁴` | `7.286794014×10⁴` | `822 566 075 728` | `822 566 075 728` | **1** | 0 / 1 054 | 1 (0 flips) |
+| 16 | 71 | 18.9 s | `1.474065676×10⁶` | `1.474148314×10⁶` | `17 175 910 896 716 672` | `17 176 873 794 444 224` | **0.999 944** | 40 / 8 538 | 1 (0 flips) |
+| 32 | running | | | `4.55×10²⁰`-scale | | | | | |
+
+Read plainly: at `M = 8` the damped Jacobi lands on **the same sign vector** as the
+Gauss–Seidel greedy — not merely the same objective — so §3.3's warning that the two need not
+agree was, at `M = 8`, too cautious. At `M = 16` they differ in 40 of 8 538 signs and the Jacobi
+optimum is **0.0056 % weaker**; it is nevertheless already a strict local optimum of the exact
+objective (the polish sweep finds no improving flip), so the residual risk named in §3.3 — that
+the polish reintroduces the sweep wall — **did not materialise at `M ≤ 16`**: the polish is one
+verification sweep. The exact `|S|` of the Jacobi seed and the float `|P|` agree in ratio to the
+greedy to all six printed digits (`0.999944` both ways), which is the §2 constant doing its job
+end-to-end. Cost at `M = 16`: 18.9 s where the greedy took 8 min (25×). Whether the iteration
+count keeps growing (`16 → 71`, i.e. ×4.4 per doubling, which would put `M = 64` at ~1 400
+iterations × ~20 s ≈ 8 h — still local) is exactly what the `M = 32` row decides.
+Artifacts: `exploration/scout_runs/S5_M{8,16}_phases_jacobi.txt`, `S5_M16_align_jacobi.log`,
+`S5_M16_polish.log`.
 
 1. **Arithmetic control.** At `M = 8`, for a random `σ`: the FFT gradient's `δ_j` must equal the
    exact `−2·contrib(j)` (already computed in `i128` by the scout) scaled by the §2 constant, for

@@ -62,6 +62,21 @@ No horizon-6 arm: not readable at `M = 16` and not what the question asks. Resul
 `494.0 s` — dirty-tracking is correct and **5.5 % slower**. Kept as a validated negative result,
 per LL-27.
 
+## Spectral (FFT-gradient) alignment — `docs/designs/SPECTRAL_ALIGNMENT.md` §4 item 3
+
+`--align jacobi`: damped Jacobi sign ascent driven by the FFT gradient of the production `P`,
+from all-`+1`, `ρ₀ = 0.1`. The exact objective of the result is then recomputed and polished by
+the exact greedy (`--align free --phases-start`).
+
+| file | what |
+|---|---|
+| `S5_M8_phases_jacobi.txt` | 16 iterations, 0.4 s; **byte-identical** to the greedy `phases_M8` (same optimum, 822 566 075 728) |
+| `S5_M16_phases_jacobi.txt`, `S5_M16_align_jacobi.log` | 71 iterations, 18.9 s; 40 / 8 538 signs differ from `S3_M16_phases.txt`; exact `|S| = 17 175 910 896 716 672` = 0.999944 × greedy |
+| `S5_M16_polish.log` | the exact polish from that seed: **1 sweep, 0 flips** — the Jacobi optimum is already a strict local optimum of the exact objective |
+
+Not part of the S-2…S-4 series: a **different family** (a different local optimum at `M = 16`),
+to be reported as a second series if S-5 is registered.
+
 Columns: `step,t,E,D,D2,P_re,P_im,ratio_energy,ratio_enstrophy` with `D = Z = Σ|k|²|u_k|²`,
 `D2 = Σ|k|⁴|u_k|²`, `P` the enstrophy production, `ratio_energy = P/(νD)`,
 `ratio_enstrophy = P/(νD2)` (`> 1` ⟺ enstrophy increasing).
