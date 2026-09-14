@@ -185,6 +185,52 @@ Rejected, with reasons, in the judge's record: `ρ₀ = 0.5` (inert after 9 iter
 iteration 34: predicted null), three or more seeds (slot budget; random starts cannot advance),
 pre-polish quality (favours B0), iterations or wall as the cost metric (hide retries / depend on load).
 
+**Result of the `M = 16` screen (2026-09-14, run as registered; `exploration/scout_runs/screen_M16/`).**
+No void: C1, C2 (byte-identical re-run), C3, C4 (corrupted signs: 40 polish flips, DISCARD), C5
+and C6 pass; H1 identity PASS. Reference `Q0 = 17 175 910 896 716 672`, `E0 = 163` evaluations
+(71 gradients + 92 objective calls), 21 failed steps, 1 polish sweep.
+
+| row | C/E0 | failed steps | exact `Q` (post-polish) | `Q/Q0 − 1` | signs ≠ greedy | label (as registered) |
+|---|---|---|---|---|---|---|
+| H1 rank delta | 1.000 | 21 | = `Q0` | 0 | 40 | control PASS |
+| H2 `ρ₀ 0.02` | 1.031 | 24 | `17 176 873 794 444 224` | +5.6×10⁻⁵ | **0** | TIE |
+| H3 cap 0.15 | 0.988 | 17 | `17 176 873 794 444 224` | +5.6×10⁻⁵ | **0** | TIE |
+| H4 growth 1.1 | 0.982 | 18 | `17 176 873 794 444 224` | +5.6×10⁻⁵ | **0** | TIE |
+| H5 cap 1.0 | 1.006 | 22 | = `Q0` | 0 | 40 | control NEITHER |
+| H6 tabu 3 | 0.908 | **0** | = `Q0` | 0 | 40 | TIE |
+| H7 random:1 | 1.521 | 34 | `15 099 681 966 297 824` | −1.2×10⁻¹ | | variance |
+| H8 random:2 | 0.834 | 24 | `10 513 309 742 220 224` | −3.9×10⁻¹ | | variance |
+| H9 lift M=8 | 1.142 | 19 | `17 176 872 607 246 832` | +5.6×10⁻⁵ | | DISCARD (costlier) |
+| H10 anneal | 1.000 | 21 | = `Q0` | 0 | 40 | TIE (null: identical to B0) |
+
+What it says, plainly:
+1. **Three one-flag changes land exactly on the greedy's optimum** — H2, H3, H4 return the
+   greedy's sign vector bit for bit at `M = 16`, at B0's cost. B0's 40-sign miss was a property of
+   its schedule, not of Jacobi.
+2. **The registered criterion misfired on them.** `+5.6×10⁻⁵` exceeds `ε`, but the seed-spread
+   rule ("if `|Q_H7 − Q_H8| > ε·Q0`, downgrade every better to tie") fired, because the random
+   starts are *catastrophically* worse (−12 %, −39 %) — a rugged landscape, not the near-degenerate
+   noise the rule was written for. Under the registered rule H2–H4 are TIE and the advancing set
+   is **H6, H4, H3** (the TIE rows by `C/E0`). Had the rule not misfired, H2–H4 would be KEEP and
+   the set would be H4, H3 and their combination. The registered set is run as registered; the
+   combination **H3+H4 is added as an explicitly post-hoc row, not eligible for `M = 64`** under
+   this screen. Lesson recorded: a downgrade rule must test the premise it encodes (spread of
+   *converged near-optima*), not a proxy that a different phenomenon can trip.
+3. **H5, the damping negative control, was vacuous — and the reason is a finding about B0.** The
+   cap never binds: in 59 of B0's 70 accepted steps `⌈ρn⌉` exceeded the number of improvers, so
+   *every* improver flipped. B0 is effectively "flip all improvers, halve on failure"; the only
+   damping that acts is the halving. The judge's control was built on the documented mechanism,
+   not the operative one — LL-19 again: a perturbation must be demonstrated to bite. H3's cap 0.15
+   did bind in early iterations, which is plausibly what moved it onto the greedy's basin.
+4. **Random starts are a bad idea on this objective**, and all-`+1` is not an arbitrary start —
+   worth knowing independently of the optimiser choice.
+5. **H6 (tabu) eliminates failed steps entirely** (21 → 0) at the same `Q`, missing "cheaper" by
+   1.3 evaluations (148 vs 146.7).
+6. **C7 was an unusable instrument**: the 1-min load average at the start of a row in a
+   sequential screen measures the *previous* row's 8-core polish (load 9–11 on every row, no
+   foreign process). Wall times are void for decisions anyway (C2 drifted 20 %); evaluation
+   counts are deterministic and carry the result.
+
 Where this departs from autoresearch, deliberately: the loop does
 **not** run unattended overnight and does not mutate its own code — the hypotheses are fixed
 in advance because the thing being protected is the comparability of the rows, and the
@@ -235,7 +281,7 @@ in §3.1. Reproduction: `exploration/alignment_spectral/README.md`.
 |---|---|---|---|---|---|---|---|---|---|
 | 8 | 16 | 0.4 s | `7.286794014×10⁴` | `7.286794014×10⁴` | `822 566 075 728` | `822 566 075 728` | **1** | 0 / 1 054 | 1 (0 flips) |
 | 16 | 71 | 18.9 s | `1.474065676×10⁶` | `1.474148314×10⁶` | `17 175 910 896 716 672` | `17 176 873 794 444 224` | **0.999 944** | 40 / 8 538 | 1 (0 flips) |
-| 32 | 210 | 528 s | `3.147221027×10⁷` | `3.147224672×10⁷` | polish running | `455 … ×10¹⁸` (S-4) | **0.999 998 8** (float) | | running |
+| 32 | 210 | 528 s | `3.147221027×10⁷` | `3.147224672×10⁷` | `455 471 158 672 505 926 960` | `455 471 686 189 347 441 312` | **0.999 998 84** | 49 / 68 532 | 1 (0 flips, 827 s) |
 
 Read plainly: at `M = 8` the damped Jacobi lands on **the same sign vector** as the
 Gauss–Seidel greedy — not merely the same objective — so §3.3's warning that the two need not
@@ -251,7 +297,11 @@ contention (§4.3.6): **~150×**, and its float `|P|` is within `1.2×10⁻⁶` 
 iteration count grows sub-geometrically (`16 → 71 → 210`: ×4.4 then ×3.0), so `M = 64` at
 `~500–600` iterations × ~20 s ≈ **3 h** on this workstation is the current extrapolation —
 still an extrapolation, labelled as one, and not a claim until the `M = 64` clock is read
-(LL-22). The exact polish at `M = 32` (one sweep ≈ 12 min) decides the last column.
+(LL-22). The exact polish at `M = 32` then ran one verification sweep (827 s) and found **no
+improving flip**: the Jacobi optimum is a strict local optimum of the exact objective at every
+`M` measured, so the polish-wall risk of §3.3 has not materialised at `M = 8, 16, 32`. At
+`M = 64` a single verification sweep is ~13 h (extrapolated), which is why the screen charges
+polish sweeps as cost.
 Artifacts: `exploration/scout_runs/S5_M{8,16}_phases_jacobi.txt`, `S5_M16_align_jacobi.log`,
 `S5_M16_polish.log`.
 

@@ -1,0 +1,42 @@
+== C6 criterion self-test ==
+== C3 evaluator known value, M=8 ==
+  C3 |S|=822566075728 iters=16 evals=41 -> PASS
+== C1 B0 reference, M=16 ==
+  C1 Q0=17175910896716672 E0=163 F0=21 P0=1 W0=19.7 iters=71 load=10.95 -> PASS
+  H1 done: status=converged iters=71 evals=163 fails=21 S_pre=17175910896716672 Q=17175910896716672 sweeps=1 polish_flips=0 wall=19.1 load=9.81
+  H2 done: status=converged iters=72 evals=168 fails=24 S_pre=17176873794444224 Q=17176873794444224 sweeps=1 polish_flips=0 wall=18.4 load=10.14
+  H3 done: status=converged iters=72 evals=161 fails=17 S_pre=17176873794444224 Q=17176873794444224 sweeps=1 polish_flips=0 wall=18.1 load=11.04
+  H4 done: status=converged iters=71 evals=160 fails=18 S_pre=17176873794444224 Q=17176873794444224 sweeps=1 polish_flips=0 wall=22.5 load=10.49
+  H5 done: status=converged iters=71 evals=164 fails=22 S_pre=17175910896716672 Q=17175910896716672 sweeps=1 polish_flips=0 wall=17.0 load=10.82
+  H6 done: status=converged iters=74 evals=148 fails=0 S_pre=17175910896716672 Q=17175910896716672 sweeps=1 polish_flips=0 wall=17.8 load=9.05
+  H7 done: status=converged iters=107 evals=248 fails=34 S_pre=15099681966297824 Q=15099681966297824 sweeps=1 polish_flips=0 wall=25.4 load=8.64
+  H8 done: status=converged iters=56 evals=136 fails=24 S_pre=10513309742220224 Q=10513309742220224 sweeps=1 polish_flips=0 wall=13.4 load=8.81
+  H9 done: status=converged iters=81 evals=181 fails=19 S_pre=17176872607246832 Q=17176872607246832 sweeps=1 polish_flips=0 wall=21.0 load=8.59
+  H10 done: status=converged iters=71 evals=163 fails=21 S_pre=17175910896716672 Q=17175910896716672 sweeps=1 polish_flips=0 wall=17.2 load=9.47
+== C4 corrupted signs (C1 signs, indices 0..39 flipped) ==
+  C4 S_pre=16788833804852576 Q=17175910896716672 polish_flips=40 label=DISCARD -> PASS
+== C2 B0 re-run ==
+  C2 identical to C1: PASS  wall=15.7
+
+== RESULTS (M=16; Q0=17175910896716672 E0=163 F0=21 P0=1 W0=19.7) ==
+id	role	flags	status	iters	it99.9	grads	objs	fails	C	C/E0	S_pre	Q	Q/Q0-1	sweeps	polish_flips	wall_s	load	quality	cost	label	note
+H1	control	--rank delta	converged	71	43	71	92	21	163.0	1.000	17175910896716672	17175910896716672	+0.000e+00	1	0	19.1	9.81	tie	cost-tie	PASS	
+H2	candidate	--rho 0.02	converged	72	46	72	96	24	168.0	1.031	17176873794444224	17176873794444224	+5.606e-05	1	0	18.4	10.14	tie	cost-tie	TIE	
+H3	candidate	--rho-max 0.15	converged	72	44	72	89	17	161.0	0.988	17176873794444224	17176873794444224	+5.606e-05	1	0	18.1	11.04	tie	cost-tie	TIE	
+H4	candidate	--rho-grow 1.1	converged	71	45	71	89	18	160.0	0.982	17176873794444224	17176873794444224	+5.606e-05	1	0	22.5	10.49	tie	cost-tie	TIE	
+H5	control	--rho-max 1.0	converged	71	43	71	93	22	164.0	1.006	17175910896716672	17175910896716672	+0.000e+00	1	0	17.0	10.82	tie	cost-tie	NEITHER	
+H6	candidate	--tabu 3	converged	74	46	74	74	0	148.0	0.908	17175910896716672	17175910896716672	+0.000e+00	1	0	17.8	9.05	tie	cost-tie	TIE	
+H7	variance	--init random:1	converged	107	80	107	141	34	248.0	1.521	15099681966297824	15099681966297824	-1.209e-01	1	0	25.4	8.64	worse	costlier	reported	
+H8	variance	--init random:2	converged	56	38	56	80	24	136.0	0.834	10513309742220224	10513309742220224	-3.879e-01	1	0	13.4	8.81	worse	cheaper	reported	
+H9	candidate	--init lift:/home/xavkal/xdev/SocrateAI-Scientific-MechanicaFluidorum/exploration/scout_runs/S5_M8_phases_jacobi.txt	converged	81	46	81	100	19	186.1	1.142	17176872607246832	17176872607246832	+5.599e-05	1	0	21.0	8.59	tie	costlier	DISCARD	
+H10	candidate	--anneal-tau 1e-3 --anneal-decay 0.9	converged	71	43	71	92	21	163.0	1.000	17175910896716672	17175910896716672	+0.000e+00	1	0	17.2	9.47	tie	cost-tie	TIE	
+
+== ADVANCE TO M=32 (30 min each, plus B0 M=32 reference) ==
+  H6: --tabu 3
+  H4: --rho-grow 1.1
+  H3: --rho-max 0.15
+
+== VOID ==
+  none
+== PARTIAL VOIDS ==
+  timings void: C2 wall 15.7 vs W0 19.7

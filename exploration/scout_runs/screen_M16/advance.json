@@ -1,0 +1,14 @@
+[
+ {
+  "id": "H6",
+  "flags": "--tabu 3"
+ },
+ {
+  "id": "H4",
+  "flags": "--rho-grow 1.1"
+ },
+ {
+  "id": "H3",
+  "flags": "--rho-max 0.15"
+ }
+]

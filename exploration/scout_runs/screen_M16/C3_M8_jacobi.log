@@ -1,0 +1,23 @@
+   [align/jacobi] M=8 n=1054 grid=32^3 start |P|=2.128827e4 opts=JacobiOpts { rho0: 0.1, rho_max: 0.5, rho_grow: 1.25, init: "ones", rank: "gain", tabu: 0, anneal_tau: 0.0, anneal_decay: 0.5, max_iter: 10000, budget_s: 60.0 }
+   [align/jacobi] iter    1: |P|=5.759091010e4 flipped    106/341    improvers rho=0.1000 tau=0.0e0 (0.0 s)
+   [align/jacobi] iter    2: |P|=6.950606683e4 flipped    106/106    improvers rho=0.1250 tau=0.0e0 (0.0 s)
+   [align/jacobi] iter    3: |P|=7.125627008e4 flipped     36/36     improvers rho=0.1562 tau=0.0e0 (0.1 s)
+   [align/jacobi] iter    4: |P|=7.204697303e4 flipped     25/25     improvers rho=0.1953 tau=0.0e0 (0.1 s)
+   [align/jacobi] iter    5: |P|=7.236923087e4 flipped     18/18     improvers rho=0.2441 tau=0.0e0 (0.1 s)
+   [align/jacobi] iter    6: |P|=7.256594941e4 flipped     20/20     improvers rho=0.3052 tau=0.0e0 (0.1 s)
+   [align/jacobi] iter    7: |P|=7.260341206e4 flipped     19/19     improvers rho=0.3815 tau=0.0e0 (0.2 s)
+   [align/jacobi] iter    8: |P|=7.274627388e4 flipped     17/17     improvers rho=0.4768 tau=0.0e0 (0.2 s)
+   [align/jacobi] iter    9: |P|=7.275657921e4 flipped     12/12     improvers rho=0.5000 tau=0.0e0 (0.2 s)
+   [align/jacobi] iter   10: |P|=7.279702267e4 flipped     11/11     improvers rho=0.5000 tau=0.0e0 (0.2 s)
+   [align/jacobi] iter   11: |P|=7.280028469e4 flipped      9/10     improvers rho=0.0078 tau=0.0e0 (0.3 s)
+   [align/jacobi] iter   12: |P|=7.282205669e4 flipped      6/10     improvers rho=0.0049 tau=0.0e0 (0.3 s)
+   [align/jacobi] iter   13: |P|=7.283875282e4 flipped      6/6      improvers rho=0.0061 tau=0.0e0 (0.3 s)
+   [align/jacobi] iter   14: |P|=7.286293292e4 flipped      3/6      improvers rho=0.0019 tau=0.0e0 (0.4 s)
+   [align/jacobi] iter   15: |P|=7.286794014e4 flipped      2/2      improvers rho=0.0024 tau=0.0e0 (0.4 s)
+   [align/jacobi] iter 16 converged: no single flip improves |P| (0.4 s, 396 flips total)
+   [align/jacobi] final |P|=7.286794014e4 after 16 iterations, 396 flips, 0.4 s, status=converged
+   [align/jacobi] accounting: gradients=16 objective_evals=25 failed_steps=9 iter_to_99.9%=10
+   [align] phases written to /tmp/claude-1000/-home-xavkal-xdev-SocrateAI-Scientific-MechanicaFluidorum/a8c42e7f-96bf-4015-9ce0-3c94ea24b741/scratchpad/screen_M16/C3_M8_phases.txt
+== scout: M=8 ic=adv nu=0.05 dt=0.00025 steps=0 lambda=-0.05 E0=144 engine=fft modes=2109 ==
+step,t,E,D,D2,P_re,P_im,ratio_energy,ratio_enstrophy
+0,0.000000,1.440000000e2,6.931937194e3,3.541327369e5,7.286794014e4,-1.782e-11,210.238316,4.115290

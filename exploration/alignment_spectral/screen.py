@@ -143,9 +143,55 @@ def search(out, rid, M, flags):
     r.update(ev)
     return r
 
+def stage2(out16, out):
+    """M = 32 stage: the registered advancing rows + a B0 reference, 30 min search budget each,
+    criterion re-applied against the reference, transfer check C/E0(32) <= C/E0(16) + 0.15.
+    Post-hoc rows (declared after the M=16 result) are reported but never eligible."""
+    global BUDGET_S
+    BUDGET_S = 1800
+    M = 32
+    out.mkdir(parents=True, exist_ok=True)
+    adv = json.load(open(out16 / "advance.json"))
+    ce16 = {}
+    for line in open(out16 / "results.tsv").read().splitlines()[1:]:
+        f = line.split("\t"); ce16[f[0]] = float(f[10])
+    rows = [dict(id=a["id"], flags=a["flags"].split(), posthoc=False) for a in adv]
+    rows.append(dict(id="H3+H4", flags=["--rho-max", "0.15", "--rho-grow", "1.1"], posthoc=True))
+    verdict = []
+    say = lambda s: (print(s, flush=True), verdict.append(s))
+    B0_PHASES_M32 = REPO / "exploration/scout_runs/S5_M32_phases_jacobi.txt"
+    GREEDY_M32 = REPO / "exploration/scout_runs/S4_M32_phases.txt"
+    g = signs_of(GREEDY_M32)
+    say("== R: B0 reference, M=32 ==")
+    ref = search(out, "R", M, [])
+    ok = not ref.get("crash") and open(ref["phases"]).read() == B0_PHASES_M32.read_text() and ref["polish_flips"] == 0
+    Q0, E0, P0, F0 = ref.get("Q"), ref.get("evals"), ref.get("sweeps"), ref.get("fails")
+    say(f"  R Q0={Q0} E0={E0} F0={F0} P0={P0} iters={ref.get('iters')} wall={ref.get('wall')} reproduces committed M=32 B0: {'PASS' if ok else 'FAIL'}")
+    void = [] if ok else ["R does not reproduce the committed M=32 B0 phases"]
+    table = []
+    for r in rows:
+        res = search(out, r["id"].replace("+", "_"), M, r["flags"]); res.update(id=r["id"], flags=" ".join(r["flags"]), posthoc=r["posthoc"])
+        if res.get("crash"):
+            res.update(status="crash", label="INCONCLUSIVE"); table.append(res); say(f"  {r['id']}: CRASH"); continue
+        res["C"] = res["evals"]; res["status"] = status_of(res, F0)
+        res["q"] = quality(res["Q"], Q0, False); res["c"] = cost(res["C"], E0, res["sweeps"], P0)
+        res["label"] = label(res["status"], res["q"], res["c"])
+        res["transfer"] = "n/a" if r["posthoc"] else ("ok" if res["C"] / E0 <= ce16.get(r["id"], 0) + 0.15 else "FAIL")
+        res["vs_greedy"] = sum(a != b for a, b in zip(signs_of(res["phases"]), g))
+        table.append(res)
+        say(f"  {r['id']}{' (POST-HOC)' if r['posthoc'] else ''}: status={res['status']} iters={res['iters']} C={res['C']} C/E0={res['C']/E0:.3f} fails={res['fails']} Q={res['Q']} Q/Q0-1={(res['Q']-Q0)/Q0:+.3e} sweeps={res['sweeps']} polish_flips={res['polish_flips']} signs!=greedy={res['vs_greedy']} quality={res['q']} cost={res['c']} label={res['label']} transfer={res['transfer']} wall={res['wall']}")
+    elig = [t for t in table if not t.get("posthoc") and t.get("label") == "KEEP" and t.get("transfer") == "ok"]
+    elig.sort(key=lambda t: (t["C"] / E0, -t["Q"]))
+    say("\n== TO M=64 ==\n  " + (f"{elig[0]['id']}: {elig[0]['flags']}" if elig else "B0 (no eligible KEEP row at M=32)"))
+    say("== VOID ==\n  " + ("; ".join(void) if void else "none"))
+    (out / "verdict.txt").write_text("\n".join(verdict) + "\n")
+
 def main():
     if "--selftest" in sys.argv:
         sys.exit(0 if selftest() else 1)
+    if "--stage2" in sys.argv:
+        i = sys.argv.index("--stage2")
+        stage2(pathlib.Path(sys.argv[i + 1]), pathlib.Path(sys.argv[i + 2])); return
     out = pathlib.Path(sys.argv[1]); out.mkdir(parents=True, exist_ok=True)
     verdict = []; void = []; partial = []
     say = lambda s: (print(s, flush=True), verdict.append(s))
