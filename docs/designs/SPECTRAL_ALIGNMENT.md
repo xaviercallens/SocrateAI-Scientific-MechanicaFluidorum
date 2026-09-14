@@ -110,6 +110,87 @@ converge: **unknown — to be measured at `M = 8, 16, 32`** (hypothesis: 50–30
 (A). Fewer iterations, but rounding a continuous optimum can lose a lot; its value is as an
 *initialiser*.
 
+**(C) How the optimiser is chosen — a fixed-budget screen, not a deep dive (added 2026-09-14
+on the owner's recommendation, after karpathy/autoresearch).** (A) was implemented first and
+works (§4 item 3), but "the first thing that worked" is not a design decision. The autoresearch
+discipline is: *one* metric, *one* fixed budget per experiment so runs are directly comparable
+whatever was changed, an evaluator the experimenter may not touch, every result logged
+whatever its outcome, a written keep/discard rule, and many cheap hypotheses screened before
+any of them is deepened. Adapted here:
+
+| autoresearch | this screen |
+|---|---|
+| `val_bpb`, lower is better | exact `i128` `\|S\|` of the returned signs *before* polish, higher is better, as a ratio to the greedy's `\|S\|` at the same `M` |
+| 5-minute training budget | `60 s` wall at `M = 16`, solo on this workstation (the baseline needs ~19 s; the greedy needed 468 s) |
+| `prepare.py` is untouchable | the evaluator is the Tier-B-ported exact greedy (`--align free --phases-start`), which prints the seed's exact `\|S\|` and then polishes it; the screen never edits it |
+| `results.tsv` with keep/discard/crash | `results.tsv`: id, status (`converged` / `budget` / `crash`), iterations, flips, wall, float `\|P\|`, exact `\|S\|`, ratio, polish sweeps, polished `\|S\|`, decision |
+| keep iff improved, else `git reset` | `keep` iff converged within budget **and** exact `\|S\|` strictly above the baseline row's; `tie` iff identical (then fewer iterations wins); else `discard` — written here before the first run |
+| ~100 experiments overnight, one change each | ten one-change hypotheses off the baseline, then only the `keep`/`tie` rows advance to a `30 min` budget at `M = 32`, and only that stage's winner to `M = 64` |
+
+**How the design was fixed (2026-09-14, before any screen row ran).** A first list of ten was
+written by the main session, then refined by three independent proposers (Sonnet; lenses:
+optimisation theory, cost at `M = 64`, controls/experimental design), each given the same
+facts and no repository access, and a judge (Opus) given their three outputs plus seven binding
+implementation facts the main session verified against the code. That verification step
+mattered: it found that **`--rank delta` is a known null** (for every single flip `|δ_j| ≪ |P|`,
+so gain = `|δ_j|` and the ranking is identical — two proposers had predicted an effect), that
+**annealing does not remove halving retries** (one proposer's cost argument assumed it did),
+and **a real bug**: tabu filtered improvers *before* the convergence test, so a tabu run could
+report `converged` while improving flips existed. Fixed (tabu now filters candidates only; if
+all improvers rest, tabu is ignored that iteration), and a second stop-reason bug fixed with it
+(the float-floor stop reported `iterations = max_iter`; it is now its own status, LL-18).
+
+**Goal.** Choose the single optimiser configuration run at `M = 32` and then `M = 64`. At
+`M = 64` the deciding quantity is **cost** — objective evaluations in the search (gradients +
+objective calls, failed retries included) plus exact polish sweeps (~13 h each there).
+**Quality is a gate, not the objective**: exact `|S|` *after* polish may not fall below `B0`'s
+by more than `ε = 10⁻⁵`; beyond `ε` it breaks cost ties but never buys cost. `B0` wins by default.
+
+**The ten rows** (one change each off `B0`; roles: candidate / control / variance):
+
+| id | flags | role | falsifiable prediction (vs C1: `Q0`, `E0`, `F0`) |
+|---|---|---|---|
+| H1 | `--rank delta` | control | byte-identical to C1 (signs, `Q`, iterations, evaluations, trace); else the screen is void |
+| H2 | `--rho 0.02` | candidate | tie; iterations 72–85; `C ∈ [1.0, 1.15]·E0` |
+| H3 | `--rho-max 0.15` | candidate | tie or better; failures ≤ 2; `C ≤ 1.0·E0` (falsified if `> 1.1·E0` or failures `> 3`) |
+| H4 | `--rho-grow 1.1` | candidate | tie; failures ≤ 3; `C ∈ [0.85, 1.05]·E0` |
+| H5 | `--rho-max 1.0` | control | must degrade (failures ≥ 8 and `C ≥ 1.1·E0`, or worse); if not, the damping premise is falsified and H3/H4 become INCONCLUSIVE |
+| H6 | `--tabu 3` | candidate | tie or better; failures ≤ 2; iterations 55–75; `C ≤ 0.95·E0` |
+| H7 | `--init random:1` | variance | tie or worse; `C ≥ E0`; with H8 and all-`+1`, three starts |
+| H8 | `--init random:2` | variance | as H7; if `|Q_H7 − Q_H8| > ε·Q0`, every "better" is downgraded to "tie" |
+| H9 | `--init lift:<M=8 optimum>` | candidate | two-sided: good prior 20–50 iterations and `C ≤ 0.7·E0` (M=8 evaluations charged ÷8), bad prior > 71 iterations |
+| H10 | `--anneal-tau 1e-3 --anneal-decay 0.9` | candidate | tie or better, the one row with a real chance of `> +ε`; `C ∈ [0.95, 1.3]·E0` |
+
+**Controls that void the screen**: C1 (B0 at `M = 16` reproduces `Q0 = 17 175 910 896 716 672`, 0
+polish flips, 71 iterations); C2 (B0 re-run after the batch, byte-identical to C1); C3 (`M = 8`
+evaluator known value `822 566 075 728`, signs identical to the greedy); C4 (C1 signs with 40
+flipped: must score below `Q0`, need polish flips, never be labelled KEEP); C5 (float `|P|` /
+exact `|S|` constant to `10⁻⁹` on every row); C6 (the criterion code labels a synthetic table
+correctly — **demonstrated able to fail**: a mutant using `≥` at the `ε` edge mislabels 2 rows);
+C7 (1-min load logged per row; wall is a cross-check only, never a decision).
+
+**Criterion (mechanical, `screen.py` `label()`)**: status `crash` / `invalid` (C5) /
+`false-converged` (converged but polish flips `> 0`) / `budget` / `thrashing` (failures `> 3·max(F0,1)`
+or `> 50 %` of evaluations) / `converged`. Quality on post-polish integers: better iff
+`10⁵(Q−Q0) > Q0`, worse iff `10⁵(Q0−Q) > Q0`, else tie. Cost: cheaper iff `C ≤ 0.9·E0` and polish
+sweeps `≤ P0`; costlier iff `C > 1.1·E0` or sweeps `> P0`. Labels: INCONCLUSIVE (status not
+converged) · DISCARD (worse, or tie and costlier) · KEEP (tie/better and cheaper, or better and
+cost-tie) · TIE (the rest). **Advancement**: at most three candidates to `M = 32` (top two KEEP by
+`C/E0`, then `Q`; third slot their combination if they change different flags), each 30 min, with
+a B0 `M = 32` reference; the criterion is re-applied there, and exactly one row goes to `M = 64`
+subject to a transfer check (`C/E0` at 32 ≤ `C/E0` at 16 + 0.15); if none, B0 goes.
+
+Rejected, with reasons, in the judge's record: `ρ₀ = 0.5` (inert after 9 iterations), growth 2.0
+(same mechanism as the H5 control), anneal `10⁻⁴/0.5` (τ < 10⁻⁸ before the first failure at
+iteration 34: predicted null), three or more seeds (slot budget; random starts cannot advance),
+pre-polish quality (favours B0), iterations or wall as the cost metric (hide retries / depend on load).
+
+Where this departs from autoresearch, deliberately: the loop does
+**not** run unattended overnight and does not mutate its own code — the hypotheses are fixed
+in advance because the thing being protected is the comparability of the rows, and the
+scientific claims downstream (S-5) stay under the pre-registration rule (LL-24), which the
+screen does not replace. The screen chooses an *optimiser*; it does not choose a *result*.
+
 Either way the search runs in floating point and the **final sign vector's objective is
 recomputed exactly** — in `i128` by the existing scout code (loading the signs through the
 checkpoint path with `--steps 0`), or in Python exact integers at small `M`. The recorded `S` is
@@ -154,7 +235,7 @@ in §3.1. Reproduction: `exploration/alignment_spectral/README.md`.
 |---|---|---|---|---|---|---|---|---|---|
 | 8 | 16 | 0.4 s | `7.286794014×10⁴` | `7.286794014×10⁴` | `822 566 075 728` | `822 566 075 728` | **1** | 0 / 1 054 | 1 (0 flips) |
 | 16 | 71 | 18.9 s | `1.474065676×10⁶` | `1.474148314×10⁶` | `17 175 910 896 716 672` | `17 176 873 794 444 224` | **0.999 944** | 40 / 8 538 | 1 (0 flips) |
-| 32 | running | | | `4.55×10²⁰`-scale | | | | | |
+| 32 | 210 | 528 s | `3.147221027×10⁷` | `3.147224672×10⁷` | polish running | `455 … ×10¹⁸` (S-4) | **0.999 998 8** (float) | | running |
 
 Read plainly: at `M = 8` the damped Jacobi lands on **the same sign vector** as the
 Gauss–Seidel greedy — not merely the same objective — so §3.3's warning that the two need not
@@ -164,9 +245,13 @@ objective (the polish sweep finds no improving flip), so the residual risk named
 the polish reintroduces the sweep wall — **did not materialise at `M ≤ 16`**: the polish is one
 verification sweep. The exact `|S|` of the Jacobi seed and the float `|P|` agree in ratio to the
 greedy to all six printed digits (`0.999944` both ways), which is the §2 constant doing its job
-end-to-end. Cost at `M = 16`: 18.9 s where the greedy took 8 min (25×). Whether the iteration
-count keeps growing (`16 → 71`, i.e. ×4.4 per doubling, which would put `M = 64` at ~1 400
-iterations × ~20 s ≈ 8 h — still local) is exactly what the `M = 32` row decides.
+end-to-end. Cost at `M = 16`: 18.9 s where the greedy took 8 min (25×). At `M = 32` the
+Jacobi converged in **210 iterations, 528 s (8.8 min)**, where the greedy took ~22 h under
+contention (§4.3.6): **~150×**, and its float `|P|` is within `1.2×10⁻⁶` of the greedy's. The
+iteration count grows sub-geometrically (`16 → 71 → 210`: ×4.4 then ×3.0), so `M = 64` at
+`~500–600` iterations × ~20 s ≈ **3 h** on this workstation is the current extrapolation —
+still an extrapolation, labelled as one, and not a claim until the `M = 64` clock is read
+(LL-22). The exact polish at `M = 32` (one sweep ≈ 12 min) decides the last column.
 Artifacts: `exploration/scout_runs/S5_M{8,16}_phases_jacobi.txt`, `S5_M16_align_jacobi.log`,
 `S5_M16_polish.log`.
 

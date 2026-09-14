@@ -1014,13 +1014,70 @@ fn dp_dsigma(s: &State, hb: &[K], bb: &[[C; 3]], yy: &[[C; 3]], zz: &[[C; 3]], f
 /// the greedy path (`--align free --phases-start`), so float error can only make the search
 /// worse, never the record wrong. This is a DIFFERENT adversarial family from the greedy's
 /// (a different local optimum of the same objective) and is reported as one.
-fn phases_adversarial_jacobi(m: i64, lam: f64, e0: f64, rho0: f64, max_iter: usize)
+/// Knobs of the damped-Jacobi sign ascent. Every field is one screening hypothesis of
+/// docs/designs/SPECTRAL_ALIGNMENT.md section 3.2 (autoresearch-style: one change per run,
+/// fixed budget, exact evaluator untouched). The defaults ARE the baseline B0.
+#[derive(Clone, Debug)]
+struct JacobiOpts {
+    rho0: f64,          // initial damping fraction of n
+    rho_max: f64,       // cap on rho
+    rho_grow: f64,      // multiplier after an accepted step
+    init: String,       // "ones" | "random:<seed>" | "file:<phases>" | "lift:<phases at M/2>"
+    rank: String,       // "gain" (|P+d|-|P|) | "delta" (|d|)
+    tabu: usize,        // a flipped class may not flip again for this many iterations
+    anneal_tau: f64,    // accept a step that LOWERS |P| by at most tau*|P| (0 = pure ascent)
+    anneal_decay: f64,  // tau *= decay each iteration
+    max_iter: usize,
+    budget_s: f64,      // wall budget; the run stops with status BUDGET when exceeded (0 = none)
+}
+impl JacobiOpts {
+    fn from_args(get: &dyn Fn(&str, &str) -> String) -> JacobiOpts {
+        JacobiOpts {
+            rho0: get("--rho", "0.1").parse().unwrap(),
+            rho_max: get("--rho-max", "0.5").parse().unwrap(),
+            rho_grow: get("--rho-grow", "1.25").parse().unwrap(),
+            init: get("--init", "ones"),
+            rank: get("--rank", "gain"),
+            tabu: get("--tabu", "0").parse().unwrap(),
+            anneal_tau: get("--anneal-tau", "0").parse().unwrap(),
+            anneal_decay: get("--anneal-decay", "0.5").parse().unwrap(),
+            max_iter: get("--max-iter", "10000").parse().unwrap(),
+            budget_s: get("--budget-s", "0").parse().unwrap(),
+        }
+    }
+}
+
+/// Initial sign vector on the half-ball of M from the `init` spec. `lift:` reads a phases file
+/// for M/2 and copies its signs onto the inner half-ball, +1 elsewhere (coarse-to-fine).
+fn jacobi_init(m: i64, hb: &[K], init: &str) -> Vec<i64> {
+    if init == "ones" { return vec![1; hb.len()]; }
+    if let Some(seed) = init.strip_prefix("random:") {
+        let seed: u64 = seed.parse().unwrap();
+        // the same LCG as phases_random, restricted to signs
+        let mut x = seed.wrapping_mul(2654435761) % (1u64 << 31);
+        return hb.iter().map(|_| { x = (1103515245u64.wrapping_mul(x) + 12345) % (1u64 << 31); if (x >> 16) & 1 == 1 { 1 } else { -1 } }).collect();
+    }
+    if let Some(path) = init.strip_prefix("file:") {
+        let ph = phases_read(path, m);
+        return hb.iter().map(|k| ph[k].im as i64).collect();
+    }
+    if let Some(path) = init.strip_prefix("lift:") {
+        let ph = phases_read(path, m / 2);
+        let found = hb.iter().filter(|k| ph.contains_key(k)).count();
+        eprintln!("   [align/jacobi] lifted {} signs from M={} onto {} classes (+1 elsewhere)", found, m / 2, hb.len());
+        return hb.iter().map(|k| ph.get(k).map_or(1, |c| c.im as i64)).collect();
+    }
+    panic!("unknown --init {}", init);
+}
+
+fn phases_adversarial_jacobi(m: i64, lam: f64, e0: f64, o: &JacobiOpts)
     -> std::collections::HashMap<K, C> {
     let hb = half_ball(m);
     let n = hb.len();
     let grid = Grid::new(m);
     let model = Model { nu: 0.0, engine: Engine::Fft, grid: None };
-    let mut signs: Vec<i64> = vec![1; n];
+    let mut signs: Vec<i64> = jacobi_init(m, &hb, &o.init);
+    let (rho0, max_iter) = (o.rho0, o.max_iter);
     let build = |signs: &Vec<i64>| -> (State, f64) {
         let phases: std::collections::HashMap<K, C> =
             hb.iter().zip(signs).map(|(k, &sg)| (*k, C::new(0.0, sg as f64))).collect();
@@ -1033,53 +1090,82 @@ fn phases_adversarial_jacobi(m: i64, lam: f64, e0: f64, rho0: f64, max_iter: usi
     let flam = f * lam;
     let mut p = model.production(&s, &b_fft(&s, &grid)).re;
     let mut rho = rho0;
+    let mut tau = o.anneal_tau;
     let t0 = std::time::Instant::now();
-    eprintln!("   [align/jacobi] M={} n={} grid={}^3 start |P|={:.6e} rho0={}", m, n, grid.n, p.abs(), rho0);
+    eprintln!("   [align/jacobi] M={} n={} grid={}^3 start |P|={:.6e} opts={:?}", m, n, grid.n, p.abs(), o);
     let mut it = 0usize;
     let mut flips_total = 0usize;
-    while it < max_iter {
+    let mut last_flip: Vec<usize> = vec![0; n];     // iteration of the last flip (tabu)
+    let (mut best_signs, mut best_p) = (signs.clone(), p);   // annealing may descend
+    let mut status = "max-iter";
+    // Screen accounting: every FFT objective evaluation (the start, each trial incl. failed
+    // retries) and every gradient; failed trials (halvings); the |P| trace, for the iteration at
+    // which the run first reached 99.9 % of its own final |P|.
+    let (mut n_obj, mut n_grad, mut n_fail) = (1usize, 0usize, 0usize);
+    let mut trace: Vec<(usize, f64)> = vec![(0, p.abs())];
+    'outer: while it < max_iter {
+        if o.budget_s > 0.0 && t0.elapsed().as_secs_f64() > o.budget_s {
+            eprintln!("   [align/jacobi] iter {} BUDGET: wall budget {} s exceeded ({:.1} s)", it, o.budget_s, t0.elapsed().as_secs_f64());
+            status = "budget"; break;
+        }
         it += 1;
         let (bb, yy, zz) = grad_p_fft(&s, &grid, false, false);
+        n_grad += 1;
         let dp = dp_dsigma(&s, &hb, &bb, &yy, &zz, flam);
-        // exact single-flip gain in |P|: |P + delta_j| - |P|
-        let mut gain: Vec<(f64, usize)> = (0..n).map(|j| {
+        // exact single-flip gain in |P|: |P + delta_j| - |P|; ranked by gain or by |delta|
+        let improvers: Vec<(f64, usize)> = (0..n).map(|j| {
             let delta = -2.0 * (signs[j] as f64) * dp[j];
-            ((p + delta).abs() - p.abs(), j)
+            let g = (p + delta).abs() - p.abs();
+            (if o.rank == "delta" { if g > 0.0 { delta.abs() } else { 0.0 } } else { g }, j)
         }).filter(|&(g, _)| g > 0.0).collect();
-        if gain.is_empty() {
+        if improvers.is_empty() {
             eprintln!("   [align/jacobi] iter {} converged: no single flip improves |P| ({:.1} s, {} flips total)",
                 it, t0.elapsed().as_secs_f64(), flips_total);
-            break;
+            status = "converged"; break;
         }
+        // Tabu filters the CANDIDATES, never the convergence test: if every improver is resting,
+        // tabu is ignored for this iteration (otherwise "converged" could be reported while
+        // improving flips exist).
+        let rested: Vec<(f64, usize)> = improvers.iter().copied()
+            .filter(|&(_, j)| o.tabu == 0 || last_flip[j] == 0 || it - last_flip[j] > o.tabu).collect();
+        let mut gain = if rested.is_empty() { improvers.clone() } else { rested };
         gain.sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap());
-        // damped step with exact acceptance
+        // damped step with exact acceptance (annealed: tolerate a bounded decrease of |P|)
         loop {
             let take = ((rho * n as f64).ceil() as usize).clamp(1, gain.len());
             let mut trial = signs.clone();
             for &(_, j) in &gain[..take] { trial[j] = -trial[j]; }
             let (st, _) = build(&trial);
             let pt = model.production(&st, &b_fft(&st, &grid)).re;
-            if pt.abs() > p.abs() {
+            n_obj += 1;
+            if pt.abs() > p.abs() * (1.0 - tau) {
+                for &(_, j) in &gain[..take] { last_flip[j] = it; }
                 signs = trial; s = st;
-                let improvers = gain.len();
                 p = pt;
                 flips_total += take;
-                eprintln!("   [align/jacobi] iter {:>4}: |P|={:.9e} flipped {:>6}/{:<6} improvers rho={:.4} ({:.1} s)",
-                    it, p.abs(), take, improvers, rho, t0.elapsed().as_secs_f64());
-                rho = (rho * 1.25).min(0.5);
+                if p.abs() > best_p.abs() { best_p = p; best_signs = signs.clone(); }
+                trace.push((it, best_p.abs()));
+                eprintln!("   [align/jacobi] iter {:>4}: |P|={:.9e} flipped {:>6}/{:<6} improvers rho={:.4} tau={:.1e} ({:.1} s)",
+                    it, p.abs(), take, improvers.len(), rho, tau, t0.elapsed().as_secs_f64());
+                rho = (rho * o.rho_grow).min(o.rho_max);
                 break;
             }
+            n_fail += 1;
             if take == 1 {
                 // A single exact-delta flip cannot fail to improve unless float error at the
-                // 1e-16 level says otherwise; treat that as convergence.
-                eprintln!("   [align/jacobi] iter {} converged: best single flip does not improve |P| in float ({:.1} s)",
+                // 1e-16 level says otherwise; a distinct stop reason (LL-18), not "converged".
+                eprintln!("   [align/jacobi] iter {} FLOAT-FLOOR: best single flip does not improve |P| in float ({:.1} s)",
                     it, t0.elapsed().as_secs_f64());
-                it = max_iter; break;
+                status = "float-floor"; break 'outer;
             }
             rho /= 2.0;
         }
+        tau *= o.anneal_decay;
     }
-    eprintln!("   [align/jacobi] final |P|={:.9e} after {} iterations, {} flips, {:.1} s", p.abs(), it, flips_total, t0.elapsed().as_secs_f64());
+    if best_p.abs() > p.abs() { signs = best_signs; p = best_p; }
+    let it999 = trace.iter().find(|&&(_, v)| v >= 0.999 * p.abs()).map_or(it, |&(i, _)| i);
+    eprintln!("   [align/jacobi] final |P|={:.9e} after {} iterations, {} flips, {:.1} s, status={}", p.abs(), it, flips_total, t0.elapsed().as_secs_f64(), status);
+    eprintln!("   [align/jacobi] accounting: gradients={} objective_evals={} failed_steps={} iter_to_99.9%={}", n_grad, n_obj, n_fail, it999);
     hb.iter().zip(&signs).map(|(k, &sg)| (*k, C::new(0.0, sg as f64))).collect()
 }
 
@@ -1182,13 +1268,12 @@ fn scout(args: &[String]) {
         if pin.is_empty() {
             let ckpt = get("--ckpt", "");
             let e0_for_align: f64 = get("--E0", "144").parse().unwrap();
-            let rho0: f64 = get("--rho", "0.1").parse().unwrap();
-            let max_iter: usize = get("--max-iter", "10000").parse().unwrap();
+            let jopts = JacobiOpts::from_args(&get);
             let start = get("--phases-start", "");
             let p = match align.as_str() {
                 "free" => phases_adversarial_free(m, &ckpt, &start),
                 "dirty" => phases_adversarial_dirty(m, &ckpt),
-                "jacobi" => phases_adversarial_jacobi(m, lam, e0_for_align, rho0, max_iter),
+                "jacobi" => phases_adversarial_jacobi(m, lam, e0_for_align, &jopts),
                 _ => phases_adversarial(m),
             };
             if !pout.is_empty() { phases_write(&pout, m, &p); }
