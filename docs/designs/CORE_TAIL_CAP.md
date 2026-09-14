@@ -877,6 +877,26 @@ and **no exact-integer `|S|`**, labelled as such.
 predictions about the greedy family and are *also* read against the new family; nothing above is
 amended after the `M = 64` sign vector exists.
 
+**Family-equivalence control result (2026-09-15, before the `M = 64` sign vector exists).** The
+`M = 32` optimiser screen (`SPECTRAL_ALIGNMENT.md` §3.2(C), stage 2) chose **H6 (`--tabu 3`)**
+outright — same exact `|S|` as the baseline Jacobi run, `13 %` fewer evaluations, no misfired
+rule (unlike the `M = 16` stage). H6's own `M = 32` phases differ from the greedy's optimum in
+49 of 68 532 signs (`0.07 %`) — the same order as `B0`'s. Its transient, run at the registered
+`S4f` protocol (both `dt` arms, readable: worst disagreement `1.25×10⁻⁵` in `D`):
+
+> **`Z_max/Z₀|_{M=32,\,H6} = 1.038575`**, vs the greedy's `1.0386`: `Δ = −2.5×10⁻⁵`.
+
+**Pass, by eight times the threshold margin** (`2×10⁻⁵` inside the registered `2×10⁻⁴` bound).
+The 49-sign difference is dynamically invisible at this precision. **The `M = 64` point extends
+the S-2…S-4 series**; no second series, no caveat. `exploration/scout_runs/S5_M32_familycheck_{a,b}.csv`.
+
+The `M = 64` alignment now launches with H6's schedule (`--tabu 3`), checkpointed
+(`SPECTRAL_ALIGNMENT.md` — a real bug in the un-checkpointed Jacobi loop was fixed and the
+resume path validated byte-identical before this run). Measured gradient cost `25.27 s` (§3.1)
+revises the wall estimate upward from the registered `~3 h` to **`~4–5 h`**; the run is given a
+`7 h` safety budget and is not itself a scientific claim — only its converged sign vector and
+the transient built from it are.
+
 ## 5. The certificate's arithmetic, built and measured (Tier B)
 
 The whole Core-Tail construction rests on one primitive: a **rigorous upper bound on the
