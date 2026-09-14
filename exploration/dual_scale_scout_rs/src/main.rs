@@ -1029,6 +1029,7 @@ struct JacobiOpts {
     anneal_decay: f64,  // tau *= decay each iteration
     max_iter: usize,
     budget_s: f64,      // wall budget; the run stops with status BUDGET when exceeded (0 = none)
+    ckpt: String,       // checkpoint path; saved after every accepted iteration, resumed if present
 }
 impl JacobiOpts {
     fn from_args(get: &dyn Fn(&str, &str) -> String) -> JacobiOpts {
@@ -1043,8 +1044,49 @@ impl JacobiOpts {
             anneal_decay: get("--anneal-decay", "0.5").parse().unwrap(),
             max_iter: get("--max-iter", "10000").parse().unwrap(),
             budget_s: get("--budget-s", "0").parse().unwrap(),
+            ckpt: get("--ckpt", ""),
         }
     }
+}
+
+/// Checkpoint format, one line of scalars then n sign lines (mirrors the free path's, plus the
+/// extra scalar state a Jacobi run needs to resume EXACTLY, not just re-seed): iteration, rho,
+/// tau, flips_total, n_grad, n_obj, n_fail, then `last_flip[j]` interleaved with the sign so tabu
+/// state survives resume. A checkpoint from a different M or n is refused, not silently reused.
+struct JacobiCkpt { it: usize, rho: f64, tau: f64, flips_total: usize, n_grad: usize, n_obj: usize, n_fail: usize,
+    signs: Vec<i64>, last_flip: Vec<usize> }
+
+fn jacobi_ckpt_load(path: &str, m: i64, n: usize) -> Option<JacobiCkpt> {
+    if path.is_empty() { return None; }
+    let text = std::fs::read_to_string(path).ok()?;
+    let mut lines = text.lines();
+    let hdr = lines.next()?;
+    let p: Vec<&str> = hdr.split_whitespace().collect();
+    assert!(p.len() >= 8 && p[1] == format!("M={}", m), "checkpoint {} is for another M", path);
+    let (it, rho, tau, flips_total, n_grad, n_obj, n_fail) = (
+        p[2].trim_start_matches("it=").parse().unwrap(), p[3].trim_start_matches("rho=").parse().unwrap(),
+        p[4].trim_start_matches("tau=").parse().unwrap(), p[5].trim_start_matches("flips=").parse().unwrap(),
+        p[6].trim_start_matches("grad=").parse().unwrap(), p[7].trim_start_matches("obj=").parse().unwrap(),
+        p[8].trim_start_matches("fail=").parse().unwrap());
+    let (mut signs, mut last_flip) = (Vec::with_capacity(n), Vec::with_capacity(n));
+    for l in lines {
+        let f: Vec<&str> = l.split_whitespace().collect();
+        signs.push(f[0].parse().unwrap()); last_flip.push(f[1].parse().unwrap());
+    }
+    assert_eq!(signs.len(), n, "checkpoint {} has {} signs, expected {}", path, signs.len(), n);
+    eprintln!("   [align/jacobi] RESUMED from {} after iteration {}", path, it);
+    Some(JacobiCkpt { it, rho, tau, flips_total, n_grad, n_obj, n_fail, signs, last_flip })
+}
+
+fn jacobi_ckpt_save(path: &str, m: i64, it: usize, rho: f64, tau: f64, flips_total: usize,
+    n_grad: usize, n_obj: usize, n_fail: usize, signs: &[i64], last_flip: &[usize]) {
+    if path.is_empty() { return; }
+    let mut t = format!("# M={} it={} rho={} tau={} flips={} grad={} obj={} fail={}\n",
+        m, it, rho, tau, flips_total, n_grad, n_obj, n_fail);
+    for (s, lf) in signs.iter().zip(last_flip) { t.push_str(&format!("{} {}\n", s, lf)); }
+    let tmp = format!("{}.tmp", path);
+    std::fs::write(&tmp, t).expect("write jacobi checkpoint");
+    std::fs::rename(&tmp, path).expect("rename jacobi checkpoint");   // atomic
 }
 
 /// Initial sign vector on the half-ball of M from the `init` spec. `lift:` reads a phases file
@@ -1076,7 +1118,8 @@ fn phases_adversarial_jacobi(m: i64, lam: f64, e0: f64, o: &JacobiOpts)
     let n = hb.len();
     let grid = Grid::new(m);
     let model = Model { nu: 0.0, engine: Engine::Fft, grid: None };
-    let mut signs: Vec<i64> = jacobi_init(m, &hb, &o.init);
+    let resumed = jacobi_ckpt_load(&o.ckpt, m, n);
+    let mut signs: Vec<i64> = resumed.as_ref().map_or_else(|| jacobi_init(m, &hb, &o.init), |c| c.signs.clone());
     let (rho0, max_iter) = (o.rho0, o.max_iter);
     let build = |signs: &Vec<i64>| -> (State, f64) {
         let phases: std::collections::HashMap<K, C> =
@@ -1089,20 +1132,23 @@ fn phases_adversarial_jacobi(m: i64, lam: f64, e0: f64, o: &JacobiOpts)
     let (mut s, f) = build(&signs);
     let flam = f * lam;
     let mut p = model.production(&s, &b_fft(&s, &grid)).re;
-    let mut rho = rho0;
-    let mut tau = o.anneal_tau;
+    let mut rho = resumed.as_ref().map_or(rho0, |c| c.rho);
+    let mut tau = resumed.as_ref().map_or(o.anneal_tau, |c| c.tau);
     let t0 = std::time::Instant::now();
     eprintln!("   [align/jacobi] M={} n={} grid={}^3 start |P|={:.6e} opts={:?}", m, n, grid.n, p.abs(), o);
-    let mut it = 0usize;
-    let mut flips_total = 0usize;
-    let mut last_flip: Vec<usize> = vec![0; n];     // iteration of the last flip (tabu)
+    let mut it = resumed.as_ref().map_or(0, |c| c.it);
+    let mut flips_total = resumed.as_ref().map_or(0, |c| c.flips_total);
+    // iteration of the last flip (tabu); resumed so tabu state survives a preemption exactly
+    let mut last_flip: Vec<usize> = resumed.as_ref().map_or_else(|| vec![0; n], |c| c.last_flip.clone());
     let (mut best_signs, mut best_p) = (signs.clone(), p);   // annealing may descend
     let mut status = "max-iter";
     // Screen accounting: every FFT objective evaluation (the start, each trial incl. failed
     // retries) and every gradient; failed trials (halvings); the |P| trace, for the iteration at
-    // which the run first reached 99.9 % of its own final |P|.
-    let (mut n_obj, mut n_grad, mut n_fail) = (1usize, 0usize, 0usize);
-    let mut trace: Vec<(usize, f64)> = vec![(0, p.abs())];
+    // which the run first reached 99.9 % of its own final |P|. Resumed counters continue; the
+    // trace restarts at the resumed |P| (it999 after a resume is measured from the resume point).
+    let (mut n_obj, mut n_grad, mut n_fail) = resumed.as_ref()
+        .map_or((1usize, 0usize, 0usize), |c| (c.n_obj, c.n_grad, c.n_fail));
+    let mut trace: Vec<(usize, f64)> = vec![(it, p.abs())];
     'outer: while it < max_iter {
         if o.budget_s > 0.0 && t0.elapsed().as_secs_f64() > o.budget_s {
             eprintln!("   [align/jacobi] iter {} BUDGET: wall budget {} s exceeded ({:.1} s)", it, o.budget_s, t0.elapsed().as_secs_f64());
@@ -1145,9 +1191,10 @@ fn phases_adversarial_jacobi(m: i64, lam: f64, e0: f64, o: &JacobiOpts)
                 flips_total += take;
                 if p.abs() > best_p.abs() { best_p = p; best_signs = signs.clone(); }
                 trace.push((it, best_p.abs()));
+                rho = (rho * o.rho_grow).min(o.rho_max);
+                jacobi_ckpt_save(&o.ckpt, m, it, rho, tau, flips_total, n_grad, n_obj, n_fail, &signs, &last_flip);
                 eprintln!("   [align/jacobi] iter {:>4}: |P|={:.9e} flipped {:>6}/{:<6} improvers rho={:.4} tau={:.1e} ({:.1} s)",
                     it, p.abs(), take, improvers.len(), rho, tau, t0.elapsed().as_secs_f64());
-                rho = (rho * o.rho_grow).min(o.rho_max);
                 break;
             }
             n_fail += 1;
