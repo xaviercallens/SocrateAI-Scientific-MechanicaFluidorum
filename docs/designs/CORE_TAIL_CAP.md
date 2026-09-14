@@ -804,6 +804,79 @@ own step-halving disagreement, not just its physical observables.
 
 ---
 
+#### 4.3.10 Pre-registration of the `M = 64` point (S-5) — written before the `M = 64` optimiser is chosen and before any `M = 64` object exists (2026-09-14, 22:10)
+
+`M = 64` became reachable by the spectral optimiser of `SPECTRAL_ALIGNMENT.md` (Jacobi sign
+ascent on the FFT gradient: `M = 32` in 9 min where the greedy took 22 h, exact `|S|` within
+`1.2×10⁻⁶` of the greedy's, and a strict local optimum of the exact objective at every `M`
+measured). The screen that picks its schedule is running at `M = 32` as this is written; this
+registration does not depend on which schedule wins, and says so where it matters.
+
+**Family.** The series `M = 2…32` is the *greedy* family. The `M = 64` sign vector will come from
+the screened optimiser. Whether that is the *same* family is not assumed: at `M = 16` three
+one-flag schedules returned the greedy's optimum **exactly** (all 8 538 signs), while the
+baseline schedule missed it by 40 signs; at `M = 32` the baseline misses by 49 of 68 532. Two
+consequences fixed now: (i) the initial excess `P/(νD₂)|₀` is *exactly* proportional to the
+optimiser's `|S|`, since `D₂` is sign-independent, so a `10⁻⁶` shortfall in `|S|` is invisible in
+it; (ii) whether the *dynamic* factors (injection, survival) are insensitive to a few tens of
+differing signs is **measured, not assumed**: before the `M = 64` transient runs, the `M = 32`
+transient is re-run from the screened optimiser's `M = 32` phases (`~30` min) and compared with
+the greedy's `1.0386`. **Family-equivalence control:** if `|ΔZ_max/Z₀| ≤ 2×10⁻⁴` (twice the
+halving precision), the `M = 64` point extends the series; otherwise it opens a second series and
+the brackets below are read against it with that caveat stated. Either outcome is reported.
+
+**The factors, each on its own trend (§4.3.6 method; inputs §4.3.6, §4.3.8):**
+
+| factor | `M = 2 … 32` | trend | **predicted at `M = 64`** |
+|---|---|---|---|
+| initial excess `P/(νD₂)`\|₀ | 1.604, 2.840, 4.115, 5.016, 6.604 | local exponent `0.82, 0.54, 0.29, 0.40` — fell three times then rose; bracket the exponent on its last two values `[0.29, 0.50]` | `[8.05, 9.34]` |
+| dephasing time `t_φ` | 0.059, 0.017, 0.004, 0.001, 0.0002 | exponent `−1.8, −2.1, −2.0, −2.3`; `M⁻²` to `M⁻²·³` | `[0.00004, 0.00005]`; `t_peak ≈ 0.00004` |
+| injection `ΔZ_inj/Z₀` | 0.0154, 0.0292, 0.0468, 0.0503, 0.0530 | exponent `0.92, 0.68, 0.10, 0.075`; bracket `[0, 0.10]` | `[0.0530, 0.0568]` |
+| survival fraction `e/ΔZ_inj` | 0.149, 0.418, 0.571, 0.644, 0.728 | increments `+0.27, +0.15, +0.07, +0.08` — stopped halving; bracket the next increment `[+0.04, +0.10]` | `[0.77, 0.83]` |
+
+**Route A — product of factors:** `e(64) ∈ [0.0408, 0.0471]`, i.e.
+
+> **`Z_max/Z₀|_{M=64} ∈ [1.041, 1.047]`.**
+
+**Route D — the §4.3.8 post-diction, now a prediction:** slow power law `e ∼ M^{0.27}` gives
+`e(64) = 0.0465`, **`1.0465`** — inside Route A, near its top. **Route B (saturation):** the
+excursion stops growing, `Z_max/Z₀ ≤ 1.040`. Route C (`(log₂M)²`, refitted at 32): `1.0562`.
+
+**Discrimination check.** Route A and D agree, so `M = 64` cannot separate "product of
+saturating-ish factors" from "slow power law" — stated plainly. What it *does* separate: Route B
+(`≤ 1.040`) from A/D (`≥ 1.041`) by `≥ 0.001`, ten times the `10⁻⁴` halving precision, and C
+(`1.056`) from A/D by `0.009`. **The question this point answers is whether the excursion is
+still growing at the sixth doubling**, not what law it follows.
+
+**Outcomes, fixed in advance:**
+
+| measured `Z_max/Z₀` at `M = 64` | reading |
+|---|---|
+| `≤ 1.040` | growth has stopped or reversed: the strongest saturation signal on this family; the `M^{0.27}` post-diction is dead |
+| in `[1.041, 1.047]` | still growing at ~`M^{1/4}`; both A and D survive and are indistinguishable here; the certificate's envelope must cover `≈ 4.5 %` and no turnover is in sight |
+| in `(1.047, 1.056)` | faster than every registered route except C; no candidate registered |
+| `≥ 1.056` | the `(log₂M)²` reading revives after two failures — the reversal count would then be four |
+
+**Protocol.** Every-step transient only: horizon `0.0005` (`≈ 12 t_peak`; at `M = 32` the
+excursion is back below `Z₀` by `2.2 t_peak`), `dt = 2.5×10⁻⁶` and its halving partner
+`1.25×10⁻⁶` (`≈ 16` samples to the predicted peak, as before), read only where `E` and `Z` agree
+within `2 %`. No long-horizon arm. Cost, extrapolated from the `M = 32` clock (`~3–4` s/step
+contended at `128³`) by the `9×` grid-volume ratio: `~30` s/step, `200 + 400` steps, **`~5 h`
+local**, both arms serial. Memory: `256³` arrays, `~3 GB` for the transient; the `M = 64`
+gradient is measured (one call) before anything is launched.
+
+**The exact evaluation at `M = 64`** (`--align free --phases-start`: class set, exact `|S|`, one
+verification sweep — each `O(|ball|²)`, `~64×` the `M = 32` passes) is **`~35–40 h` on this
+workstation, or `~20 h` on a 16-vCPU spot VM (`≈ $6`)**. It is the *only* `M = 64` job that
+is GCP-shaped, and it is not on the critical path of the transient: its outputs are the exact
+integer record and the "0 polish flips" check. It runs in parallel if the owner launches it; if
+not, the `M = 64` point is reported with the float `|P|` and the §2 constant (`10⁻⁹` relative)
+and **no exact-integer `|S|`**, labelled as such.
+
+**Withdrawal clause.** If the family-equivalence control fails, the brackets stand unchanged as
+predictions about the greedy family and are *also* read against the new family; nothing above is
+amended after the `M = 64` sign vector exists.
+
 ## 5. The certificate's arithmetic, built and measured (Tier B)
 
 The whole Core-Tail construction rests on one primitive: a **rigorous upper bound on the
