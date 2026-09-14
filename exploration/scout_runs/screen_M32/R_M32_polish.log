@@ -1,0 +1,9 @@
+   [align/free] M=32 classes=68532 dense state 1.4 MB
+   [align] phases read from /tmp/claude-1000/-home-xavkal-xdev-SocrateAI-Scientific-MechanicaFluidorum/a8c42e7f-96bf-4015-9ce0-3c94ea24b741/scratchpad/screen_M32/R_M32_phases.txt
+   [align/free] seeded 68532 of 68532 classes from /tmp/claude-1000/-home-xavkal-xdev-SocrateAI-Scientific-MechanicaFluidorum/a8c42e7f-96bf-4015-9ce0-3c94ea24b741/scratchpad/screen_M32/R_M32_phases.txt
+   [align/free] initial exact |S| = 455471158672505926960 (before any sweep)
+   [align/free] sweep 1 done, best=455471158672505926960 (865.1 s elapsed) -- converged
+   [align] phases written to /tmp/claude-1000/-home-xavkal-xdev-SocrateAI-Scientific-MechanicaFluidorum/a8c42e7f-96bf-4015-9ce0-3c94ea24b741/scratchpad/screen_M32/R_M32_polished.txt
+== scout: M=32 ic=adv nu=0.05 dt=0.00025 steps=0 lambda=-0.05 E0=144 engine=fft modes=137065 ==
+step,t,E,D,D2,P_re,P_im,ratio_energy,ratio_enstrophy
+0,0.000000,1.440000000e2,1.141322007e5,9.530833342e7,3.147221027e7,-4.555e-9,5515.044845,6.604293

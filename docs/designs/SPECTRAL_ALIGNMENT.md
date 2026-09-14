@@ -83,12 +83,18 @@ self-adjoint, so it commutes through. One gradient ≈ 3 RHS-equivalents ≈ **4
 | 8 | 32³ | **0.021 s** | | | 0.5 s | 24× |
 | 16 | 64³ | **0.195 s** | 9.3× | 9.6× | 11 s | 56× |
 | 32 | 128³ | **1.750 s** | 9.0× | 9.3× | 12 min | **410×** |
-| 64 | 256³ | ~16 s (extrapolated on the confirmed model) | | 9.1× | ~13 h | ~3 000× |
+| 64 | 256³ | **25.270 s** (measured, 2026-09-14, `gradcheck --M 64 --ic null`) | 14.4× | 9.1× | ~13 h | **~1 850×** |
 
-The model was written down first and the two measured doublings sit on it; the `M = 64` row is
-the only extrapolation and is labelled as one. (The memo's earlier pre-measurement guess was
-~5 s at `M = 32`; the measured figure is 1.75 s, since the adjoint reuses transforms rather than
-costing three full RHS evaluations.)
+The model was written down first and the two `M ≤ 32` doublings sit on it; `M = 64` was
+originally an extrapolation, labelled as one, and has since been **measured**: `25.270 s`,
+`14.4×` over `M = 32`'s `1.750 s` — a real deviation above the `9×` `O(N log N)` prediction, not
+a modelling error (the run's own Euler-identity check, which needs no oracle, held to
+`10⁻¹³` at this size, so the gradient is correct; the extra cost is elsewhere — plausibly cache
+behaviour at `256³`, not investigated further since the number is now measured either way).
+LL-22 again: a clock, not a model, decided this row. (The memo's earlier pre-measurement guess
+was ~5 s at `M = 32`; the measured figure was 1.75 s, since the adjoint reuses transforms rather
+than costing three full RHS evaluations — so the model has undershot once and overshot once,
+which is itself the reason not to extrapolate past a measured point.)
 
 Memory at `M = 64`: `256³` complex `f64` = 268 MB per array, ~20 arrays ≈ **5–6 GB**. Fits the
 workstation; comfortable on a 64 GB VM.

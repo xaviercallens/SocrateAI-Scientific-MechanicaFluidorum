@@ -1,0 +1,11 @@
+== R: B0 reference, M=32 ==
+  R Q0=455471158672505926960 E0=441 F0=21 P0=1 iters=210 wall=496.7 reproduces committed M=32 B0: PASS
+  H6: status=converged iters=192 C=384 C/E0=0.871 fails=0 Q=455471158672505926960 Q/Q0-1=+0.000e+00 sweeps=1 polish_flips=0 signs!=greedy=49 quality=tie cost=cheaper label=KEEP transfer=ok wall=500.5
+  H4: status=converged iters=199 C=412 C/E0=0.934 fails=14 Q=455471158672505926960 Q/Q0-1=+0.000e+00 sweeps=1 polish_flips=0 signs!=greedy=49 quality=tie cost=cost-tie label=TIE transfer=ok wall=636.1
+  H3: status=converged iters=203 C=426 C/E0=0.966 fails=20 Q=455471158672505926960 Q/Q0-1=+0.000e+00 sweeps=1 polish_flips=0 signs!=greedy=49 quality=tie cost=cost-tie label=TIE transfer=ok wall=469.0
+  H3+H4 (POST-HOC): status=converged iters=199 C=410 C/E0=0.930 fails=12 Q=455471158672505926960 Q/Q0-1=+0.000e+00 sweeps=1 polish_flips=0 signs!=greedy=49 quality=tie cost=cost-tie label=TIE transfer=n/a wall=455.2
+
+== TO M=64 ==
+  H6: --tabu 3
+== VOID ==
+  none
