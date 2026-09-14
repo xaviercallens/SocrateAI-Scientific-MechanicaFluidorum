@@ -1277,6 +1277,33 @@ number, and doubles as the check against the table version's 42-sweep sequence. 
 its own author: a cost quoted from a model instead of a clock. No `M = 32` claim, and no VM
 request, until it lands.**
 
+### Tier C — `M = 32`: the fifth point, outside its pre-registered bracket (2026-09-14)
+
+`CORE_TAIL_CAP.md` §4.3.6–4.3.8. Alignment converged at sweep 113 (sweep counts `9, 42, 113`),
+phases archived. Transient pair readable over the whole window (`3.05e-6` in `E`, `1.27e-5` in
+`Z`), both members identical to every printed digit.
+
+**Registered `[1.0300, 1.0377]` at `0c1c0f2` (23:44, before any `M = 32` trajectory). Measured
+`Z_max/Z₀ = 1.0386`. Outside by `+0.0009`**, in the pre-fixed outcome row *"neither model
+survives"*. Factor by factor: initial excess `6.604` above `[4.85, 5.38]`; injection `0.0530`
+inside `[0.0453, 0.0539]`; survival fraction `0.728` above `[0.663, 0.699]` — the miss is the
+survival fraction's this time, the reverse of `M = 16`.
+
+**The `M = 16` turnover did not continue.** Differences `+0.0099, +0.0145, +0.0057, +0.0062`;
+the admissibility fit on `M = 8, 16, 32` gives **`β = −0.121`, inadmissible** — the saturating
+form was inadmissible on three points, admissible on four, inadmissible on five. The last two
+doublings have a near-constant local exponent (`0.279, 0.253`): empirically a slow power law
+`e ∼ M^{0.27}`, recorded as a **post-diction, not a registration**; it predicts `1.046` at
+`M = 64`, which is unreachable by this search (~300 sweeps at 65× the cost).
+
+**Reading, in the programme's terms:** on the greedy family at fixed `E₀`, `ν`, the excursion
+grows across five doublings without saturating, at `~M^{1/4}`; `~4 %` at `M = 32`. Nothing about
+the dynamics' own worst case, strong nonlinearity, or the limit. **O5 stands. No verdict.**
+
+**Five points, three registered readings, three reversals** — each the honest fit to the data
+then in hand. The pre-registration did not make them right; it made their failure legible and
+factor-localised, and impossible to revise quietly.
+
 ### Cross-stream — RunuX proof kernel reviewed, two fixes merged (2026-09-13; no tier here)
 
 `docs/briefs/2026-09-13-runux-interval-arith-review.md` and the overnight brief §5. Not a claim

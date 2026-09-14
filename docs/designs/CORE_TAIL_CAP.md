@@ -621,6 +621,73 @@ exists to prevent.
 
 `Z₀ = 1.1413×10⁵`, `D₂ = 9.531×10⁷` at `t = 0`; `t_φ` predicted `0.00025`.
 
+#### 4.3.8 `M = 32` result: outside the bracket, in the row where both models die (2026-09-14, 05:10; data, no verdict)
+
+`S4f_M32_advm_{a,b}` — every step, horizon `0.01`, `dt = 2.5×10⁻⁵ / 1.25×10⁻⁵`. **Readable over the
+whole window**: worst disagreement `3.05×10⁻⁶` in `E`, `1.27×10⁻⁵` in `Z`, and both members
+return identical observables to every printed digit, so the ~10-sample peak in `_a` is confirmed
+resolved by the 20-sample `_b`.
+
+> **`Z_max/Z₀|_{M=32} = 1.0386`.** Registered bracket `[1.0300, 1.0377]`. **Outside, by `+0.0009`.**
+
+The outcome table of §4.3.6, written before the run, has a row for exactly this interval, and it
+is applied verbatim: *"in `(1.038, 1.045)`: saturating routes too pessimistic, divergent route
+too optimistic; neither model survives; a third increment fit is needed and I have no candidate
+registered."*
+
+| route | predicted | miss |
+|---|---|---|
+| A — product of factors | `[1.0300, 1.0377]` | `+0.0009` |
+| B — saturating fit `β = 1.347` | `1.0346` | `+0.0040` |
+| C — divergent `(log₂M)²` | `1.0506` | `−0.0120` |
+
+**Factor by factor**, which is the reason to have registered them separately:
+
+| factor | registered | measured | |
+|---|---|---|---|
+| initial excess | `[4.85, 5.38]` | **6.604** | above (§4.3.7) |
+| dephasing time `t_φ` | `0.00025` (`M⁻²`) | **0.00020** | inside 25 %; local exponent `2.32`, the one factor that behaved (`t_peak = 0.00015`) |
+| injection `ΔZ_inj/Z₀` | `[0.0453, 0.0539]` | **0.0530** | inside, top |
+| survival fraction | `[0.663, 0.699]` | **0.728** | above — its increments stopped halving |
+
+The miss on `Z_max/Z₀` is the survival fraction's, not the injection's — the reverse of `M = 16`,
+where the injection was the miss and the survival fraction was right. Two consecutive
+factor-level predictions, two different factors wrong. On this family, no single factor has been
+predictable from three of its own points twice running.
+
+**The series, final, and what it now looks like:**
+
+```
+                M =    2       4       8      16      32
+Z_max/Z₀ − 1      0.0023  0.0122  0.0267  0.0324  0.0386
+  differences         +0.0099 +0.0145 +0.0057 +0.0062      <- the M=16 turnover did not continue
+  local exponent      +2.407  +1.130  +0.279  +0.253       <- last two doublings: ~constant
+```
+
+The admissibility fit on `M = 8, 16, 32` returns **`β = −0.121`: inadmissible.** The saturating
+form was inadmissible on three points, admissible on four, and is inadmissible on five. Neither
+registered model describes the last three points; what does, empirically, is a **slow power law
+`e ∼ M^{0.27}`** — between saturation and `(log₂M)²`. That is recorded here as a **post-diction,
+labelled as one**, and is *not* retrofitted into the registration. Its prediction for the next
+point is `e(64) ≈ 0.046`, `Z_max/Z₀ ≈ 1.046` — which `M = 64` would test, if `M = 64` were
+reachable (it is not by this search: ~65× the per-sweep work and, on `9 → 42 → 113`, ~300
+sweeps).
+
+**What this says, in the terms of the programme.** On the greedy-aligned family at fixed `E₀`
+and `ν`, the transient enstrophy excursion grows with `M` across five doublings without
+saturating, at a rate that has settled near `M^{1/4}`. It says nothing about the dynamics' own
+worst case, nothing about strong nonlinearity, nothing about the limit; a `M^{1/4}` excursion on
+a constructed family is not a counterexample to anything. **O5 stands.** What it supplies to the
+certificate is unchanged in kind and sharpened in degree: the envelope must cover a transient
+whose excess is `~4 %` at `M = 32` and not yet turning over.
+
+**And the methodological finding, which is larger than the number.** Five points, three
+registered readings, three reversals: divergent on three points, saturating on four, neither on
+five. Every one of those readings was the honest fit to the data then in hand, and every one was
+overturned by the next doubling. The pre-registration did not make the predictions right — it
+made their failure *legible*, localised to a factor each time, and impossible to quietly revise.
+That is its entire value, and this is the cleanest demonstration of it the programme has.
+
 ##### The long-horizon arm at `M = 16` is NOT READABLE past `t ≈ 0.85`, and is reported as such
 
 The horizon-6 halving pairs completed (`S3_M16_adv{m,p}_{a,b}`, `dt = 2.5e-4 / 1.25e-4`, 601 rows

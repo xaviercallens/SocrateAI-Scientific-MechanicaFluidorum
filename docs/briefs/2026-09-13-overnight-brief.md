@@ -223,6 +223,25 @@ a proof error. A two-gate system is blind to cost, to interpretation, and to its
 - **The RunuX advisor PR**, and whether `v0.4.0-leanflow` gets a `v0.4.1` note, since its
   evidence line ("13/13") describes a suite that cannot fail.
 
+## 10. Addendum, the second night — `M = 32` (2026-09-14, 05:10)
+
+The alignment converged at **sweep 113** (`9 → 42 → 113`; every bracket on the count was low),
+after one OOM kill at sweep 14 that the checkpoint turned into a twelve-minute loss. The
+transient pair is readable over the whole window (`3×10⁻⁶` in `E`, `1×10⁻⁵` in `Z`).
+
+**Pre-registered at `0c1c0f2` (23:44, factor by factor, before any `M = 32` trajectory):
+`Z_max/Z₀ ∈ [1.0300, 1.0377]`. Measured: `1.0386`. Outside by `+0.0009`**, in the outcome row
+fixed in advance as *"neither model survives"*. The initial excess (`6.604` vs `[4.85, 5.38]`)
+and the survival fraction (`0.728` vs `[0.663, 0.699]`) were the misses; the injection was
+inside. **The `M = 16` turnover did not continue** — differences `+0.0057 → +0.0062`, and the
+saturating fit is inadmissible again (`β = −0.121`). The last two doublings sit on a slow power
+law `∼ M^{0.27}`, recorded as a post-diction. Five points, three registered readings, three
+reversals; O5 stands; no verdict. The next point, `M = 64`, is unreachable by this search
+(~300 sweeps at 65× the cost) and needs a different one.
+
+GCP was never provisioned — `gcloud` remained denied — so **\$0 was spent** and there is nothing
+to release. The scripts are in `exploration/gcp/` for the next size.
+
 ## 9. State of the record
 
 MechanicaFluidorum: both gates green at `3c8011f`, released **`v1.5.0`**, 193 kernel-verified

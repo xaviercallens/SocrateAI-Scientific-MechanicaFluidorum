@@ -661,6 +661,19 @@ that evening: `Z_max/Z₀ = 1.0324` at `M = 16`. The increments of every series 
 returns **`β = +1.347`** — admissible, where twelve hours earlier on `M = 2, 4, 8` it returned
 `β = −0.53` and supported a confidently divergent reading.
 
+**SECOND SEQUEL, the following night: the fifth point reversed the fourth's reading too.**
+`M = 32` came in at `1.0386`, outside a factor-by-factor bracket of `[1.0300, 1.0377]`; the
+differences went `+0.0057 → +0.0062`, and the admissibility fit on `M = 8, 16, 32` returned
+`β = −0.121`. Inadmissible on three points, admissible on four, inadmissible on five. The last
+two doublings show a near-constant exponent `~0.27` — a slow power law neither registered model
+contains. Three readings, three reversals, each the honest fit to the data in hand. **The
+lesson has stopped being "fit the form and check admissibility" and become: on this family,
+no three-point extrapolation has survived the next doubling, three times running. Register the
+next bracket from the factors' historical *ranges of exponents*, not from their trends — and
+say, in the registration, that the family has reversed every trend so far.** What the
+discipline delivered was not correct predictions but *legible, factor-localised failures* that
+could not be revised after the fact; that is worth more than the predictions would have been.
+
 So the rule survives and the *reading* did not. Both readings were exact three-parameter fits to
 three points, and the two disagreed in sign. **The lesson is therefore stronger than first
 written: the admissibility test is necessary and nowhere near sufficient, and an exact fit to as

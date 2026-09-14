@@ -42,6 +42,17 @@ the *whole series* re-measured on one uniform grid, so the four points are compa
 `S2f` value to `2e-4`; only the `M = 16` injection integral was under-integrated, by 4 %. The
 `S3ff_*` values are the ones read in `CORE_TAIL_CAP.md` §4.3.4.
 
+## Protocol S-4 — the `M = 32` point (registered in `CORE_TAIL_CAP.md` §4.3.6 before the run)
+
+| file | what |
+|---|---|
+| `S4_M32_phases.txt` | converged greedy alignment, 68 532 signs; table-free algorithm, sweep 113 |
+| `S4_M32_align.log` | the full sweep log including the OOM kill at sweep 14 and the `RESUMED` line |
+| `S4f_M32_advm_{a,b}` | every-step transient, horizon 0.01, `dt = 2.5e-5` / `1.25e-5` (`_b` every 2) |
+
+No horizon-6 arm: not readable at `M = 16` and not what the question asks. Result
+`Z_max/Z₀ = 1.0386`, outside the pre-registered `[1.0300, 1.0377]`; see §4.3.8.
+
 Columns: `step,t,E,D,D2,P_re,P_im,ratio_energy,ratio_enstrophy` with `D = Z = Σ|k|²|u_k|²`,
 `D2 = Σ|k|⁴|u_k|²`, `P` the enstrophy production, `ratio_energy = P/(νD)`,
 `ratio_enstrophy = P/(νD2)` (`> 1` ⟺ enstrophy increasing).
