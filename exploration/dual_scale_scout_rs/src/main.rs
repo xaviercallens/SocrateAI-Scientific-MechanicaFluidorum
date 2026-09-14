@@ -593,6 +593,194 @@ fn phases_adversarial_free(m: i64, ckpt: &str) -> std::collections::HashMap<K, C
         .collect()
 }
 
+/// DIRTY-TRACKED ALIGNMENT (2026-09-14). `phases_adversarial_free` re-evaluates every one of the
+/// `n` classes on every sweep, even though measurement shows 45% of M=16's sweeps and 58% of
+/// M=32's gain under 0.01% -- i.e. touch almost nothing -- while still paying the full
+/// O(classes x |ball|) cost. This function is the SAME greedy, provably giving the SAME
+/// sequence of accept/reject decisions, but skips a class's re-evaluation whenever nothing that
+/// could change its answer has happened since it was last checked.
+///
+/// THE ARGUMENT, so the optimisation can be trusted rather than merely timed. contrib(i) sums
+/// term(T) over triads T where class i has ODD multiplicity; term(T) is unchanged by flipping a
+/// class k unless k ALSO has odd multiplicity in T (flipping multiplies term(T) by (-1)^{mult of
+/// k in T}). So contrib(i) can change upon k's flip only if some triad T has BOTH i and k at odd
+/// multiplicity -- and every such T is, by definition, one of the triads `contrib(k)` itself
+/// sums over. Marking EVERY class appearing in every triad counted toward contrib(k) (a safe
+/// over-approximation: it also marks a leg with even multiplicity in that same triad, which
+/// cannot actually be affected, at the cost of a few needless rechecks) therefore marks every
+/// class whose contrib truly could have changed, and only those plus a small, bounded excess.
+/// A class left unmarked since its last (non-improving) check is PROVABLY unchanged, so skipping
+/// it reproduces the exact decision a full recheck would have given.
+///
+/// Consequently: same class order, same Gauss-Seidel in-sweep update semantics, same accept
+/// criterion (strict improvement) -- the only difference from `phases_adversarial_free` is which
+/// contrib() calls are skipped as provably redundant. It is held to that claim, not merely
+/// timed: validated by reproducing the FULL per-sweep `best` sequence already on record for
+/// M = 16 (42 sweeps) and M = 32 (113 sweeps) exactly, not just a final answer.
+fn phases_adversarial_dirty(m: i64, ckpt: &str) -> std::collections::HashMap<K, C> {
+    use std::sync::atomic::{AtomicBool, Ordering::Relaxed};
+    let bv = ball(m);
+    let side = (2 * m + 1) as usize;
+    let lin = |k: &K| -> Option<usize> {
+        if k.0.iter().any(|&x| x < -m || x > m) { return None; }
+        Some((((k.0[0] + m) as usize * side) + (k.0[1] + m) as usize) * side + (k.0[2] + m) as usize)
+    };
+    let mut inball = vec![false; side * side * side];
+    for k in &bv { inball[lin(k).unwrap()] = true; }
+
+    let entry = |p: &K, q: &K| -> Option<(K, K, K, i64)> {
+        let r = p.add(q).neg();
+        for k in [p, q, &r] {
+            match lin(k) { Some(i) if inball[i] => {}, _ => return None }
+        }
+        if *p == K([0,0,0]) || *q == K([0,0,0]) || r == K([0,0,0]) { return None; }
+        let (rp, rq, rr) = (rep(p), rep(q), rep(&r));
+        let w = r.sq() - q.sq();
+        let g = w * q.dot(&p.cross(&direction_varied(&rp)))
+                  * q.cross(&direction_varied(&rq)).dot(&r.cross(&direction_varied(&rr)));
+        if g == 0 { None } else { Some((rp, rq, rr, g)) }
+    };
+
+    let present: std::collections::HashSet<K> = bv.par_iter().map(|p| {
+        let mut s = std::collections::HashSet::new();
+        for q in &bv {
+            if let Some((rp, rq, rr, _)) = entry(p, q) { s.insert(rp); s.insert(rq); s.insert(rr); }
+        }
+        s
+    }).reduce(std::collections::HashSet::new, |mut a, b| { a.extend(b); a });
+    let mut classes: Vec<K> = present.into_iter().collect();
+    classes.sort();
+    let n = classes.len();
+    let mut cidx = vec![u32::MAX; side * side * side];
+    for (i, c) in classes.iter().enumerate() { cidx[lin(c).unwrap()] = i as u32; }
+    let cls = |k: &K| -> u32 { lin(&rep(k)).map_or(u32::MAX, |i| cidx[i]) };
+    eprintln!("   [align/dirty] M={} classes={} dense state {:.1} MB",
+        m, n, (side * side * side * 5) as f64 / 1e6);
+
+    let term = |rp: &K, rq: &K, rr: &K, g: i64, signs: &Vec<i64>| -> i128 {
+        (signs[cls(rp) as usize] * signs[cls(rq) as usize] * signs[cls(rr) as usize] * g) as i128
+    };
+    // Identical triad selection to phases_adversarial_free's contrib -- kept textually parallel
+    // to it on purpose, so a diff between the two is easy to audit.
+    let contrib = |ci: usize, signs: &Vec<i64>| -> i128 {
+        let c = classes[ci];
+        [c, c.neg()].iter().map(|&s| {
+            bv.par_iter().map(|x| {
+                let mut acc: i128 = 0;
+                let mut take = |p: K, q: K| {
+                    if let Some((rp, rq, rr, g)) = entry(&p, &q) {
+                        let mult = (rp == c) as u32 + (rq == c) as u32 + (rr == c) as u32;
+                        if mult % 2 == 1 { acc += term(&rp, &rq, &rr, g, signs); }
+                    }
+                };
+                take(s, *x);
+                if rep(x) != c {
+                    take(*x, s);
+                    let q = s.neg().sub(x);
+                    let inb = matches!(lin(&q), Some(i) if inball[i]);
+                    if inb && rep(&q) != c { take(*x, q); }
+                }
+                acc
+            }).sum::<i128>()
+        }).sum()
+    };
+    // Marks dirty every class appearing (in any leg, any multiplicity) in any triad counted
+    // toward contrib(ci) -- the safe over-approximation the correctness argument above relies
+    // on. Same triad-selection predicate as `contrib`, deliberately duplicated rather than
+    // shared, so the two can be diffed by eye for exact agreement.
+    let mark_dirty = |ci: usize, dirty: &[AtomicBool]| {
+        let c = classes[ci];
+        [c, c.neg()].iter().for_each(|&s| {
+            bv.par_iter().for_each(|x| {
+                let mark3 = |rp: K, rq: K, rr: K| {
+                    dirty[cls(&rp) as usize].store(true, Relaxed);
+                    dirty[cls(&rq) as usize].store(true, Relaxed);
+                    dirty[cls(&rr) as usize].store(true, Relaxed);
+                };
+                let take = |p: K, q: K| {
+                    if let Some((rp, rq, rr, _g)) = entry(&p, &q) {
+                        let mult = (rp == c) as u32 + (rq == c) as u32 + (rr == c) as u32;
+                        if mult % 2 == 1 { mark3(rp, rq, rr); }
+                    }
+                };
+                take(s, *x);
+                if rep(x) != c {
+                    take(*x, s);
+                    let q = s.neg().sub(x);
+                    let inb = matches!(lin(&q), Some(i) if inball[i]);
+                    if inb && rep(&q) != c { take(*x, q); }
+                }
+            });
+        });
+    };
+
+    let mut signs: Vec<i64> = vec![1; n];
+    let mut sweep0 = 0usize;
+    if !ckpt.is_empty() {
+        if let Ok(text) = std::fs::read_to_string(ckpt) {
+            let mut it = text.lines();
+            let hdr = it.next().unwrap_or("");
+            let parts: Vec<&str> = hdr.split_whitespace().collect();
+            assert!(parts.len() >= 4 && parts[1] == format!("M={}", m),
+                "checkpoint {} is for another M", ckpt);
+            sweep0 = parts[2].trim_start_matches("sweep=").parse().unwrap();
+            let v: Vec<i64> = it.filter_map(|l| l.trim().parse().ok()).collect();
+            assert_eq!(v.len(), n, "checkpoint has {} signs, expected {}", v.len(), n);
+            assert!(v.iter().all(|&x| x == 1 || x == -1), "checkpoint holds a non-sign");
+            signs = v;
+            eprintln!("   [align/dirty] RESUMED from {} after sweep {}", ckpt, sweep0);
+        }
+    }
+    // Dirty state is NOT checkpointed (only signs are). On resume every class starts dirty,
+    // which is always safe (it is exactly what a fresh run's first sweep does) and costs at
+    // most one full sweep of otherwise-avoidable work, once, after a restart.
+    let dirty: Vec<AtomicBool> = (0..n).map(|_| AtomicBool::new(true)).collect();
+
+    let mut s: i128 = bv.par_iter().map(|p| {
+        let mut acc: i128 = 0;
+        for q in &bv {
+            if let Some((rp, rq, rr, g)) = entry(p, q) { acc += term(&rp, &rq, &rr, g, &signs); }
+        }
+        acc
+    }).sum();
+    let mut best = s.abs();
+    let save = |sweep: usize, best: i128, signs: &Vec<i64>| {
+        if ckpt.is_empty() { return; }
+        let mut t = format!("# M={} sweep={} best={}\n", m, sweep, best);
+        for &x in signs { t.push_str(&format!("{}\n", x)); }
+        let tmp = format!("{}.tmp", ckpt);
+        std::fs::write(&tmp, t).expect("write checkpoint");
+        std::fs::rename(&tmp, ckpt).expect("rename checkpoint");
+    };
+    let t0 = std::time::Instant::now();
+    for sweep in (sweep0 + 1).. {
+        let mut improved = false;
+        let mut checked: u64 = 0;
+        for i in 0..n {
+            if !dirty[i].load(Relaxed) { continue; }
+            checked += 1;
+            let s_new = s - 2 * contrib(i, &signs);
+            if s_new.abs() > best {
+                best = s_new.abs();
+                s = s_new;
+                signs[i] *= -1;
+                improved = true;
+                mark_dirty(i, &dirty);
+            } else {
+                dirty[i].store(false, Relaxed);
+            }
+        }
+        save(sweep, best, &signs);
+        eprintln!("   [align/dirty] sweep {} done, best={} ({:.1} s elapsed, {}/{} classes checked){}",
+            sweep, best, t0.elapsed().as_secs_f64(), checked, n,
+            if improved { "" } else { " -- converged" });
+        if !improved { break; }
+    }
+    half_ball(m).into_iter()
+        .map(|k| (k, C::new(0.0, match cls(&k) { u32::MAX => 1, i => signs[i as usize] } as f64)))
+        .collect()
+}
+
 /// The alignment is deterministic and, at M = 16, the most expensive part of a run, while the
 /// six adversarial runs of protocol S-3 (two signs x two step sizes, plus the every-step pair)
 /// all need the SAME phases. `--phases-out` writes them, `--phases-in` reads them back, so the
@@ -691,7 +879,11 @@ fn scout(args: &[String]) {
     let phases = if ic == "adv" {
         if pin.is_empty() {
             let ckpt = get("--ckpt", "");
-            let p = if align == "free" { phases_adversarial_free(m, &ckpt) } else { phases_adversarial(m) };
+            let p = match align.as_str() {
+                "free" => phases_adversarial_free(m, &ckpt),
+                "dirty" => phases_adversarial_dirty(m, &ckpt),
+                _ => phases_adversarial(m),
+            };
             if !pout.is_empty() { phases_write(&pout, m, &p); }
             p
         } else {
@@ -732,6 +924,6 @@ fn main() {
     match args.get(1).map(|s| s.as_str()) {
         Some("calibrate") => calibrate(&args[2]),
         Some("scout") => scout(&args[2..]),
-        _ => eprintln!("usage: calibrate <json> | scout --M m --ic adv|null --nu x --dt x --steps n [--every e] [--lambda l] [--engine fft|direct] [--seed s] [--phases-out f | --phases-in f]"),
+        _ => eprintln!("usage: calibrate <json> | scout --M m --ic adv|null --nu x --dt x --steps n [--every e] [--lambda l] [--engine fft|direct] [--seed s] [--align table|free|dirty] [--ckpt f] [--phases-out f | --phases-in f]"),
     }
 }

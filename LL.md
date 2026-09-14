@@ -848,11 +848,49 @@ that subsume the denials**, and do not rely on an agent's restraint for a bounda
 especially before granting unattended overnight compute, which is exactly when nobody is
 watching. Cheap to verify on a settings file; expensive to discover on a proof.
 
+## LL-27 — a provably-correct optimisation can still be a net loss; the theory bounds the win, only the clock proves it (2026-09-14)
+
+**Incident.** `M = 32`'s alignment spent 58% of its sweeps gaining under 0.01% each while still
+paying a full `O(classes × |ball|)` sweep, because every class is re-checked every sweep
+regardless of relevance. The fix implemented — dirty-tracking, skip a class whenever nothing
+that could change its answer has happened since its last check — has a tight, checkable
+correctness argument (`CORE_TAIL_CAP.md` §4.3.9): a class's contribution can only change via a
+triad shared with a class that just flipped, and marking every class in every triad a flip
+touches is a provable superset of the classes that could actually be affected. It was validated
+against ground truth already on record — not a fresh small run, but the *entire* 42-sweep `best`
+sequence for `M = 16` and the converged phases file, both reproduced **digit for digit / byte for
+byte**. The correctness claim is airtight.
+
+**It is a net loss anyway.** Fair, uncontended, same-box timing: `free` (the unoptimised
+baseline) converged in `468.4 s`; `dirty` took `494.0 s` — **5.5% slower**. The aggregate
+reduction in `contrib()` calls was `1.2%`: every one of the first 39 of 42 sweeps checked *all*
+8 538 classes, because even the final sweep's handful of flips dirtied over half the class set.
+The bookkeeping (an atomic flag check on every class, every sweep, plus an extra marking pass on
+every accepted flip) cost more than the skips it bought.
+
+**Rule.** A correctness argument bounds what an optimisation is *allowed* to skip; it says
+nothing about how much it *will* skip on the object actually in front of you. Whether a
+theoretically-sound worklist/dirty-tracking scheme pays off depends entirely on the sparsity of
+the underlying dependency structure, which is an empirical property of the *specific problem*,
+not of the technique. **Measure the aggregate skip rate and the wall-clock time against a fair
+(uncontended, same-box) baseline before trusting a "smarter" algorithm is actually smarter** —
+the same discipline this repo already applies to cost models (LL-22), applied one level up, to
+an optimisation *of* a cost model rather than to the raw cost itself.
+
+**Corollary, and the reason to keep the negative result.** The two prior optimisations at this
+scale — the incremental delta-sum and the table-free enumeration — were also "provably the same
+algorithm, just cheaper" and both delivered large, measured wins (2846× and smaller-and-faster
+respectively). This one is provably the same algorithm and delivers *no* win. Reporting only the
+successes would make "provably correct → measure it → it'll be faster" look like a pattern; it
+isn't. The failure is informative about the object itself: the triad co-occurrence structure
+this programme is searching over is close to dense, not locally sparse, which is worth knowing
+independently of whether this particular optimisation shipped.
+
 ---
 
 # Synthesis — the three blind spots of a two-gate system
 
-LL-20 through LL-25 are one pattern, and it is not the control pattern below. Every one of them
+LL-20 through LL-27 are one pattern, and it is not the control pattern below. Every one of them
 occurred with **both gates green**, and none of them is a proof error:
 
 | Lesson | What was wrong | Why no gate could see it |
@@ -864,6 +902,7 @@ occurred with **both gates green**, and none of them is a proof error:
 | LL-24 | A product observable's composite was extrapolated instead of its factors; the pre-registered bracket was falsified | Gates check identities, not the structure of a forecast |
 | LL-25 | An aggregate was read off a file a background job was still writing | A truncated file and a finished one look identical to a row reader |
 | LL-26 | Four unattended jobs OOM-killed by desktop pressure they did not cause; no checkpoint, 1.5 h lost | Neither gate models the machine the work runs on |
+| LL-27 | A provably-correct optimisation, validated bit-identical, was 5.5% *slower* in wall clock | Gates check correctness, never whether a "faster" algorithm actually is |
 
 **The three blind spots, stated for the next campaign:**
 

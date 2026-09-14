@@ -53,6 +53,15 @@ the *whole series* re-measured on one uniform grid, so the four points are compa
 No horizon-6 arm: not readable at `M = 16` and not what the question asks. Result
 `Z_max/Z₀ = 1.0386`, outside the pre-registered `[1.0300, 1.0377]`; see §4.3.8.
 
+## Dirty-tracking alignment: a validated, net-negative optimisation (`CORE_TAIL_CAP.md` §4.3.9)
+
+`S3_M16_align_dirty.log` — the `--align dirty` variant run to convergence at `M = 16`, all 42
+`best` values digit-identical to `S3_M16_align_free.log`. `S3_M16_align_free_uncontended.log` —
+`--align free` re-run uncontended on the same box for a fair timing comparison (the archived
+`S3_M16_align_free.log` was itself run under contention). Result: `free` `468.4 s` vs `dirty`
+`494.0 s` — dirty-tracking is correct and **5.5 % slower**. Kept as a validated negative result,
+per LL-27.
+
 Columns: `step,t,E,D,D2,P_re,P_im,ratio_energy,ratio_enstrophy` with `D = Z = Σ|k|²|u_k|²`,
 `D2 = Σ|k|⁴|u_k|²`, `P` the enstrophy production, `ratio_energy = P/(νD)`,
 `ratio_enstrophy = P/(νD2)` (`> 1` ⟺ enstrophy increasing).

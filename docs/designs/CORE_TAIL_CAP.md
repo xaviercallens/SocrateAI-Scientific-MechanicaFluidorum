@@ -688,6 +688,70 @@ overturned by the next doubling. The pre-registration did not make the predictio
 made their failure *legible*, localised to a factor each time, and impossible to quietly revise.
 That is its entire value, and this is the cleanest demonstration of it the programme has.
 
+#### 4.3.9 One candidate for "a different search" tried, and it is a net loss — recorded honestly (2026-09-14)
+
+`M = 64`'s wall is 58% of `M = 32`'s sweeps (45% of `M = 16`'s) gaining under 0.01% each while
+still paying the full `O(classes × |ball|)` cost of a sweep, because every class is re-evaluated
+every sweep regardless of whether anything relevant to it changed. The natural fix is a
+**dirty-tracking** worklist: skip a class's re-evaluation whenever nothing that could change its
+answer has happened since it was last checked.
+
+**The correctness argument, stated because it is what makes the result trustworthy rather than
+just fast or slow.** `contrib(i)` sums `term(T)` over triads `T` where class `i` has odd
+multiplicity; `term(T)` is unchanged by flipping class `k` unless `k` *also* has odd multiplicity
+in `T` (flipping multiplies `term(T)` by `(−1)^{mult of k in T}`). So `contrib(i)` can change upon
+`k`'s flip only if some triad has both `i` and `k` at odd multiplicity — and every such triad is,
+by construction, one of the triads `contrib(k)` itself sums over. Marking every class appearing
+in every triad counted toward `contrib(k)` (a safe over-approximation: it also marks a leg with
+even multiplicity in that same triad, which cannot actually be affected) therefore marks every
+class whose `contrib` truly could have changed, and only a small, bounded excess beyond that. A
+class left unmarked since its last non-improving check is provably unchanged, so skipping it
+reproduces the exact decision a full recheck would give — same class order, same in-sweep
+Gauss–Seidel semantics, same accept criterion; only which `contrib()` calls are skipped as
+provably redundant differs from `phases_adversarial_free`.
+
+**Held to that standard, not merely timed.** Implemented as a separate function (`--align
+dirty`, `phases_adversarial_dirty`), touching nothing in the validated `free` path. Validated
+against `M = 8`: output CSV byte-identical to the archive. Validated against `M = 16`: **every
+one of the 42 recorded `best` values reproduced digit for digit, and the converged phases file
+byte-identical** — the strongest cross-check available, since the full ground truth was already
+on record rather than freshly generated.
+
+**And it is a net loss.** Fair, uncontended, same-box comparison at `M = 16`:
+
+| | wall time | sweeps |
+|---|---|---|
+| `free` (unoptimized) | `468.4 s` | 42 |
+| `dirty` (tracked) | `494.0 s` | 42 |
+
+**`dirty` is 5.5% *slower*.** Across the whole run it performed `354 438` `contrib()` calls
+against `358 596` for a full scan every sweep — a **1.2% reduction**, not enough to pay for the
+atomic dirty-flag bookkeeping on every class every sweep plus the extra `mark_dirty` pass on
+every accepted flip. Sweep-by-sweep: **every one of the first 39 sweeps checked all 8 538
+classes**; the first skip (8 537/8 538) appears at sweep 40; the final, confirming sweep (no
+flips) still had to check 4 384/8 538 (51%), because the handful of flips in sweep 41 alone
+dirtied over half the class set.
+
+**Why: the object appears to be structurally dense, not just conservatively marked.** For a
+fixed class, `contrib`'s enumeration ranges over the *whole* ball, and the resulting partner
+classes span a large fraction of all classes rather than a local neighbourhood — unlike a
+spatially local PDE discretisation, "adjacency" in this triad structure looks close to
+all-to-all. That even the *final* sweep's few flips dirty over half the classes is evidence for
+this, though it is not conclusive: the marking rule above is a safe over-approximation (it marks
+a triad's other legs unconditionally, not only when their own multiplicity in that triad is also
+odd), and a precise version might dirty fewer classes. **That precise version is not
+implemented or tested here** — recorded as the one open thread, not as a hidden justification for
+trying again.
+
+**Consequence for `M = 64`.** The natural "smarter search" has been tried and does not help.
+`M = 64` remains unreachable by this algorithm family as measured (~300 sweeps at ~65× the
+per-sweep cost of `M = 32`, itself now known to gain nothing from dirty-tracking); reaching it
+needs either a genuinely different algorithm (not a worklist optimisation on this one) or is not
+worth reaching by this route at all. The code is kept (`--align dirty`, both `main.rs` and the
+`docs/gcp` scripts still call `--align free`) because it is correct and the negative result is
+itself the finding — not deleted, per the standing rule that a control which fails to help is
+reported, not quietly removed.
+
 ##### The long-horizon arm at `M = 16` is NOT READABLE past `t ≈ 0.85`, and is reported as such
 
 The horizon-6 halving pairs completed (`S3_M16_adv{m,p}_{a,b}`, `dt = 2.5e-4 / 1.25e-4`, 601 rows

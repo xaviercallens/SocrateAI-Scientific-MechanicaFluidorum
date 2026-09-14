@@ -1296,6 +1296,17 @@ doublings have a near-constant local exponent (`0.279, 0.253`): empirically a sl
 `e ∼ M^{0.27}`, recorded as a **post-diction, not a registration**; it predicts `1.046` at
 `M = 64`, which is unreachable by this search (~300 sweeps at 65× the cost).
 
+**The natural fix for that cost was tried and is a net loss (`CORE_TAIL_CAP.md` §4.3.9, `LL.md`
+LL-27).** Dirty-tracking — skip a class's re-check whenever nothing that could change its answer
+has happened since its last check — has a tight correctness argument and was validated against
+the **full recorded `M = 16` ground truth**: all 42 `best` values digit-for-digit, phases file
+byte-identical. Fair uncontended timing: `free` `468.4 s` vs `dirty` `494.0 s` — **5.5% slower**,
+a `1.2%` reduction in `contrib()` calls that does not cover its own bookkeeping. Even the final
+converging sweep's handful of flips dirtied over half the class set: the triad structure appears
+close to dense, not locally sparse. `M = 64` remains unreachable by this algorithm family; it
+needs a genuinely different algorithm, not a worklist optimisation on this one. Kept in the tree
+(`--align dirty`) as a validated negative result, not deleted.
+
 **Reading, in the programme's terms:** on the greedy family at fixed `E₀`, `ν`, the excursion
 grows across five doublings without saturating, at `~M^{1/4}`; `~4 %` at `M = 32`. Nothing about
 the dynamics' own worst case, strong nonlinearity, or the limit. **O5 stands. No verdict.**
