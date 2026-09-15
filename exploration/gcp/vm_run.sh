@@ -14,6 +14,11 @@ upload() {   # best-effort, never fatal: the disk keeps everything too (STOP, no
     [ -f "$f" ] && gsutil -q cp "$f" "gs://$BUCKET/" 2>/dev/null
   done
 }
+# Backstop: an early-exit branch in this script's sibling (vm_eval.sh) shipped without an
+# `upload` call once, so a fast failure left an empty bucket and no diagnostic trace at all
+# (caught 2026-09-15). A trap cannot save a run `poweroff` kills mid-flight, so explicit
+# `upload` calls before every `poweroff` below are kept too; this is defence in depth.
+trap 'upload' EXIT
 
 if ! command -v cargo >/dev/null 2>&1 && [ ! -x "$HOME/.cargo/bin/cargo" ]; then
   sudo apt-get update -qq && sudo apt-get install -y -qq build-essential curl pkg-config >/dev/null
@@ -26,7 +31,7 @@ if [ ! -x target/release/dual_scale_scout ]; then
   RUSTFLAGS="-C target-cpu=native" cargo build --release --quiet || { log "BUILD FAILED"; upload; sudo poweroff; }
 fi
 
-[ -f S4_M32_align.ckpt ] || { log "no checkpoint present; refusing to start from scratch on a paid machine"; sudo poweroff; }
+[ -f S4_M32_align.ckpt ] || { log "no checkpoint present; refusing to start from scratch on a paid machine"; upload; sudo poweroff; }
 log "resuming from: $(head -1 S4_M32_align.ckpt)"
 
 # Periodic upload of the checkpoint while running, so a preemption that also loses the disk
