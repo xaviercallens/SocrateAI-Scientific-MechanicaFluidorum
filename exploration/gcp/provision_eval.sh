@@ -64,8 +64,8 @@ bundle() {  # M SEED DIR
   cp "$seed" "$dir/seed_phases.txt"
   tar -czf "$dir/src.tar.gz" -C "$SRC" Cargo.toml Cargo.lock src
   local rev dirty
-  rev=$(git -C "$REPO" rev-parse HEAD)
-  dirty=$(git -C "$REPO" status --porcelain -- exploration/dual_scale_scout_rs exploration/gcp | wc -l)
+  rev=$(git -C "$REPO" rev-parse HEAD 2>/dev/null || echo unknown)
+  dirty=$( { git -C "$REPO" status --porcelain -- exploration/dual_scale_scout_rs exploration/gcp 2>/dev/null || echo "?"; } | wc -l)
   printf 'GIT_REV=%s\nGIT_DIRTY_FILES=%s\nM=%s\nSEED=%s\nSEED_SHA256=%s\nBUILT=%s\n' \
     "$rev" "$dirty" "$m" "$(basename "$seed")" "$(sha256sum "$seed" | cut -d' ' -f1)" "$(date -u +%FT%TZ)" > "$dir/job.env"
   (cd "$dir" && sha256sum dual_scale_scout seed_phases.txt src.tar.gz job.env > manifest.sha256)

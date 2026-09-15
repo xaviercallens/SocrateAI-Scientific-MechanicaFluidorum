@@ -1,0 +1,30 @@
+PASS  dead instance, no checkpoint: serial log saved, deleted, recreated, schedule written
+PASS  live instance: refused, nothing deleted or created
+PASS  preempted job with a bucket checkpoint: resumed, not recreated
+PASS  --fresh: deleted and recreated despite the checkpoint
+PASS  result already in the bucket: stops, creates nothing
+PASS  VM reports FAILED_INPUT after boot: launcher exits 1 and shows the runner's lines
+PASS  no previous instance: straight to create, VM reports RUNNING
+
+--- the schedule the launcher printed (clean scenario) ---
+MONITORING SCHEDULE -- M=64 exact evaluation, launched Tue 15 Sep 21:35
+command for every check:   bash exploration/gcp/provision_eval.sh status 64
+
+  Tue 15 Sep 21:45   T0+10min  RUNNING, phase classes/init, heartbeat < 2 min old
+                              (not so -> bash exploration/gcp/provision_eval.sh logs)
+  Tue 15 Sep 22:05   T0+30min  phase init with a % and an ETA. Real speed of this VM:
+                              init total = ETA / (1 - fraction done);  job total ~ init total x 4.8
+  Wed 16 Sep 01:05   T0+3.5h   phase sweep, sweep=1, flips=0   (flips > 0 -> a 2nd sweep, +10-13 h)
+  every 4-6 h                 heartbeat fresh, sweep % rising.  Instance TERMINATED without DONE
+                              = preempted: bash exploration/gcp/provision_eval.sh resume   (loses at most ~2 min of work)
+  Wed 16 Sep 08:35 -> Wed 16 Sep 14:35
+                              EXPECTED DONE (one sweep, T0+11h..17h)
+                              then: bash exploration/gcp/provision_eval.sh fetch 64  &&  bash exploration/gcp/provision_eval.sh destroy
+  Wed 16 Sep 17:35 -> Thu 17 Sep 03:35
+                              if a second sweep was needed (T0+20h..30h)
+  Thu 17 Sep 21:35   T0+48h    hard cap: the VM stops itself (the bucket keeps the checkpoint)
+
+cost: ~$0.18/h indicative -> ~$2-3 for one sweep, < $9 at the cap
+== 21:35:23 schedule saved to exploration/scout_runs/gcp/m64_monitor_schedule.txt
+
+ALL LAUNCHER TESTS PASSED
