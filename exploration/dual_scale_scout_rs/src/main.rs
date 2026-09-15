@@ -457,7 +457,150 @@ fn phases_adversarial(m: i64) -> std::collections::HashMap<K, C> {
 ///
 /// This returns the SAME alignment as the table version — same class set and order, same sweep
 /// order, same accept test — and is checked by reproducing it exactly at M = 8 and M = 16.
-fn phases_adversarial_free(m: i64, ckpt: &str, start: &str) -> std::collections::HashMap<K, C> {
+/// Execution options for the exact greedy (checkpoint cadence, telemetry, test hook). None of them
+/// changes WHAT is computed -- only how often state is persisted and reported.
+#[derive(Clone, Debug, Default)]
+struct FreeOpts {
+    ckpt: String,          // checkpoint path ("" = none); `.prev` holds the previous save
+    start: String,         // --phases-start seed file ("" = all +1)
+    ckpt_every_s: f64,     // minimum seconds between saves (0 = every chunk / every class)
+    progress: String,      // machine-readable progress JSON path ("" = none)
+    die_after_saves: usize,// TEST HOOK: exit(75) after this many saves (0 = off)
+}
+
+fn fnv64(bytes: &[u8]) -> u64 {
+    let mut h: u64 = 0xcbf29ce484222325;
+    for b in bytes { h ^= *b as u64; h = h.wrapping_mul(0x100000001b3); }
+    h
+}
+
+/// Checkpoint format v2 (text, self-verifying):
+///   `# mfckpt v2 M=<m> chunks=<c> seed=<fnv64 of the seed file> phase=<p> <phase fields>`
+///   `MASK <hex u64 words: the class-presence bitset over the lattice cube>`
+///   `SIGNS <one '+'/'-' per class>`            (absent in phase=classes)
+///   `END <fnv64 of every byte above>`          (a truncated or edited file fails this)
+/// Phases: classes{chunk} -> init{chunk,sum} -> sweep{sweep,i,s,best,improved,init,flips} -> done.
+/// Every field needed to continue EXACTLY is stored, so no pass is ever recomputed on resume.
+fn free_ckpt_text(m: i64, chunks: usize, seed: u64, head: &str, mask: &[u64], signs: Option<&[i64]>) -> String {
+    let mut t = String::with_capacity(32 + mask.len() * 16 + signs.map_or(0, |s| s.len()) + 64);
+    t.push_str(&format!("# mfckpt v2 M={} chunks={} seed={:016x} {}\n", m, chunks, seed, head));
+    t.push_str("MASK ");
+    for w in mask { t.push_str(&format!("{:016x}", w)); }
+    t.push('\n');
+    if let Some(sg) = signs {
+        t.push_str("SIGNS ");
+        for &x in sg { t.push(if x > 0 { '+' } else { '-' }); }
+        t.push('\n');
+    }
+    let h = fnv64(t.as_bytes());
+    t.push_str(&format!("END {:016x}\n", h));
+    t
+}
+
+struct FreeCkpt { chunks: usize, seed: u64, phase: String,
+    kv: std::collections::HashMap<String, String>, mask: Vec<u64>, signs: Option<Vec<i64>> }
+impl FreeCkpt {
+    fn get<T: std::str::FromStr>(&self, k: &str) -> T {
+        self.kv.get(k).and_then(|v| v.parse().ok()).unwrap_or_else(|| {
+            eprintln!("   [align/free] FATAL: checkpoint field {} missing or malformed", k);
+            std::process::exit(3)
+        })
+    }
+}
+
+fn free_ckpt_parse(text: &str, m: i64, words: usize) -> Result<FreeCkpt, String> {
+    if !text.starts_with("# mfckpt v2 ") {
+        return Err("not a v2 checkpoint (v1 files are no longer resumable; the only one is the converged S-4 M=32 run)".into());
+    }
+    let end = text.rfind("\nEND ").ok_or("no END trailer (truncated)")?;
+    let (body, trailer) = text.split_at(end + 1);
+    let want = u64::from_str_radix(trailer.trim_start_matches("END ").trim(), 16).map_err(|_| "unreadable END hash")?;
+    if fnv64(body.as_bytes()) != want { return Err("END hash mismatch (corrupt)".into()); }
+    let mut lines = body.lines();
+    let hdr = lines.next().ok_or("empty")?;
+    let kv: std::collections::HashMap<String, String> = hdr.split_whitespace()
+        .filter_map(|w| w.split_once('=')).map(|(a, b)| (a.to_string(), b.to_string())).collect();
+    let cm: i64 = kv.get("M").and_then(|v| v.parse().ok()).ok_or("no M")?;
+    if cm != m { return Err(format!("checkpoint is for M={}, this run is M={}", cm, m)); }
+    let chunks: usize = kv.get("chunks").and_then(|v| v.parse().ok()).ok_or("no chunks")?;
+    let seed = kv.get("seed").and_then(|v| u64::from_str_radix(v, 16).ok()).ok_or("no seed")?;
+    let phase = kv.get("phase").cloned().ok_or("no phase")?;
+    let mut mask = Vec::new();
+    let mut signs = None;
+    for l in lines {
+        if let Some(h) = l.strip_prefix("MASK ") {
+            if h.len() % 16 != 0 { return Err("MASK length not a multiple of 16".into()); }
+            mask = (0..h.len() / 16).map(|i| u64::from_str_radix(&h[16 * i..16 * i + 16], 16))
+                .collect::<Result<Vec<_>, _>>().map_err(|_| "MASK not hex")?;
+        } else if let Some(s) = l.strip_prefix("SIGNS ") {
+            signs = Some(s.bytes().map(|b| if b == b'+' { 1 } else { -1 }).collect());
+        }
+    }
+    if mask.len() != words { return Err(format!("MASK has {} words, expected {}", mask.len(), words)); }
+    if phase != "classes" && signs.is_none() { return Err(format!("phase={} without SIGNS", phase)); }
+    Ok(FreeCkpt { chunks, seed, phase, kv, mask, signs })
+}
+
+/// Load `path`, falling back to `path.prev` (a save rotates the old file there first, so a crash
+/// between the two renames leaves only `.prev`). A file that EXISTS but fails verification is
+/// never silently ignored: if no usable file remains the process exits 3 ("checkpoint unusable")
+/// and the caller decides -- the VM runner quarantines it and restarts, loudly.
+fn free_ckpt_load(path: &str, m: i64, words: usize) -> Option<FreeCkpt> {
+    if path.is_empty() { return None; }
+    let prev = format!("{}.prev", path);
+    let mut problems = Vec::new();
+    for p in [path, prev.as_str()] {
+        let text = match std::fs::read_to_string(p) {
+            Ok(t) => t,
+            Err(_) => { if p == path { problems.push(format!("{}: absent", p)); } continue; }
+        };
+        match free_ckpt_parse(&text, m, words) {
+            Ok(c) => {
+                if p == path { eprintln!("   [align/free] RESUMED from {} (phase={})", p, c.phase); }
+                else { eprintln!("   [align/free] WARNING: {} -- RESUMING FROM THE PREVIOUS SAVE {} (phase={})", problems.join("; "), p, c.phase); }
+                return Some(c);
+            }
+            Err(e) => problems.push(format!("{}: {}", p, e)),
+        }
+    }
+    if problems.iter().any(|s| !s.ends_with("absent")) {
+        eprintln!("   [align/free] FATAL: checkpoint present but unusable: {}", problems.join("; "));
+        std::process::exit(3);
+    }
+    None
+}
+
+/// Atomic, durable save: write tmp, fsync, rotate the current file to `.prev`, rename, fsync dir.
+fn free_ckpt_save(path: &str, text: &str) {
+    use std::io::Write;
+    let tmp = format!("{}.tmp", path);
+    {
+        let mut f = std::fs::File::create(&tmp).expect("create checkpoint tmp");
+        f.write_all(text.as_bytes()).expect("write checkpoint");
+        f.sync_all().expect("fsync checkpoint");
+    }
+    if std::path::Path::new(path).exists() {
+        std::fs::rename(path, format!("{}.prev", path)).expect("rotate checkpoint to .prev");
+    }
+    std::fs::rename(&tmp, path).expect("rename checkpoint");
+    let dir = std::path::Path::new(path).parent().filter(|d| !d.as_os_str().is_empty())
+        .unwrap_or(std::path::Path::new("."));
+    if let Ok(d) = std::fs::File::open(dir) { let _ = d.sync_all(); }
+}
+
+fn free_progress(path: &str, v: serde_json::Value) {
+    if path.is_empty() { return; }
+    let tmp = format!("{}.tmp", path);
+    if std::fs::write(&tmp, v.to_string()).is_ok() { let _ = std::fs::rename(&tmp, path); }
+}
+
+fn unix_now() -> u64 {
+    std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_or(0, |d| d.as_secs())
+}
+
+#[allow(unused_assignments)]   // the final save's `last_save` update is intentionally never read
+fn phases_adversarial_free(m: i64, o: &FreeOpts) -> std::collections::HashMap<K, C> {
+    let (ckpt, start) = (o.ckpt.as_str(), o.start.as_str());
     let bv = ball(m);
     let side = (2 * m + 1) as usize;
     let lin = |k: &K| -> Option<usize> {
@@ -485,15 +628,101 @@ fn phases_adversarial_free(m: i64, ckpt: &str, start: &str) -> std::collections:
         if g == 0 { None } else { Some((rp, rq, rr, g)) }
     };
 
-    // Pass 1: the class SET, in the table version's order. O(|ball|^2) once, nothing stored.
-    let present: std::collections::HashSet<K> = bv.par_iter().map(|p| {
-        let mut s = std::collections::HashSet::new();
-        for q in &bv {
-            if let Some((rp, rq, rr, _)) = entry(p, q) { s.insert(rp); s.insert(rq); s.insert(rr); }
+    // RESILIENT EXECUTION (2026-09-15). All three O(|ball|^2) passes -- class set, initial exact
+    // |S|, sweeps -- run in `chunks` slices of the ball and checkpoint between slices (time-gated
+    // by `ckpt_every_s`). Before this, only a COMPLETED sweep was saved: at M = 64 a spot
+    // preemption in the first ~10 h lost everything, and even a sweep resume recomputed the
+    // initial-|S| pass (hours). Every pass result is order-independent (a set union, an exact i128
+    // sum) or strictly sequential (the sweep, resumed at the saved class index with its exact
+    // running total), so a resumed run is the uninterrupted run -- tested by killing a run after
+    // every k-th save and resuming until done, and comparing the output byte for byte.
+    let side3 = side * side * side;
+    let words = (side3 + 63) / 64;
+    let hb_len = half_ball(m).len();
+    let nb = bv.len();
+    let chunks = nb.min(1000).max(1);
+    let chunk_lo = |c: usize| c * nb / chunks;
+    let seed = if start.is_empty() { 0 } else {
+        fnv64(&std::fs::read(start).unwrap_or_else(|e| {
+            eprintln!("   [align/free] FATAL: cannot read --phases-start {}: {}", start, e); std::process::exit(4)
+        }))
+    };
+    let loaded = free_ckpt_load(ckpt, m, words);
+    if let Some(c) = &loaded {
+        if c.seed != seed {
+            eprintln!("   [align/free] FATAL: checkpoint was made from a different seed file (fnv {:016x}, this run {:016x}); refusing to mix them", c.seed, seed);
+            std::process::exit(4);
         }
-        s
-    }).reduce(std::collections::HashSet::new, |mut a, b| { a.extend(b); a });
-    let mut classes: Vec<K> = present.into_iter().collect();
+        if (c.phase == "classes" || c.phase == "init") && c.chunks != chunks {
+            eprintln!("   [align/free] FATAL: checkpoint chunking {} differs from this build's {}", c.chunks, chunks);
+            std::process::exit(3);
+        }
+    }
+    let t0 = std::time::Instant::now();
+    let mut last_save = std::time::Instant::now();
+    let mut last_prog: Option<std::time::Instant> = None;
+    let mut saves = 0usize;
+    let every = o.ckpt_every_s;
+    // One save = write + telemetry line + the test hook. A macro, because the state it saves is
+    // borrowed differently in each pass.
+    macro_rules! save {
+        ($head:expr, $mask:expr, $signs:expr) => {{
+            if !ckpt.is_empty() {
+                let head: String = $head;
+                free_ckpt_save(ckpt, &free_ckpt_text(m, chunks, seed, &head, $mask, $signs));
+                saves += 1;
+                last_save = std::time::Instant::now();
+                eprintln!("   [align/free] ckpt #{} {} ({:.0} s)", saves, head, t0.elapsed().as_secs_f64());
+                if o.die_after_saves > 0 && saves >= o.die_after_saves {
+                    eprintln!("   [align/free] TEST HOOK: exiting after {} checkpoint saves", saves);
+                    std::process::exit(75);
+                }
+            }
+        }};
+    }
+    let due = |last_save: &std::time::Instant| every <= 0.0 || last_save.elapsed().as_secs_f64() >= every;
+    let prog_due = |lp: &Option<std::time::Instant>| lp.map_or(true, |t| t.elapsed().as_secs_f64() >= 30.0);
+
+    // Pass 1: the class SET, in the table version's order. O(|ball|^2), marked into a bitset over
+    // the lattice cube (a set union, so chunk order cannot change it). It stops early, EXACTLY,
+    // once all |half_ball| possible classes are present: rep(k) = max(k, -k) takes exactly that
+    // many values, so no further pair can add one.
+    let mut mask: Vec<u64> = loaded.as_ref().map_or_else(|| vec![0u64; words], |c| c.mask.clone());
+    if loaded.as_ref().map_or(true, |c| c.phase == "classes") {
+        let c0: usize = loaded.as_ref().map_or(0, |c| c.get("chunk"));
+        let seg_t = std::time::Instant::now();
+        for c in c0..chunks {
+            let have = mask.iter().map(|w| w.count_ones() as usize).sum::<usize>();
+            if have == hb_len {
+                eprintln!("   [align/free] class set saturated after {}/{} chunks: all {} classes present, the rest cannot add one", c, chunks, hb_len);
+                break;
+            }
+            let (lo, hi) = (chunk_lo(c), chunk_lo(c + 1));
+            let part = bv[lo..hi].par_iter().fold(|| vec![0u64; words], |mut acc, p| {
+                for q in &bv {
+                    if let Some((rp, rq, rr, _)) = entry(p, q) {
+                        for r in [rp, rq, rr] { let i = lin(&r).unwrap(); acc[i >> 6] |= 1u64 << (i & 63); }
+                    }
+                }
+                acc
+            }).reduce(|| vec![0u64; words], |mut a, b| { for (x, y) in a.iter_mut().zip(b) { *x |= y; } a });
+            for (x, y) in mask.iter_mut().zip(part) { *x |= y; }
+            let done = c + 1;
+            if prog_due(&last_prog) {
+                let el = seg_t.elapsed().as_secs_f64();
+                let rate = (done - c0) as f64 / el.max(1e-9);
+                eprintln!("   [align/free] phase=classes {}/{} chunks ({:.1}%) eta {:.0} s", done, chunks, 100.0 * done as f64 / chunks as f64, (chunks - done) as f64 / rate);
+                free_progress(&o.progress, serde_json::json!({"m": m, "phase": "classes", "done": done, "total": chunks,
+                    "frac": done as f64 / chunks as f64, "eta_phase_s": (chunks - done) as f64 / rate,
+                    "elapsed_s": t0.elapsed().as_secs_f64(), "saves": saves, "updated_unix": unix_now()}));
+                last_prog = Some(std::time::Instant::now());
+            }
+            if due(&last_save) && done < chunks { save!(format!("phase=classes chunk={}", done), &mask, None); }
+        }
+    }
+    let mut classes: Vec<K> = (0..side3).filter(|&i| (mask[i >> 6] >> (i & 63)) & 1 == 1)
+        .map(|i| K([(i / (side * side)) as i64 - m, ((i / side) % side) as i64 - m, (i % side) as i64 - m]))
+        .collect();
     classes.sort();
     let n = classes.len();
     let mut cidx = vec![u32::MAX; side * side * side];
@@ -530,37 +759,19 @@ fn phases_adversarial_free(m: i64, ckpt: &str, start: &str) -> std::collections:
         }).sum()
     };
 
-    // CHECKPOINTING (2026-09-13). At M = 32 this loop runs 20-50 h, and the intended host is a
-    // PREEMPTIBLE spot instance -- so without this the job may simply never finish, and locally
-    // it is one OOM away from losing everything (LL-26, which cost 1.5 h of trajectory the same
-    // day). The signs vector is the entire state: dumped after each completed sweep, written to
-    // a temp file and renamed so a kill mid-write cannot corrupt it. Resume is EXACT rather than
-    // approximate -- the greedy visits i = 0..n-1 in order and accepts strict improvements, so
-    // restarting at the top of a sweep from saved signs is precisely what an uninterrupted run
-    // would do next. Only the running total is recomputed on load, in one cheap pass.
+    // Signs: from the checkpoint when past the class pass, otherwise +1 and then the seed.
     let mut signs: Vec<i64> = vec![1; n];
-    let mut sweep0 = 0usize;
-    if !ckpt.is_empty() {
-        if let Ok(text) = std::fs::read_to_string(ckpt) {
-            let mut it = text.lines();
-            let hdr = it.next().unwrap_or("");
-            let parts: Vec<&str> = hdr.split_whitespace().collect();
-            assert!(parts.len() >= 4 && parts[1] == format!("M={}", m),
-                "checkpoint {} is for another M", ckpt);
-            sweep0 = parts[2].trim_start_matches("sweep=").parse().unwrap();
-            let v: Vec<i64> = it.filter_map(|l| l.trim().parse().ok()).collect();
-            assert_eq!(v.len(), n, "checkpoint has {} signs, expected {}", v.len(), n);
-            assert!(v.iter().all(|&x| x == 1 || x == -1), "checkpoint holds a non-sign");
-            signs = v;
-            eprintln!("   [align/free] RESUMED from {} after sweep {}", ckpt, sweep0);
+    if let Some(sg) = loaded.as_ref().and_then(|c| c.signs.clone()) {
+        if sg.len() != n {
+            eprintln!("   [align/free] FATAL: checkpoint has {} signs, this class set has {}", sg.len(), n);
+            std::process::exit(3);
         }
-    }
-    // `--phases-start`: seed the greedy from a sign vector produced elsewhere (the spectral
-    // optimiser of docs/designs/SPECTRAL_ALIGNMENT.md), mapped by WAVEVECTOR so the file's
-    // order never matters; classes absent from the file stay +1. The sweeps that follow are the
-    // exact polish, and their count is the measurement the memo's section 3.3 asks for. Not
-    // combined with a checkpoint: a checkpoint already carries the signs.
-    if sweep0 == 0 && !start.is_empty() {
+        signs = sg;
+    } else if !start.is_empty() {
+        // `--phases-start`: seed the greedy from a sign vector produced elsewhere (the spectral
+        // optimiser of docs/designs/SPECTRAL_ALIGNMENT.md), mapped by WAVEVECTOR so the file's
+        // order never matters; classes absent from the file stay +1. The sweeps that follow are the
+        // exact polish, and their count is the measurement the memo's section 3.3 asks for.
         let ph = phases_read(start, m);
         let mut seeded = 0usize;
         for (k, c) in &ph {
@@ -569,39 +780,108 @@ fn phases_adversarial_free(m: i64, ckpt: &str, start: &str) -> std::collections:
         }
         eprintln!("   [align/free] seeded {} of {} classes from {}", seeded, n, start);
     }
-    let mut s: i128 = bv.par_iter().map(|p| {
-        let mut acc: i128 = 0;
-        for q in &bv {
-            if let Some((rp, rq, rr, g)) = entry(p, q) { acc += term(&rp, &rq, &rr, g, &signs); }
+    let phase = loaded.as_ref().map_or("classes".to_string(), |c| c.phase.clone());
+
+    // Pass 2: the initial exact |S| of the (seeded) signs, an exact i128 sum over chunks.
+    let mut s: i128;
+    let init: i128;
+    if phase == "classes" || phase == "init" {
+        let (c0, mut sum): (usize, i128) = if phase == "init" {
+            let c = loaded.as_ref().unwrap(); (c.get("chunk"), c.get("sum"))
+        } else { (0, 0) };
+        if phase == "classes" {
+            // phase transition saved at once: the class pass is never repeated after this point
+            save!(format!("phase=init chunk=0 sum=0"), &mask, Some(&signs[..]));
         }
-        acc
-    }).sum();
-    let mut best = s.abs();
-    eprintln!("   [align/free] initial exact |S| = {} (before any sweep)", best);
-    let save = |sweep: usize, best: i128, signs: &Vec<i64>| {
-        if ckpt.is_empty() { return; }
-        let mut t = format!("# M={} sweep={} best={}\n", m, sweep, best);
-        for &x in signs { t.push_str(&format!("{}\n", x)); }
-        let tmp = format!("{}.tmp", ckpt);
-        std::fs::write(&tmp, t).expect("write checkpoint");
-        std::fs::rename(&tmp, ckpt).expect("rename checkpoint");   // atomic
-    };
-    let t0 = std::time::Instant::now();
-    for sweep in (sweep0 + 1).. {
-        let mut improved = false;
-        for i in 0..n {
-            let s_new = s - 2 * contrib(i, &signs);
-            if s_new.abs() > best {
-                best = s_new.abs();
-                s = s_new;
-                signs[i] *= -1;
-                improved = true;
+        let seg_t = std::time::Instant::now();
+        last_prog = None;   // report a phase change at once, not up to 30 s later
+        for c in c0..chunks {
+            let (lo, hi) = (chunk_lo(c), chunk_lo(c + 1));
+            sum += bv[lo..hi].par_iter().map(|p| {
+                let mut acc: i128 = 0;
+                for q in &bv {
+                    if let Some((rp, rq, rr, g)) = entry(p, q) { acc += term(&rp, &rq, &rr, g, &signs); }
+                }
+                acc
+            }).sum::<i128>();
+            let done = c + 1;
+            if prog_due(&last_prog) {
+                let rate = (done - c0) as f64 / seg_t.elapsed().as_secs_f64().max(1e-9);
+                eprintln!("   [align/free] phase=init {}/{} chunks ({:.1}%) eta {:.0} s", done, chunks, 100.0 * done as f64 / chunks as f64, (chunks - done) as f64 / rate);
+                free_progress(&o.progress, serde_json::json!({"m": m, "phase": "init", "done": done, "total": chunks,
+                    "frac": done as f64 / chunks as f64, "eta_phase_s": (chunks - done) as f64 / rate,
+                    "elapsed_s": t0.elapsed().as_secs_f64(), "saves": saves, "updated_unix": unix_now()}));
+                last_prog = Some(std::time::Instant::now());
             }
+            if due(&last_save) && done < chunks { save!(format!("phase=init chunk={} sum={}", done, sum), &mask, Some(&signs[..])); }
         }
-        save(sweep, best, &signs);
-        eprintln!("   [align/free] sweep {} done, best={} ({:.1} s elapsed){}", sweep, best,
-            t0.elapsed().as_secs_f64(), if improved { "" } else { " -- converged" });
-        if !improved { break; }
+        s = sum;
+        init = s.abs();
+        eprintln!("   [align/free] initial exact |S| = {} (before any sweep)", init);
+        save!(format!("phase=sweep sweep=1 i=0 s={} best={} improved=0 init={} flips=0", s, init, init), &mask, Some(&signs[..]));
+    } else {
+        let c = loaded.as_ref().unwrap();
+        s = c.get("s");
+        init = c.get("init");
+        eprintln!("   [align/free] initial exact |S| = {} (from checkpoint)", init);
+    }
+
+    // Pass 3: the sweeps. Strictly sequential over classes; the saved state at class i is exactly
+    // (signs, s, best, improved, flips), so resuming at i is the uninterrupted run.
+    if phase != "done" {
+        let lc = loaded.as_ref().filter(|c| c.phase == "sweep");
+        let mut best: i128 = lc.map_or(init, |c| c.get("best"));
+        let mut sweep: usize = lc.map_or(1, |c| c.get("sweep"));
+        let mut i0: usize = lc.map_or(0, |c| c.get("i"));
+        let mut improved = lc.map_or(false, |c| c.get::<u8>("improved") == 1);
+        let mut flips: usize = lc.map_or(0, |c| c.get("flips"));
+        loop {
+            let seg_t = std::time::Instant::now();
+            let seg_i0 = i0;
+            last_prog = None;   // report each new sweep at once
+            for i in i0..n {
+                let s_new = s - 2 * contrib(i, &signs);
+                if s_new.abs() > best {
+                    best = s_new.abs();
+                    s = s_new;
+                    signs[i] *= -1;
+                    improved = true;
+                    flips += 1;
+                }
+                let done = i + 1;
+                if prog_due(&last_prog) {
+                    let rate = (done - seg_i0) as f64 / seg_t.elapsed().as_secs_f64().max(1e-9);
+                    eprintln!("   [align/free] phase=sweep sweep={} {}/{} classes ({:.2}%) flips={} best={} eta_sweep {:.0} s",
+                        sweep, done, n, 100.0 * done as f64 / n as f64, flips, best, (n - done) as f64 / rate);
+                    free_progress(&o.progress, serde_json::json!({"m": m, "phase": "sweep", "sweep": sweep, "done": done,
+                        "total": n, "frac": done as f64 / n as f64, "eta_phase_s": (n - done) as f64 / rate,
+                        "flips": flips, "best": best.to_string(), "init": init.to_string(),
+                        "elapsed_s": t0.elapsed().as_secs_f64(), "saves": saves, "updated_unix": unix_now()}));
+                    last_prog = Some(std::time::Instant::now());
+                }
+                if due(&last_save) && done < n {
+                    save!(format!("phase=sweep sweep={} i={} s={} best={} improved={} init={} flips={}",
+                        sweep, done, s, best, improved as u8, init, flips), &mask, Some(&signs[..]));
+                }
+            }
+            eprintln!("   [align/free] sweep {} done, best={} ({:.1} s elapsed){}", sweep, best,
+                t0.elapsed().as_secs_f64(), if improved { "" } else { " -- converged" });
+            if !improved {
+                save!(format!("phase=done sweep={} best={} init={}", sweep, best, init), &mask, Some(&signs[..]));
+                free_progress(&o.progress, serde_json::json!({"m": m, "phase": "done", "sweep": sweep, "frac": 1.0,
+                    "best": best.to_string(), "init": init.to_string(), "elapsed_s": t0.elapsed().as_secs_f64(),
+                    "saves": saves, "updated_unix": unix_now()}));
+                break;
+            }
+            sweep += 1;
+            i0 = 0;
+            improved = false;
+            flips = 0;
+            save!(format!("phase=sweep sweep={} i=0 s={} best={} improved=0 init={} flips=0", sweep, s, best, init), &mask, Some(&signs[..]));
+        }
+    } else {
+        let c = loaded.as_ref().unwrap();
+        eprintln!("   [align/free] sweep {} done, best={} (from checkpoint) -- converged", c.get::<usize>("sweep"), c.get::<i128>("best"));
     }
     half_ball(m).into_iter()
         .map(|k| (k, C::new(0.0, match cls(&k) { u32::MAX => 1, i => signs[i as usize] } as f64)))
@@ -1318,7 +1598,13 @@ fn scout(args: &[String]) {
             let jopts = JacobiOpts::from_args(&get);
             let start = get("--phases-start", "");
             let p = match align.as_str() {
-                "free" => phases_adversarial_free(m, &ckpt, &start),
+                "free" => phases_adversarial_free(m, &FreeOpts {
+                    ckpt: ckpt.clone(),
+                    start: start.clone(),
+                    ckpt_every_s: get("--ckpt-every-s", "120").parse().unwrap(),
+                    progress: get("--progress", ""),
+                    die_after_saves: get("--die-after-saves", "0").parse().unwrap(),
+                }),
                 "dirty" => phases_adversarial_dirty(m, &ckpt),
                 "jacobi" => phases_adversarial_jacobi(m, lam, e0_for_align, &jopts),
                 _ => phases_adversarial(m),

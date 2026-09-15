@@ -1,0 +1,23 @@
+== bundle (the same code path provision_eval.sh create uses)
+PASS  bundle built
+PASS  happy path: exit 0, state DONE
+PASS  happy path: result.json final |S| = 17175910896716672
+PASS  happy path: polished phases uploaded, identical to the seed (0 polish flips)
+PASS  happy path: DONE marker and runner.log in the bucket
+PASS  rerun after DONE: exits at once
+PASS  missing seed: FAILED_INPUT (exit 11)
+PASS  missing seed: the reason is in the bucket's runner.log
+PASS  tampered seed: sha256 refusal (exit 11)
+PASS  broken binary: FAILED_BUILD (exit 12), smoke output uploaded
+PASS  broken binary + build fallback: rebuilt from src.tar.gz, job DONE
+PASS  read-only bucket: FAILED_PREFLIGHT (exit 10)
+PASS  SIGTERM mid-sweep: exit 143, checkpoint flushed to the bucket
+PASS  fresh VM: checkpoint restored from the bucket
+PASS  fresh VM: the scout RESUMED (did not restart)
+PASS  preempted + resumed on a new VM: output byte-identical to the uninterrupted run
+      (scout SIGKILLed)
+PASS  scout SIGKILLed mid-sweep: runner retried from the checkpoint, output byte-identical
+PASS  corrupt checkpoints: quarantined (also in the bucket), restarted, correct result
+PASS  guest attributes written: status, heartbeat, progress (DONE)
+
+ALL RUNNER TESTS PASSED
