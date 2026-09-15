@@ -2254,6 +2254,149 @@ itself, and there a larger machine buys roughly a factor of two --- the scout sa
 twelve busy threads and is then memory-bandwidth bound --- so the honest ask, if one is ever
 made, is sixteen cores and not sixty-four.
 
+\subsection{The fifth point ($M=32$): the algorithm fix held, and the prediction it enabled
+still failed (\tC{})}
+\label{sec:fifth}
+
+The fix of \S\ref{sec:algo} delivered what it promised: the $M=32$ alignment converged in
+$113$ sweeps ($9\to42\to113$ across the series --- the landscape's depth is growing faster than
+its size) with essentially no memory pressure, not the $195$~GB and $108$ days the quadratic
+costing had implied. This time the prediction was built \emph{factor by factor before the run},
+per the standing rule of \S\ref{sec:fourth}: initial excess $[4.85,5.38]$, dephasing time
+$0.00025$ ($M^{-2}$ exactly), injection $[0.0453,0.0539]$, survival fraction
+$[0.663,0.699]$, giving $Z_{\max}/Z_0\in[1.0300,1.0377]$.
+
+\textbf{Measured: $1.0386$, outside by $+0.0009$.} The miss was localised before the run's own
+outcome table was consulted: the initial excess came in at $6.604$, above its bracket, with a
+local exponent that \emph{rose} ($0.286\to0.397$) rather than continuing to fall --- the third
+reversal of a monotone-looking trend in two days. Read factor by factor against what actually
+missed: the injection landed inside its bracket ($0.0530$), and the survival fraction was the
+culprit this time ($0.728$, above $[0.663,0.699]$), the reverse of $M=16$, where the injection
+had been the miss and the survival fraction had been right. \textbf{No single factor on this
+family has been predictable from its own trend across two doublings running.} The admissibility
+fit that had looked confirmed on four points ($\beta=+1.347$) is inadmissible on five
+($\beta=-0.121$); what fits, empirically and \emph{not} as a registration, is a slow power law
+$e\sim M^{0.27}$.
+
+A second attempt to make $M=64$ reachable by a cheaper search was tried and is reported as a
+validated negative result rather than discarded quietly. Dirty-tracking --- skip a class's
+re-check unless something that could change its answer flipped since its last check --- has a
+tight correctness argument and was checked against the \emph{entire} recorded $M=16$ sweep
+sequence, all $42$ values digit for digit, the converged phases byte for byte. It is
+\textbf{5.5\% slower}, because even the converging sweep's handful of flips dirtied over half
+the class set: the triad co-occurrence structure is close to dense, not locally sparse, and a
+worklist trick that wins on sparse problems does not apply here. Kept in the tree as a measured
+negative result (LL-27): a correctness argument bounds what an optimisation is \emph{allowed} to
+skip, never how much it \emph{will} skip on the object in front of it.
+
+\subsection{Breaking the search, twice: an FFT gradient, and a screen that chooses the
+optimiser instead of the human (\tC{})}
+\label{sec:spectral}
+
+$M=64$ needed a different algorithm, not a faster version of the same one: the exact
+sign-by-sign sweep costs $O(\text{classes}\times\text{triads})\propto M^6$ per sweep and, on the
+observed sweep counts, was estimated at $\sim80$ days of CPU. The route out rests on one
+measured fact rather than an assumed one: the greedy's exact integer objective $S(\sigma)$ is
+\emph{proportional to the scout's own $t=0$ enstrophy production} $P$, to one constant, to the
+last printed digit, across three sign patterns spanning three orders of magnitude and both
+signs ($P/S=8.858612371\times10^{-8}$, sign included). Since $P$ and its gradient are
+computable by FFT in $O(N\log N)$ instead of by triad enumeration, maximising $|S(\sigma)|$
+became maximising $|P|$ by gradient ascent on the sign vector, with the convolution structure
+that made the triad table dense being exactly the structure an FFT diagonalises. The gradient
+itself carries its own oracle-free check (a slot-wise Euler identity on a homogeneous cubic
+form) and an arithmetic control against the exact integer table (agreement to
+$8.4\times10^{-13}$ relative, over every one of $1\,054$ classes at $M=8$); two negative
+controls --- dropping the adjoint term, and a reflection control that had to be redesigned once
+after the first version was found to be vacuous on the sign family --- were demonstrated to
+fail, per the standing rule that a control which cannot fail is not a control.
+
+A damped-Jacobi sign ascent driven by that gradient reproduces the greedy's own optimum
+\emph{exactly} at $M=8$ (the identical sign vector, not merely the same objective) and reaches
+$99.9944\%$ of it at $M=16$ and $99.999884\%$ at $M=32$, in each case a strict local optimum of
+the exact objective (the exact polish finds no improving flip). Measured cost: one gradient
+$0.021$~s at $M=8$, $0.195$~s at $M=16$, $1.750$~s at $M=32$, $25.27$~s at $M=64$ --- the last a
+genuine measurement, not the $O(N\log N)$ model's prediction of $\sim16$~s, and reported as
+such (a clock, not a model, decides cost). The full alignment: $16$ iterations at $M=8$
+($0.4$~s against the greedy's half a minute), $71$ at $M=16$ ($18.9$~s against eight minutes),
+and $210$ at $M=32$ ($528$~s against twenty-two hours).
+
+\textbf{Which schedule of this optimiser to run at $M=64$ was decided by a screen, not a guess,
+on the owner's explicit instruction to use a fixed-budget, autoresearch-style methodology
+rather than deepen one hand-picked setting.} Ten one-flag variants of the optimiser were
+proposed by three independent agents working from a written description alone (one on
+optimisation theory, one on the cost model, one on experimental controls), reconciled by a
+fourth acting as judge, and only then checked by the authoring session against the code the
+proposals presumed to describe. That check --- not the panel --- caught a real defect: the
+tabu-search variant filtered its candidate flips \emph{before} testing for convergence, so a run
+could report ``converged'' while an improving flip still existed. It also found that two
+proposals rested on a misreading of the code (one assumed a ranking rule would change the
+optimiser's behaviour when it is provably identical on this objective; another assumed a
+relaxed-acceptance variant removes retries that it does not). The bug was fixed and the resume
+path re-validated bit for bit; the screen ran only after that check passed, with the design
+committed to version control before the first row.
+
+The screen decided cleanly at $M=32$: a tabu-window variant reached the \emph{same} exact
+objective as the baseline at $13\%$ lower cost, with no misfired selection rule this time (one
+had misfired at $M=16$, where random-restart noise had tripped a downgrade clause meant for a
+different failure mode, and the run was reported exactly as registered rather than
+re-adjudicated after the fact). A control registered before the $M=64$ sign vector existed ---
+would the screened schedule's own $M=32$ transient match the archived greedy's $1.0386$, so that
+$M=64$ extends the same series rather than opening a second one under a caveat --- passed by
+eight times its own threshold ($2.5\times10^{-5}$ against a $2\times10^{-4}$ bound).
+
+\subsection{The sixth point ($M=64$): inside the bracket, still growing, not yet turned over
+(\tC{})}
+\label{sec:sixth}
+
+The $M=64$ alignment converged in $417$ iterations, $2.76$~hours, with zero failed steps
+throughout; the transient that followed (the registered protocol, both step-halving arms) agreed
+to $8\times10^{-8}$ in $Z$ and $1.5\times10^{-8}$ in $E$ --- an order of magnitude past the
+readability bound the protocol itself required. Reaching this point, alignment and transient
+together, took $7.7$ hours on this workstation; the exact greedy alone would have needed
+$\sim80$ days.
+
+\textbf{The bracket, $[1.041,1.047]$, was fixed the night before this alignment ran. Measured:
+$Z_{\max}/Z_0=1.043082$. Inside, in the lower half.} Factor by factor: the initial excess
+$8.978824$ landed inside $[8.05,9.34]$; the injection $0.054915$ inside $[0.0530,0.0568]$; the
+survival fraction $0.784508$ inside $[0.77,0.83]$; only the dephasing time
+($3.5\times10^{-5}$ against a $[4,5]\times10^{-5}$ prediction) fell outside, and because it is a
+diagnostic rather than an input to the product that predicts $Z_{\max}/Z_0$, that one miss did
+not propagate.
+
+\begin{center}
+\small
+\begin{tabular}{@{}rrrrr@{}}
+\toprule
+$M$ & $Z_{\max}/Z_0-1$ & difference & local exponent & \\
+\midrule
+2  & $0.0023$ & & & \\
+4  & $0.0122$ & $+0.0099$ & $+2.407$ & \\
+8  & $0.0267$ & $+0.0145$ & $+1.130$ & \\
+16 & $0.0324$ & $+0.0057$ & $+0.279$ & \\
+32 & $0.0386$ & $+0.0062$ & $+0.253$ & \\
+64 & $\mathbf{0.0431}$ & $+0.0045$ & $\mathbf{+0.158}$ & \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+The local exponent fell again at the sixth doubling, \emph{below} the $M^{0.27}$ power law that
+had fit the previous three points as a post-diction, not a registration; a fit on the last
+three exponents alone is closer to $M^{0.16}$, and is recorded with the same status every
+previous fit on this family has earned: not to be trusted past one more doubling. What is not a
+fit, because it is the measured quantity itself, is that the excursion is \textbf{still growing
+at the sixth doubling}, has not turned over, and its ceiling --- if it has one --- remains out
+of sight.
+
+\textbf{This bears on Hypothesis U exactly as every point before it has: it does not.} The
+finding is Tier C throughout, about one constructed adversarial initial condition's transient,
+and its role is to size the Gevrey tail envelope the Core--Tail certificate must cover, not to
+say anything about the dynamics' own worst case, strong nonlinearity, or the limit
+$M\to\infty$. \textbf{O5 stands. No verdict.} Six points now stand on the record, with three
+reversals of the series' own apparent shape --- divergent on three points, saturating on four,
+neither on five, decelerating-but-still-growing on six --- and every one of those reversals is
+legible, attributed to a named factor, and impossible to revise quietly, because in every case
+the bracket was written down before the number that would test it existed.
+
 \subsection{What the division of labour actually did here}
 \label{sec:collab}
 
@@ -2288,13 +2431,36 @@ running, and reporting a $12\times$ measured speed-up rather than the $2846\time
 arithmetic promised. Each of those is mechanical rather than clever, and each caught something
 that an accurate-sounding sentence would have hidden.
 
-The candid summary is that the engineering in this cycle is in good order and the mathematics is
-not. The certificate's arithmetic exists, is exact, is validated against an independent
+A second episode, three nights later, put the same division of labour under a different stress:
+not one machine session working alone, but a panel of them, asked by the owner to screen ten
+cheap variants of a new optimiser before deepening any one, in the spirit of fixed-budget
+autonomous research screens rather than a single deepened guess (\S\ref{sec:spectral}). The
+panel's proposals were plausible and two were wrong in ways a panel working from a written
+description, rather than the code, could not have caught: a ranking rule presumed to matter that
+provably cannot on this objective, and a relaxed-acceptance variant presumed to remove retries
+that it does not remove. The panel's design also contained a live defect in the software it was
+screening, found only because the authoring session checked each proposal against the code
+before letting the screen run --- a tabu-search variant could have reported convergence while an
+improving flip still existed. None of this was caught by the panel adjudicating itself; all of it
+was caught by one session insisting on checking a plausible-sounding design against ground truth
+before trusting it, which is the same discipline the gates exist to enforce, applied one level
+up, to a design instead of a proof. The resulting screen then ran seven consecutive hours
+unattended overnight --- alignment, a registered family-equivalence control, transient, all
+chained by mechanical scripts with the interpretive judgement calls held back for the authoring
+session at each stage --- and closed a six-point series with no further correction needed. A
+permission boundary held again during that night: a cloud-provisioning tool remained denied for
+the run's whole duration despite the owner adding it to the allow-list, because this session's
+own settings watcher does not reload without a restart, and the session reported that limit
+rather than working around it, twice.
+
+The candid summary is that the engineering in this programme is in good order and the mathematics
+is not. The certificate's arithmetic exists, is exact, is validated against an independent
 implementation, and is fast enough that $M_{\mathrm{core}}=8$ costs $32$~milliseconds. The
 blocker is the self-consistency closure, which no amount of the above touches, and the
 programme's three standing headwinds are unchanged: the forcing bound loses a factor two to
 three where it is tightest, the dynamics is now known to \emph{generate} triad alignment rather
-than scramble it, and the transient gain grows with $M$ with increments that are still growing.
+than scramble it, and the transient gain (\S\ref{sec:sixth}) is still growing after six
+doublings, at a decelerating rate that has not visibly turned over.
 O5 stands.
 
 \section{What Has Failed, and What That Taught}
