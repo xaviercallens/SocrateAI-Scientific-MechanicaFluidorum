@@ -1,0 +1,6 @@
+== M=64 alignment: --align jacobi --tabu 3, ckpt=/tmp/claude-1000/-home-xavkal-xdev-SocrateAI-Scientific-MechanicaFluidorum/a8c42e7f-96bf-4015-9ce0-3c94ea24b741/scratchpad/m64_align.ckpt, budget 25200 s ==
+== alignment exited rc=0 ==
+   [align/jacobi] final |P|=6.882098333e8 after 417 iterations, 404279 flips, 9919.5 s, status=converged
+== M=64 transient, arm a: dt=2.5e-6, steps=200, every=1 ==
+== M=64 transient, arm b: dt=1.25e-6, steps=400, every=2 ==
+== STAGE 2 DONE ==

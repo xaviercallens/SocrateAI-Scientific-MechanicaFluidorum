@@ -1277,6 +1277,44 @@ number, and doubles as the check against the table version's 42-sweep sequence. 
 its own author: a cost quoted from a model instead of a clock. No `M = 32` claim, and no VM
 request, until it lands.**
 
+### Tier C — `M = 64`: the sixth point, protocol S-5 closed, inside its pre-registered bracket (2026-09-15)
+
+`CORE_TAIL_CAP.md` §4.3.10–4.3.11, `SPECTRAL_ALIGNMENT.md` §3.2(C). Reached by a spectral
+(FFT-gradient, damped-Jacobi) optimiser instead of the greedy sweep — the greedy would have
+needed `~80 days`; this took **2.76 h alignment + ~4.9 h transient ≈ 7.7 h**, on a schedule
+(`--tabu 3`) chosen by a fixed-budget, pre-registered optimiser screen (three independent
+proposer agents + one judge, checked against the code before any row ran; a real bug found and
+fixed in the process — `LL-28`). A **family-equivalence control**, registered before the `M = 64`
+sign vector existed, confirmed the screened optimiser's `M = 32` transient (`1.038575`) matches
+the greedy's (`1.0386`) to `2.5×10⁻⁵`, eight times inside its `2×10⁻⁴` threshold — the `M = 64`
+point extends the S-2…S-4 series rather than opening a second one.
+
+**Registered bracket `[1.041, 1.047]`, fixed 2026-09-14 before the `M = 64` alignment ran.
+Measured `Z_max/Z₀ = 1.043082`. Inside**, at `t_peak = 3.0×10⁻⁵`. Halving pair readable an order
+of magnitude past the registration's own bar (`8.05×10⁻⁸` in `Z`, `1.53×10⁻⁸` in `E`, both arms
+agreeing to every printed digit). Factor by factor: initial excess `8.978824` inside
+`[8.05, 9.34]`; injection `0.054915` inside `[0.0530, 0.0568]`; survival fraction `0.784508`
+inside `[0.77, 0.83]`; only the dephasing time `t_φ = 3.5×10⁻⁵` fell below its `[4, 5]×10⁻⁵`
+bracket — a diagnostic, not an input to the `Z_max/Z₀` product, so this one miss does not
+propagate.
+
+**The full series, six points:** `Z_max/Z₀ − 1 = 0.0023, 0.0122, 0.0267, 0.0324, 0.0386,
+0.0431` at `M = 2, 4, 8, 16, 32, 64`. Local exponent `2.407, 1.130, 0.279, 0.253, 0.158` — falls
+again at the sixth doubling, below the `M^{0.27}` post-diction registered after `M = 32`
+(measured `0.158`); a fit on the last three points is closer to `M^{0.16}`, itself not to be
+trusted past one more doubling on this programme's own record.
+
+**Protocol S-5 is closed with this point.** The excursion is still growing at `M = 64`, `≈4.3 %`,
+not saturated, decelerating. **O5 stands. No verdict.** Tier C throughout: bounds the transient
+of one constructed adversarial family, bears on the Core-Tail certificate's Gevrey envelope, says
+nothing about the dynamics' own worst case or the limit `M → ∞`.
+
+**Six points, three trend reversals now on the full record** (divergent on 3 points → saturating
+on 4 → neither on 5 → still-growing-but-decelerating on 6), every one legible because the
+pre-registration fixed the bracket before the number existed. Reported here per LL-24
+(factor-by-factor) and as the programme's own worked example of the discipline `SPEC.md` §7.3
+asks for.
+
 ### Tier C — `M = 32`: the fifth point, outside its pre-registered bracket (2026-09-14)
 
 `CORE_TAIL_CAP.md` §4.3.6–4.3.8. Alignment converged at sweep 113 (sweep counts `9, 42, 113`),

@@ -912,6 +912,81 @@ this factor's exponent doing something other than the simple monotone decay firs
 `M = 8`: `0.824, 0.535, 0.286, 0.397, 0.443` — three falls, then two rises. The transient
 (`m64_transient_{a,b}`) is running; §4.3.10's outcome table is applied once it reports.
 
+#### 4.3.11 `M = 64` result: the excursion is still growing, exactly where the outcome table said "still growing" (2026-09-15; data, no verdict)
+
+`S5_M64_transient_{a,b}.csv` — every step, horizon `0.0005`, `dt = 2.5×10⁻⁶ / 1.25×10⁻⁶`
+(`_b` every 2), the registered protocol. **Readable to a precision an order of magnitude past
+the registration's own bar**: worst disagreement `8.05×10⁻⁸` in `Z`, `1.53×10⁻⁸` in `E` — both
+arms agree on every printed digit of every derived quantity below, not merely within `2 %`.
+
+> **`Z_max/Z₀|_{M=64} = 1.043082`**, at `t_peak = 3.0×10⁻⁵`. Registered bracket `[1.041, 1.047]`.
+> **Inside**, in the lower half.
+
+Applying §4.3.10's outcome table **verbatim, as written before this number existed**: *"still
+growing at `~M^{1/4}`; both [route] A and [route] D survive and are indistinguishable here; the
+certificate's envelope must cover `≈ 4.5 %` and no turnover is in sight."* That is the reading.
+Route A (product of factors) and Route D (the `M^{0.27}` power law) are **not separated** by this
+point, as anticipated — the discrimination check in §4.3.10 said in advance that this point tells
+`saturated` from `still growing`, not which growing-model is right, and that is exactly what it did.
+
+**Factor by factor, against the brackets registered before the sign vector existed:**
+
+| factor | registered | measured | |
+|---|---|---|---|
+| initial excess `P/(νD₂)`\|₀ | `[8.05, 9.34]` | **8.978824** | inside, upper-middle (§4.3.10) |
+| dephasing time `t_φ` | `[0.00004, 0.00005]` | **0.000035** | **below** — the one factor outside its bracket |
+| injection `ΔZ_inj/Z₀` | `[0.0530, 0.0568]` | **0.054915** | inside, middle |
+| survival fraction `e/ΔZ_inj` | `[0.77, 0.83]` | **0.784508** | inside, lower-middle |
+
+Three of four factors landed inside; only `t_φ` came in below bracket (`t_φ = 3.5×10⁻⁵` vs a
+`[4,5]×10⁻⁵` prediction built on an `M⁻²…M⁻²·³` trend that, on this one point, ran slightly
+faster than either exponent). `t_φ` is a diagnostic, not an input to Route A's product
+(`survival × injection`), so this miss does not propagate into the `Z_max/Z₀` prediction, which
+lands inside — a genuine instance of the programme's now-repeated finding that **no single
+factor on this family has been predictable from its own trend across two doublings running**, and
+also that a factor can miss while the composite built from *other* factors still lands.
+
+**The full `M = 2…32…64` series, six points:**
+
+```
+                M =    2       4       8      16      32      64
+Z_max/Z₀ − 1      0.0023  0.0122  0.0267  0.0324  0.0386  0.0431
+  differences         +0.0099 +0.0145 +0.0057 +0.0062  +0.0045
+  local exponent      +2.407  +1.130  +0.279  +0.253   +0.158
+```
+
+The local exponent **fell again** at the sixth doubling (`0.253 → 0.158`) after the `M = 32`
+reading (`0.279 → 0.253`) had looked like a plateau — the `M^{0.27}` post-diction of §4.3.8
+over-predicts (`0.27` vs measured `0.158`); a fit on the last three exponents (`0.279, 0.253,
+0.158`) is closer to `M^{0.16}`, itself a new post-diction with the same status as the last one:
+not to be trusted past one more doubling, on this programme's own track record. What is not in
+doubt, because it is the measured quantity itself and not a fit to it: **the excursion is still
+growing at `M = 64`, has not turned over, and its ceiling — if it has one — is not yet visible.**
+
+**What this closes and does not close.** `O5` stands, in the same sense it has stood at every
+point in this series: the transient enstrophy excursion of one constructed adversarial family
+grows with `M` across six doublings without saturating, currently `≈ 4.3 %` at `M = 64`, slowing
+but not stopping. This is **Tier C throughout** and bears on Hypothesis U only as a bound the
+Core-Tail certificate's Gevrey tail envelope must cover — it says nothing about the dynamics'
+own worst case, nothing about a counterexample, nothing about the limit `M → ∞`. Protocol S-5 is
+**closed** with this point; the series (S-2 through S-5, `M = 2` to `64`, five doublings) is the
+programme's complete record on this family absent a new construction or a new search method.
+
+**The methodological result, stated once for the whole S-2…S-5 arc.** Every pre-registered
+composite prediction on this family has been wrong at least once (`M = 16`: injection missed;
+`M = 32`: survival fraction missed; `M = 64`: dephasing missed, harmlessly). Every prediction of
+the *final measured quantity itself*, when built from a bracket on each factor separately
+(LL-24), has been either inside or off by a documented, attributed amount — never silently
+wrong. Six points, three reversals of the trend's own shape (divergent → saturating → neither →
+still-growing-but-decelerating), and the record of every one of those reversals is what makes
+this series usable as an example of rigor rather than a monotone success story: the honesty is
+in what got falsified, on the record, before the next number existed to make it easy.
+
+Cost, for the record: `M = 64` reached in **2.76 h alignment + ~4.9 h transient ≈ 7.7 h** total
+on this workstation, where the exact greedy would have needed the alignment alone for `~80
+days` (§4.3.5) — the spectral optimiser plus the fixed-budget screen (`SPECTRAL_ALIGNMENT.md`
+§3.2(C)) is what made this point reachable at all.
+
 ## 5. The certificate's arithmetic, built and measured (Tier B)
 
 The whole Core-Tail construction rests on one primitive: a **rigorous upper bound on the
