@@ -1,0 +1,34 @@
+== A: class pass from scratch (load 1.84 1.68 3.07)
+Terminated
+   class set saturated after 16/1000 chunks: all 548958 classes present, the rest cannot add one
+== B: init pass at chunk 200
+== B: init pass at chunk 400
+== B: init pass at chunk 600
+== B: init pass at chunk 800
+== B: init pass at chunk 996
+== C: sweep at class 0
+== C: sweep at class 109791
+== C: sweep at class 219583
+== C: sweep at class 329374
+== C: sweep at class 439166
+== C: sweep at class 542958
+
+== MEASURED on this machine (	: Intel(R) Core(TM) i7-4930MX CPU @ 3.00GHz)
+class pass : 8.7 s/chunk (n=15), saturated after 16/1000 chunks -> 0.04 h
+init pass  : chunk    0  9.8 s/chunk
+init pass  : chunk  200  14.6 s/chunk
+init pass  : chunk  400  11.8 s/chunk
+init pass  : chunk  600  15.7 s/chunk
+init pass  : chunk  800  11.3 s/chunk
+init pass  : chunk  996  10.8 s/chunk
+init pass  : mean 12.3 s/chunk (min 9.8, max 15.7) -> 3.43 h
+sweep      : class      0  8.85 classes/s
+sweep      : class 109791  11.21 classes/s
+sweep      : class 219583  12.68 classes/s
+sweep      : class 329374  10.65 classes/s
+sweep      : class 439166  11.31 classes/s
+sweep      : class 542958  14.82 classes/s
+sweep      : mean 11.59 classes/s (min 8.85, max 14.82), n=548958 -> 13.16 h per sweep
+
+TOTAL here, 1 sweep (expected: 0 polish flips) : 16.6 h
+TOTAL here, 2 sweeps (if the seed needs flips)  : 29.8 h
