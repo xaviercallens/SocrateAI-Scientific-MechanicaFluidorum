@@ -897,6 +897,21 @@ revises the wall estimate upward from the registered `~3 h` to **`~4–5 h`**; t
 `7 h` safety budget and is not itself a scientific claim — only its converged sign vector and
 the transient built from it are.
 
+**M=64 alignment result (2026-09-15, 05:xx UTC).** Converged in **417 iterations, 404 279
+flips, 9 919.5 s (2.76 h)** — inside the `4–5 h` revised estimate, `0` failed steps throughout
+(tabu-3 again eliminates halving retries, as it did at `M = 16, 32`). `exploration/scout_runs/
+S5_M64_phases.txt` (548 958 signs), `S5_M64_align_jacobi.log`.
+
+**The initial excess — kinematic, exact, no dynamics — lands inside its registered bracket:**
+
+> `P/(νD₂)|₀ = 8.978824`, registered `[8.05, 9.34]`.
+
+Local exponent from `M = 32`'s `6.604`: `log₂(8.978824/6.604) = +0.443` — continuing the rise
+from `+0.397` (the `M = 32` value), not falling back toward zero. Four of five doublings now show
+this factor's exponent doing something other than the simple monotone decay first guessed at
+`M = 8`: `0.824, 0.535, 0.286, 0.397, 0.443` — three falls, then two rises. The transient
+(`m64_transient_{a,b}`) is running; §4.3.10's outcome table is applied once it reports.
+
 ## 5. The certificate's arithmetic, built and measured (Tier B)
 
 The whole Core-Tail construction rests on one primitive: a **rigorous upper bound on the
