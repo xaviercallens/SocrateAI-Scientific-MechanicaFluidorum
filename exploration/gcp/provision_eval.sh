@@ -1,16 +1,26 @@
 #!/usr/bin/env bash
 # TIER C — EXPLORATORY, NO CLAIMS.
 #
-# Provision a 16-vCPU SPOT instance for the EXACT EVALUATION of a phases file at a given M:
+# Provision an 8-vCPU SPOT instance for the EXACT EVALUATION of a phases file at a given M:
 # `--align free --phases-start`, i.e. the class-set pass, the exact i128 |S| of the seed, and
 # the exact greedy polish (one verification sweep when the seed is a strict local optimum).
-# This is the M=64 job that is GCP-shaped (CORE_TAIL_CAP.md §4.3.10): ~35-40 h on the 8-core
-# workstation, ~20 h here, and NOT on the critical path of the M=64 transient.
-# Run ON THE LAPTOP from the repo root. The owner runs it (gcloud is denied to the session).
+# This is the M=64 job that is GCP-shaped (CORE_TAIL_CAP.md §4.3.10) and NOT on the critical
+# path of the M=64 transient. Run ON THE LAPTOP from the repo root. The owner runs it (gcloud
+# is denied to the session).
 #
-# COST MODEL, printed before anything is created: c2-standard-16 spot ~$0.25-0.35/h;
+# MACHINE SIZE, measured not guessed (2026-09-15): the project's C2_CPUS quota in us-central1
+# is 8, so c2-standard-16 (16 vCPU) is refused outright ("Quota 'C2_CPUS' exceeded. Limit: 8.0")
+# -- caught by running `create`, not by reading docs first. c2-standard-8 fits. This also
+# happens to match the local workstation's own core count (`nproc` = 8), so the estimate below
+# is this workstation's own measured wall time, not a guess about a bigger machine: ~35-40 h.
+# A dedicated 8-core VM should still beat the local box, which typically carries a background
+# load average of 9-13 from other processes even "idle" -- but that is now an estimate, not a
+# clock, and is labelled as one (LL-22).
+#
+# COST MODEL, printed before anything is created: c2-standard-8 spot ~$0.13-0.18/h (roughly
+# half of the c2-standard-16 figure this script used before hitting the quota);
 # --max-run-duration caps the runtime by construction; the VM POWERS ITSELF OFF when the job
-# ends (vm_eval.sh); a STOPPED VM bills only its disk. Worst case 40 h x $0.35 = $14 < $50.
+# ends (vm_eval.sh); a STOPPED VM bills only its disk. Worst case 48 h x $0.18 = $8.64 < $50.
 #
 # RESILIENCE: SPOT + --instance-termination-action=STOP; the free path checkpoints every sweep
 # (`--ckpt`) and resumes from it on every boot (startup script), so a preemption costs at most
@@ -27,10 +37,10 @@ PROJECT="gen-lang-client-0625573011"
 REGION="us-central1"
 ZONE="${REGION}-a"
 NAME="mf-eval"
-MACHINE="c2-standard-16"
+MACHINE="c2-standard-8"
 IMAGE_FAMILY="debian-12"; IMAGE_PROJECT="debian-cloud"
-MAX_RUN="40h"
-RATE_INDICATIVE="0.30"          # $/h, spot, for the status estimate only — NOT a quote
+MAX_RUN="48h"
+RATE_INDICATIVE="0.18"          # $/h, spot, for the status estimate only — NOT a quote
 REMOTE_DIR="/opt/scout"
 BUCKET="mf-eval-${PROJECT}"
 SRC="exploration/dual_scale_scout_rs"
