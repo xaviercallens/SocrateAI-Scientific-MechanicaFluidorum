@@ -227,9 +227,33 @@ PY
     ;;
 
   fetch)
+    # 2026-09-16 incident: this used to swallow the real error (`2>/dev/null`) and report
+    # "nothing yet" for ANY cp failure, including a transient one -- while the objects were
+    # confirmed present by `gcloud storage ls` moments later. Now: list first (so "confirmed
+    # absent" and "listing failed" are never confused with each other), retry the copy up to 3
+    # times with the real stderr shown on every attempt, and never claim "nothing yet" for a
+    # cause other than an actually-empty listing.
     m=${2:-64}; p=$(prefix "$m"); d="$REPO/exploration/scout_runs/gcp/$p"
     mkdir -p "$d"
-    gcloud storage cp "gs://$BUCKET/$p/out/*" "$d/" --project "$PROJECT" 2>/dev/null || { say "nothing in gs://$BUCKET/$p/out/ yet"; exit 1; }
+    listing=$(mktemp)
+    if ! gcloud storage ls "gs://$BUCKET/$p/out/" --project "$PROJECT" > "$listing" 2>"$listing.err"; then
+      if grep -qi "not found\|No URLs matched\|matched no objects" "$listing.err"; then
+        say "confirmed empty: no objects under gs://$BUCKET/$p/out/ yet"; rm -f "$listing" "$listing.err"; exit 1
+      fi
+      say "LISTING FAILED (not the same as empty) -- gcloud said:"; sed 's/^/   /' "$listing.err"
+      rm -f "$listing" "$listing.err"; exit 2
+    fi
+    n=$(wc -l < "$listing"); rm -f "$listing.err"
+    if [ "$n" = 0 ]; then say "confirmed empty: gs://$BUCKET/$p/out/ lists 0 objects"; rm -f "$listing"; exit 1; fi
+    say "$n object(s) listed in gs://$BUCKET/$p/out/; downloading"
+    ok=0
+    for attempt in 1 2 3; do
+      if gcloud storage cp "gs://$BUCKET/$p/out/*" "$d/" --project "$PROJECT" 2>"$listing.err"; then ok=1; break; fi
+      say "download attempt $attempt/3 failed:"; sed 's/^/   /' "$listing.err"
+      sleep $((attempt * 3))
+    done
+    rm -f "$listing" "$listing.err"
+    [ "$ok" = 1 ] || { say "download failed after 3 attempts, but the objects ARE there (see the listing above) -- retry fetch, or use: gcloud storage cp gs://$BUCKET/$p/out/scout.log $d/"; exit 2; }
     ls -l "$d"
     if [ -f "$d/result.json" ]; then
       say "result:"; python3 -m json.tool "$d/result.json"
