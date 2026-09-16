@@ -2397,6 +2397,108 @@ neither on five, decelerating-but-still-growing on six --- and every one of thos
 legible, attributed to a named factor, and impossible to revise quietly, because in every case
 the bracket was written down before the number that would test it existed.
 
+\subsection{Certifying the exact record: an infrastructure incident, diagnosed and fixed before
+being trusted again (\tC{})}
+\label{sec:gcp}
+
+The $M=64$ transient of \S\ref{sec:sixth} is float throughout, resting on the $\S2$ proportionality
+between the exact integer objective and the FFT production. The exact integer record itself ---
+the $i128$ value of $S(\sigma)$ and the verification that no single flip improves it --- is a
+separate, off-critical-path computation ($\sim35$--$40$ hours single-threaded) that the owner
+authorised running on rented compute rather than this workstation. What follows is reported
+because the programme's own rule is that engineering failures on the path to a result are part of
+the result, not a footnote (\S\ref{sec:collab}), and because this episode is the largest single
+piece of infrastructure work the collaboration has produced.
+
+\textbf{Two failures, in sequence, on the first two attempts.} The first creation request was
+refused outright: the project's spot quota for the requested machine family is eight vCPUs in the
+target region, and a sixteen-vCPU machine was requested. \emph{This was caught by running the
+create command, not by reading quota documentation first} --- consistent with this report's
+standing preference for a clock, or here a quota error, over an estimate. Corrected to an
+eight-vCPU machine, cost re-estimated downward accordingly. The second attempt provisioned
+successfully and then \textbf{terminated within minutes, leaving an empty results bucket and no
+diagnostic trace of why}. The cause, found by reading the runner script rather than guessing: one
+exit path powered the machine off \emph{before} uploading any log, and every upload elsewhere in
+the script silently discarded its own errors. A machine can fail in a way that destroys the
+evidence of its own failure, and the script had exactly that shape.
+
+\textbf{The owner's instruction at this point was explicit: improve telemetry, resilience,
+checkpointing, and error handling before spending another cloud hour.} That produced three
+pieces of work, in order, each validated locally before the next was trusted to run for real.
+
+\emph{Checkpointing inside every pass, not only after a completed one.} The exact evaluation is
+three sequential $O(|\mathrm{ball}|^2)$ passes --- the class set, the exact initial $|S|$, and the
+verification sweep --- and the prior checkpoint scheme saved state only between completed sweeps.
+At $M=64$ a preemption during the first pass, which alone can run for hours, would have lost
+everything. The new scheme checkpoints inside all three passes on a time cadence, in a
+self-verifying format (a trailing hash over the whole file, so a truncated write is detected
+rather than silently accepted, with automatic fallback to the previous save) with an atomic
+write-fsync-rotate-rename sequence. A structural fact discovered in the process shortened the
+first pass sharply: the class set saturates --- every one of the $|{\rm half\_ball}|$ possible
+representative classes becomes present --- after a small, fixed fraction of the pass, since
+$\mathrm{rep}(k)=\max(k,-k)$ can take no more values than that; measured at $16$ of $1\,000$
+chunks at $M=64$, $20$ of $1\,000$ at $M=16$, $28$ of $1\,000$ at $M=8$, turning what had been
+assumed to be a comparable-cost pass into a two-minute one. \textbf{Validated by killing the
+process after every $k$-th checkpoint, for many values of $k$, across every phase including
+mid-class-set and mid-sweep, and resuming to completion}: $284$ forced kill-and-resume cycles at
+$M=8$, $9$ and $18$ at two $M=16$ seeds, further cycles dedicated to the class-set phase alone,
+every resumed run's output byte-identical to an uninterrupted reference and to the same exact
+integer. Two controls were run to be sure the harness itself could fail: a single flipped sign in
+an otherwise-identical output file is caught by the same byte comparison used as the verdict, and
+a checkpoint truncated by hand is detected and rejected in favour of its rotated predecessor.
+
+\emph{A runner that does not need a human, and cannot fail silently.} The prior design built the
+scout over ssh and shipped it once; the new one ships a pre-built, locally smoke-tested,
+sha256-verified binary and \emph{is} the machine's own boot script, so a preemption's automatic
+restart resumes the job with no intervention. Every upload goes through the storage API directly,
+with the HTTP status checked and retried rather than discarded; every failure ends in one of five
+named states, each of which uploads its own diagnosis \emph{before} the machine holds briefly for
+inspection and only then powers off --- the inversion of the failure this section opened with.
+State is visible three independent ways that do not depend on each other: attributes readable from
+the instance record without a login, the machine's own console log, and the results bucket.
+\textbf{Validated locally} with the metadata server, the bucket, and the power-off step replaced
+by their local equivalents and the runner driven, unmodified, through every failure mode by hand:
+a genuinely missing input, a tampered bundle (rejected by the checksum), a broken binary with and
+without the source-build fallback enabled, an unwritable bucket, a real \texttt{SIGTERM} sent
+mid-sweep followed by a \emph{fresh} instance with an empty disk resuming correctly from the
+bucket's mirrored checkpoint, and a real \texttt{SIGKILL} of the computation itself, retried
+automatically from its own checkpoint. Nineteen scenarios, all passing only on the second attempt:
+the first run of this very test suite caught a defect in the cleanup path itself, where one
+failure branch under the shell's fail-fast setting could skip the power-off step entirely ---
+which, unlike everything else in this section, is a defect that a local test caught before a
+paid machine ever saw it.
+
+\emph{A time estimate taken from a clock at $M=64$, not scaled up from $M=32$.} Each of the three
+passes was timed directly, with the production binary, on the real $M=64$ checkpoint edited only
+at the position being probed: the class pass confirmed at two minutes, the exact-$|S|$ pass at
+$12.3$ seconds per chunk ($3.4$ hours), the verification sweep at $11.6$ classes per second over
+the full $548\,958$-class half-ball ($13.2$ hours), summing to $16.6$ hours on this four-core
+workstation for the single-sweep case every prior $M$ has needed, translated to an $11$--$17$
+hour estimate on the rented machine's faster, same-topology cores.
+
+\textbf{The run itself, once launched, was preempted twice in its first day and recovered both
+times without loss beyond a few minutes of the most recent checkpoint interval} --- exactly the
+behaviour the local tests had already demonstrated, now observed for real. A third, smaller
+defect surfaced during live monitoring and is recorded for the same reason as the first two: the
+status-fetching command's own error handling discarded the true cause of one transient failure and
+reported the bucket as empty when a direct listing, moments later, showed it was not. Fixed the
+same way as everything above --- list before copying, distinguish a confirmed-empty result from a
+failed one, surface the tool's actual error instead of a guess --- and confirmed against the
+running job immediately afterward.
+
+\textbf{The result, as this is written, is not yet final: the verification sweep is in progress.}
+The exact initial value has been computed for the first time --- $S(\sigma) =
+13\,477\,832\,078\,223\,027\,252\,042\,752$, itself $\approx 2.96\times10^4$ times the $M=32$
+value, the growth expected of an objective built from $\sim M^6$ triad terms --- and the sweep has
+so far checked $265\,516$ of $548\,958$ classes, just under half, without a single one improving
+the objective read directly from the machine's own log rather than inferred from a summary.
+That extends, provisionally, the pattern already established at every smaller $M$: the spectral
+optimiser's result is already a strict local optimum of the \emph{exact} integer objective, not
+only the floating-point one used to reach it. It is reported here as exactly what it is --- an
+interim reading with just over half the search space still unchecked, capable of being overturned
+by the next class checked --- and will be recorded as a result, not a progress note, only when the
+sweep itself reports convergence.
+
 \subsection{What the division of labour actually did here}
 \label{sec:collab}
 
@@ -2452,6 +2554,16 @@ permission boundary held again during that night: a cloud-provisioning tool rema
 the run's whole duration despite the owner adding it to the allow-list, because this session's
 own settings watcher does not reload without a restart, and the session reported that limit
 rather than working around it, twice.
+
+A third episode (\S\ref{sec:gcp}) moved the same discipline onto rented, unattended hardware. The
+shape repeats: a failure (an empty results bucket with no diagnosis) was not patched around but
+traced to its cause and fixed at the design level, the fix was proven against every failure mode
+by hand \emph{before} a second cloud instance was paid for, and a further defect the fix's own
+test suite exposed --- a cleanup path that could skip powering the machine off --- was one a real
+run would have billed for, not merely gotten wrong. The owner's instruction here was procedural
+rather than mathematical (``improve the telemetry and resilience'' before restarting), which the
+first two episodes' instructions were as well; across all three, the owner's contribution has been
+where to spend doubt and when to accept a result, never the content of a proof or a script.
 
 The candid summary is that the engineering in this programme is in good order and the mathematics
 is not. The certificate's arithmetic exists, is exact, is validated against an independent
