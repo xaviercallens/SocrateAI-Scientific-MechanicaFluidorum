@@ -929,6 +929,75 @@ wall-clock drift that voided the timings voided nothing that decided anything.
   alternative as an explicitly post-hoc row that cannot win. Changing the rule after seeing the
   table is the thing pre-registration exists to prevent; hiding the misfire is worse.
 
+## LL-29 — verification code is a claim-bearing artifact, and needs a negative control of its own (2026-09-17)
+
+**Incident.** The exact `M = 64` evaluation converged correctly on GCP. Twice, the runner's own
+success-detection logic then declared it failed — not the computation, the *check*. First: the
+step that greps the run's log for the two lines confirming convergence used a plain text search
+against a file that happened to contain a handful of null bytes (an artefact of the log being
+deliberately never `fsync`'d, so an abrupt preemption can leave a small zero-filled gap; only
+the checkpoint is `fsync`'d, by design). A file containing even one null byte is treated as
+binary by that search, which then matches nothing and reports nothing — not an error, just
+silence where a result should have been. The job was marked failed and its valid checkpoint
+quarantined. Second: fixing that let a resume reach an already-converged checkpoint for the
+first time, which exposed an independent second bug — the resume logic unconditionally read a
+checkpoint field that a *completed* run's checkpoint never writes, because that field is needed
+only mid-sweep. The very first resume of a successfully-finished checkpoint failed with a
+missing-field error, and the same quarantine policy discarded it a second time.
+
+**What both bugs have in common.** Neither was in the scientific computation, which had already
+produced the right answer both times. Both were in code whose entire job is *deciding whether
+something succeeded* — and that code had never been tested against the states it would actually
+encounter: a log containing the one artefact its own design (never `fsync`'d) makes possible, and
+a checkpoint in the one phase (`done`) that a fresh process launch had never actually been handed
+before this incident, because every prior test happened to resume mid-computation rather than
+after completion.
+
+**Rule.** Code that determines "did this succeed" is a claim-bearing artifact exactly like a
+measurement or a control, and needs the same disciplines: a **negative control** — inject the
+exact artefact the check is supposed to survive (a null byte at the boundary this system's own
+design can produce it; an already-`done` checkpoint) and confirm the check still reports
+correctly, not just that it reports *something* on the happy path. A test suite for a resumable
+process must exercise **every state the resume can be launched into**, including "already
+finished" — the state a preemption immediately after convergence, or a retry after any other
+failure, lands you in most naturally, and the one every earlier test in this suite had quietly
+never produced.
+
+## LL-30 — a "discard as unusable" policy needs proof of corruption, not merely proof that the reader failed (2026-09-17)
+
+**Incident, continued.** Both bugs above led to the same downstream action: a checkpoint
+verification step failed, and the runner's policy — correct for genuine corruption — quarantined
+the checkpoint and restarted the entire computation from scratch. Both times, the checkpoint was
+byte-for-byte valid; the defect was in the code reading it. Diagnosis, both times, took minutes
+once done directly: read the raw bytes of the file with a tool that cannot itself misclassify
+binary content (here, Python, not `grep`), and check by hand whether the claimed content is
+actually there. It was, in the exact printed form the parser should have matched.
+
+**Rule.** "This input is corrupt, discard it and start over" is an expensive, hard-to-reverse
+action and needs its own burden of proof before firing — the same standard this programme
+already applies to a control's own perturbation (LL-19: a negative control must be *demonstrated*
+to bite, not assumed to). Before a quarantine-and-restart path executes, the first diagnostic
+step should be reading the artefact directly, bypassing the very tool that just failed on it —
+not treating the tool's own silence or error as proof about the data.
+
+## LL-31 — recover the value, not the compute: a safely-backed-up result does not need re-earning (2026-09-17)
+
+**Incident, continued.** The second bug's quarantine action began recomputing the entire
+`~16.6 h` evaluation from scratch on the paid cloud instance. It did not need to: the quarantined
+checkpoint had already been mirrored to the results bucket, independently of the instance that
+was about to redo the work. Once the reading bug was fixed and confirmed against a reproduction
+of the exact failure, running the corrected binary against the *recovered* checkpoint — locally,
+not on the cloud instance, in under a second — reproduced the identical, independently
+sha256-verified result. No further cloud time was spent; the instance that had begun
+recomputing was destroyed once the recovery was confirmed.
+
+**Rule.** When a result exists and is safely, independently backed up, recovering it is a
+different and far cheaper operation than re-producing it, and the two must not be conflated. A
+failure in the *verification* of a result is not evidence against the *result*, and the
+instinctive response to "the check says this failed" should not be "start over" until it is
+established which of the two actually failed. Check whether the value survives the failure
+before paying to re-earn it.
+
 ---
 
 # Synthesis — the three blind spots of a two-gate system

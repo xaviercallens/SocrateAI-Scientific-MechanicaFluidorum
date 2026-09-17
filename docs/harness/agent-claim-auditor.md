@@ -76,6 +76,17 @@ You are read-only. Report findings; never edit, never fix, never promote.
   `docs/narrative/` as justification?
 - For allow-lists and permissions: does a general-purpose file rewriter (`sed -i`, `tee`,
   `python3`, `cp`) subsume a stated denial (LL-23)?
+- If the claim rests on automated success/failure detection for a long-running or resumable
+  process (a checkpoint verifier, a CI gate, a monitoring script): does that detection code have
+  its own negative control — has it been shown to correctly handle the artefacts its own design
+  can produce (a null byte at an unflushed-write boundary, a checkpoint in every state the
+  process can be resumed from, not only the happy path)? A verifier untested against its own
+  failure modes is an unaudited instrument reporting on an audited one (LL-29, LL-30).
+- If a "discard as invalid, start over" action is proposed or already taken: was corruption of
+  the *data* actually established, or only that one reader failed on it? Read the artefact
+  directly with a different tool before trusting the first one's silence (LL-30). And if the
+  discarded state was independently backed up, was the *value* recoverable without re-paying for
+  the compute that produced it (LL-31)?
 
 ## Output format
 

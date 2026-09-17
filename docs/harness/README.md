@@ -9,14 +9,20 @@ drafts them.
 ## Install
 
 ```bash
-mkdir -p .claude/skills/preregister .claude/skills/cost-model .claude/agents
-cp docs/harness/skill-preregister.md   .claude/skills/preregister/SKILL.md
-cp docs/harness/skill-cost-model.md    .claude/skills/cost-model/SKILL.md
-cp docs/harness/agent-claim-auditor.md .claude/agents/claim-auditor.md
+mkdir -p .claude/skills/preregister .claude/skills/cost-model .claude/skills/resilient-job \
+         .claude/skills/autoresearch-screen .claude/agents
+cp docs/harness/skill-preregister.md         .claude/skills/preregister/SKILL.md
+cp docs/harness/skill-cost-model.md          .claude/skills/cost-model/SKILL.md
+cp docs/harness/skill-resilient-job.md       .claude/skills/resilient-job/SKILL.md
+cp docs/harness/skill-autoresearch-screen.md .claude/skills/autoresearch-screen/SKILL.md
+cp docs/harness/agent-claim-auditor.md       .claude/agents/claim-auditor.md
 ```
 
-Then `/preregister`, `/cost-model`, and the `claim-auditor` subagent become available. Review the
-files first: each one is an instruction set that will shape how future sessions behave.
+Then `/preregister`, `/cost-model`, `/resilient-job`, `/autoresearch-screen`, and the
+`claim-auditor` subagent become available. Review the files first: each one is an instruction
+set that will shape how future sessions behave. Each is written to be portable — none of them
+name this project's specific files as anything but an illustrative origin, so they can be
+installed in another project's `.claude/` unchanged.
 
 ## What each is for, and which failure it comes from
 
@@ -24,12 +30,17 @@ files first: each one is an instruction set that will shape how future sessions 
 |---|---|---|
 | `skill-preregister.md` | Register a measurement's predicted outcome, and check it can discriminate, before spending the compute | `LL-20` — three points called "decelerating" from ratios while differences grew; the registered decisive point was not decisive |
 | `skill-cost-model.md` | State a computation's cost model and count its bytes before scaling it to a new size | `LL-21` (a declared memory risk 6.6× optimistic), `LL-22` (a quadratic optimiser that survived three campaigns because its answers were correct) |
-| `agent-claim-auditor.md` | Adversarially audit a claim against the three things neither gate can see: cost, interpretation, and the harness itself | `LL.md` synthesis, *the three blind spots of a two-gate system* |
+| `skill-resilient-job.md` | Checkpoint inside every expensive pass, proof text search against binary-detection false negatives, give success/failure detection its own negative control, distinguish "corrupt" from "my reader failed", recover the backed-up value instead of blindly re-spending compute | `LL-29`, `LL-30`, `LL-31` — a fully-converged 34-hour cloud computation was reported failed twice by its own verification code, and its "discard and restart" policy began an unnecessary full recompute twice, before both bugs were found by reading raw bytes directly |
+| `skill-autoresearch-screen.md` | Choose between several plausible designs with a fixed-budget, pre-registered screen (independent proposers from different lenses → check every proposal against the actual code → a judge fixes the list and a mechanical rule → run as registered, report a misfire rather than hide it) | `LL-28` — a multi-agent panel's proposals were checked against the code before running and a real convergence bug was found; the screen itself later misfired on one rule and was reported exactly as registered |
+| `agent-claim-auditor.md` | Adversarially audit a claim against the things neither gate can see: cost, interpretation, the harness itself, and — as of `LL-29`/`LL-30`/`LL-31` — whether the *verification tooling* deciding success or failure has been tested against its own failure modes | `LL.md` synthesis, *the three blind spots of a two-gate system*, extended 2026-09-17 |
 
-## Why these three and not more
+## Why these and not more
 
 Both machine gates were green through every failure in the 2026-09-13 cycle, and none of those
 failures was a proof error. The gates bound what may be **claimed**; they say nothing about what
-should be **asked**, what it should **cost**, or whether the **instrument** is sound. These three
-artifacts target exactly those gaps and nothing else. A skill that restates what
-`scripts/verify.sh` already enforces would add ceremony, not rigour.
+should be **asked**, what it should **cost**, or whether the **instrument** is sound. A second
+incident cycle (2026-09-15..17, a real cloud computation) added a fourth gap of the same shape:
+the code that decides *whether a long-running job succeeded* is itself an unaudited instrument,
+and needs the same controls as everything it reports on. These artifacts target exactly those
+gaps and nothing else. A skill that restates what `scripts/verify.sh` already enforces would add
+ceremony, not rigour.
