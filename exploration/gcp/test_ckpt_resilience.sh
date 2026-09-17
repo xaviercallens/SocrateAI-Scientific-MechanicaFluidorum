@@ -77,6 +77,25 @@ for spec in "8||M8_scratch_ref" "16|$RUNS/S5_M16_phases_jacobi.txt|M16_seed_ref"
   [ "$rc" = 0 ] && cmp -s "$W/cls$mm.txt" "$W/$ref.txt" && pass "M=$mm class-pass resume: output byte-identical to uninterrupted" || fail "M=$mm class-pass resume: rc=$rc or output differs"
 done
 
+echo "== resume from an ALREADY phase=done checkpoint (2026-09-17 incident: the real M=64 run wrote"
+echo "   this exact state to eval.ckpt and completed normally in the SAME process; a fresh launch"
+echo "   loading that checkpoint -- exactly what a preemption right after convergence causes, and"
+echo "   what a manual retry after any failure does -- hit a FATAL 'checkpoint field s missing' and"
+echo "   quarantined a perfectly valid, fully-converged checkpoint, discarding it) =="
+rm -f "$W"/done8*
+rc=$(run done8_ref 8 "" --ckpt "$W/done8_ref.ckpt" --ckpt-every-s 0)
+[ "$rc" = 0 ] || fail "done8 reference exited $rc"
+head -1 "$W/done8_ref.ckpt" | grep -q "phase=done" \
+  || fail "done8 setup: eval.ckpt is not phase=done after natural completion: $(head -1 "$W/done8_ref.ckpt")"
+# a FRESH launch against that same, untouched, already-done checkpoint -- no kill involved at all
+rc=$(run done8_resumed 8 "" --ckpt "$W/done8_ref.ckpt" --ckpt-every-s 0)
+if [ "$rc" = 0 ] && grep -q "RESUMED from .*(phase=done)" "$W/done8_resumed.log" && ! grep -q "FATAL" "$W/done8_resumed.log" \
+   && cmp -s "$W/done8_resumed.txt" "$W/M8_scratch_ref.txt"; then
+  pass "fresh launch against an already-done checkpoint: no FATAL, output byte-identical"
+else
+  fail "fresh launch against an already-done checkpoint: rc=$rc; $(grep -m1 FATAL "$W/done8_resumed.log" || echo 'no FATAL line')"
+fi
+
 echo "== controls =="
 # harness can fail: one flipped sign must be caught by the same byte comparison
 awk 'NR==2{$4=-$4} {print}' "$W/M8_scratch_ref.txt" > "$W/flip1.txt"

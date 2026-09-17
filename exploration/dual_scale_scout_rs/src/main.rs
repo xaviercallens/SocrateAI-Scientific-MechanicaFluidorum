@@ -819,9 +819,22 @@ fn phases_adversarial_free(m: i64, o: &FreeOpts) -> std::collections::HashMap<K,
         init = s.abs();
         eprintln!("   [align/free] initial exact |S| = {} (before any sweep)", init);
         save!(format!("phase=sweep sweep=1 i=0 s={} best={} improved=0 init={} flips=0", s, init, init), &mask, Some(&signs[..]));
-    } else {
+    } else if phase == "sweep" {
         let c = loaded.as_ref().unwrap();
         s = c.get("s");
+        init = c.get("init");
+        eprintln!("   [align/free] initial exact |S| = {} (from checkpoint)", init);
+    } else {
+        // phase == "done": the 2026-09-17 incident. `s` (the running signed total, only ever
+        // needed WHILE a sweep is in progress) is not a field of a `phase=done` checkpoint --
+        // it was never written, because at that point nothing signed remains to accumulate. The
+        // prior code read it unconditionally here and exited 3 ("checkpoint unusable") on a
+        // perfectly valid, fully-converged checkpoint, which quarantined it and restarted the
+        // entire computation from scratch. `s` is provably unused below when phase == "done"
+        // (only the `if phase != "done"` branch touches it), so any placeholder is safe; `init`
+        // is the only field that branch's own eprintln! needs, and it IS in a `done` header.
+        let c = loaded.as_ref().unwrap();
+        s = 0;
         init = c.get("init");
         eprintln!("   [align/free] initial exact |S| = {} (from checkpoint)", init);
     }

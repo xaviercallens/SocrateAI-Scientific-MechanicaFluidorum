@@ -1,0 +1,40 @@
+== M8_scratch (M=8, kill after every 37 saves) ==
+PASS  M8_scratch reference final |S| = 822566075728 (9 sweeps)
+      285 launches, 284 resumes; resumed in:      27 phase=init     257 phase=sweep 
+PASS  M8_scratch resumed output byte-identical to uninterrupted
+PASS  M8_scratch resumed final |S| = 822566075728
+== M16_seed (M=16, kill after every 997 saves) ==
+PASS  M16_seed reference initial |S| = 17175910896716672
+PASS  M16_seed reference final |S| = 17175910896716672 (1 sweeps)
+      10 launches, 9 resumes; resumed in:       1 phase=init       8 phase=sweep 
+PASS  M16_seed resumed output byte-identical to uninterrupted
+PASS  M16_seed resumed final |S| = 17175910896716672
+== M16_perturbed (M=16, kill after every 997 saves) ==
+PASS  M16_perturbed reference initial |S| = 16788833804852576
+PASS  M16_perturbed reference final |S| = 17175910896716672 (2 sweeps)
+      19 launches, 18 resumes; resumed in:       1 phase=init      17 phase=sweep 
+PASS  M16_perturbed resumed output byte-identical to uninterrupted
+PASS  M16_perturbed resumed final |S| = 17175910896716672
+== class-pass resume (the kill loops above never land there: the class set saturates within a few chunks) ==
+PASS  M=8 killed inside the class pass (checkpoint phase=classes chunk=1)
+PASS  M=8 resumed IN the class pass
+      class set saturated after 28/1000 chunks: all 1054 classes present, the rest cannot add one
+PASS  M=8 class-pass resume: output byte-identical to uninterrupted
+PASS  M=16 killed inside the class pass (checkpoint phase=classes chunk=1)
+PASS  M=16 resumed IN the class pass
+      class set saturated after 20/1000 chunks: all 8538 classes present, the rest cannot add one
+PASS  M=16 class-pass resume: output byte-identical to uninterrupted
+== resume from an ALREADY phase=done checkpoint (2026-09-17 incident: the real M=64 run wrote
+   this exact state to eval.ckpt and completed normally in the SAME process; a fresh launch
+   loading that checkpoint -- exactly what a preemption right after convergence causes, and
+   what a manual retry after any failure does -- hit a FATAL 'checkpoint field s missing' and
+   quarantined a perfectly valid, fully-converged checkpoint, discarding it) ==
+PASS  fresh launch against an already-done checkpoint: no FATAL, output byte-identical
+== controls ==
+PASS  byte comparison catches a single flipped sign
+PASS  truncated checkpoint detected, fell back to .prev
+PASS  run resumed from .prev is byte-identical
+PASS  two corrupt checkpoints -> exit 3 (checkpoint unusable)
+PASS  checkpoint from another seed -> exit 4
+
+ALL RESILIENCE TESTS PASSED
