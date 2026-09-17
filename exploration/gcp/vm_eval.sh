@@ -288,7 +288,7 @@ heartbeat() {
     attr heartbeat "$(ts)"
     [ -f "$WORK/progress.json" ] && attr progress "$(head -c 1500 "$WORK/progress.json")"
     attr load "$(cut -d' ' -f1-3 /proc/loadavg)"
-    attr last_log "$(grep -v '^[[:space:]]*$' "$WORK/scout.log" 2>/dev/null | tail -1 | cut -c1-300)"
+    attr last_log "$(grep -a -v '^[[:space:]]*$' "$WORK/scout.log" 2>/dev/null | tail -1 | cut -c1-300)"
     if [ $((now - last_up)) -ge "$UPLOAD_S" ]; then
       snapshot_ckpt
       for f in progress.json runner.log scout.log; do [ -f "$WORK/$f" ] && store_put "$WORK/$f" "$PREFIX/out/$f"; done
@@ -314,7 +314,7 @@ while :; do
   rc=0; wait "$SCOUT_PID" || rc=$?
   SCOUT_PID=""
   [ "$rc" = 0 ] && break
-  tail_msg=$(grep -v '^[[:space:]]*$' "$WORK/scout.log" | tail -3 | tr '\n' ' ' | cut -c1-400 || true)
+  tail_msg=$(grep -a -v '^[[:space:]]*$' "$WORK/scout.log" | tail -3 | tr '\n' ' ' | cut -c1-400 || true)
   case "$rc" in
     3)  resets=$((resets + 1))
         q="$WORK/quarantine/$(date -u +%Y%m%dT%H%M%S)"; mkdir -p "$q"
@@ -338,8 +338,13 @@ P="$WORK/polished_phases.txt"; S="$WORK/job/seed_phases.txt"
 [ -f "$P" ] || die FAILED_RUN 13 "exit 0 but no polished phases file"
 head -1 "$P" | grep -qx "# scout adversarial phases M=$M" || die FAILED_RUN 13 "polished phases header wrong"
 [ "$(wc -l < "$P")" = "$(wc -l < "$S")" ] || die FAILED_RUN 13 "polished phases has $(wc -l < "$P") lines, seed has $(wc -l < "$S")"
-init=$(grep -o 'initial exact |S| = [0-9]*' "$WORK/scout.log" | tail -1 | grep -o '[0-9]*$' || true)
-last=$(grep 'sweep [0-9]* done, best=' "$WORK/scout.log" | tail -1 || true)
+# 2026-09-17 incident: an unflushed write across a preemption boundary left a handful of NUL
+# bytes in scout.log (the log is intentionally never fsync'd -- only the checkpoint is). `grep`
+# treats any file containing a NUL byte as binary and silently matches nothing at all, which
+# turned a FULLY SUCCESSFUL 34-hour run into a false FAILED_RUN, with the actual answer sitting
+# untouched in the log the whole time. `-a` forces text search regardless of binary detection.
+init=$(grep -a -o 'initial exact |S| = [0-9]*' "$WORK/scout.log" | tail -1 | grep -a -o '[0-9]*$' || true)
+last=$(grep -a 'sweep [0-9]* done, best=' "$WORK/scout.log" | tail -1 || true)
 final=$(printf '%s' "$last" | sed -n 's/.*best=\([0-9]*\).*/\1/p')
 sweeps=$(printf '%s' "$last" | sed -n 's/.*sweep \([0-9]*\) done.*/\1/p')
 [ -n "$init" ] && [ -n "$final" ] || die FAILED_RUN 13 "could not read the exact |S| values from scout.log"

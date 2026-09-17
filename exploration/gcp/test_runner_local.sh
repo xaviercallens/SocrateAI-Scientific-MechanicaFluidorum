@@ -128,6 +128,24 @@ rc=$(runner corrupt "$b")
   && grep -q '"final_exact_S":"17175910896716672"' "$b/m16/out/result.json" \
   && pass "corrupt checkpoints: quarantined (also in the bucket), restarted, correct result" || fail "corrupt checkpoints: rc=$rc"
 
+# 10.5. 2026-09-17 regression: a NUL byte in scout.log (an unflushed write torn across a real
+# preemption boundary -- the log is intentionally never fsync'd, only the checkpoint is) must not
+# make the VERIFY step blind. Built from the "happy" scenario's own completed checkpoint (already
+# phase=done) with its bucket DONE marker and result.json removed, so a re-run must re-verify from
+# scout.log to reach DONE -- exactly the step that silently failed against the real job.
+cp -r "$T/happy" "$T/nulbyte"
+rm -f "$T/nulbyte/bucket/m16/out/DONE" "$T/nulbyte/bucket/m16/out/result.json" "$T/nulbyte/work/DONE" "$T/nulbyte/work/polished_phases.txt"
+python3 -c "
+p = '$T/nulbyte/work/scout.log'
+d = open(p, 'rb').read()
+i = d.find(b'initial exact')
+open(p, 'wb').write(d[:i+40] + b'\x00' * 20 + d[i+40:])
+"
+rc=$(runner nulbyte "$T/nulbyte/bucket")
+[ "$rc" = 0 ] && [ "$(state "$T/nulbyte/bucket")" = DONE ] && grep -q '"final_exact_S":"17175910896716672"' "$T/nulbyte/bucket/m16/out/result.json" \
+  && pass "NUL byte in scout.log (torn preemption write): VERIFY still reads the exact |S| values, reaches DONE" \
+  || fail "NUL byte in scout.log: rc=$rc state=$(state "$T/nulbyte/bucket")"
+
 # 11. telemetry was actually written
 [ -s "$T/preempt/work/attrs/heartbeat" ] && [ -s "$T/preempt/work/attrs/progress" ] && [ -s "$T/preempt/work/attrs/status" ] \
   && pass "guest attributes written: status, heartbeat, progress ($(cat "$T/preempt/work/attrs/status"))" || fail "guest attributes missing"
