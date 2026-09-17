@@ -215,9 +215,15 @@ PY
     ;;
 
   resume)
+    # 2026-09-17: a stopped instance keeps whatever startup-script it was CREATED with. A local
+    # fix to vm_eval.sh (e.g. this session's NUL-byte grep fix) does nothing on resume unless the
+    # instance's own metadata is refreshed first -- a resume that skipped this would have re-run
+    # the exact bug that just failed. Always refresh before starting.
     zone=$(zone_of); [ -n "$zone" ] || { say "instance $NAME absent: use create (a bucket checkpoint is picked up automatically)"; exit 1; }
     st=$(gc compute instances describe "$NAME" --zone="$zone" --format="value(status)")
     [ "$st" = TERMINATED ] || { say "instance is $st, not TERMINATED; nothing to resume"; exit 0; }
+    say "refreshing the startup script on the instance with the current exploration/gcp/vm_eval.sh before starting"
+    gc compute instances add-metadata "$NAME" --zone="$zone" --metadata-from-file="startup-script=$REPO/exploration/gcp/vm_eval.sh"
     if gc compute instances start "$NAME" --zone="$zone"; then
       say "started; the startup script resumes from the checkpoint by itself"
     else

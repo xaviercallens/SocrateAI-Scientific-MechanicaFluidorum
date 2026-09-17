@@ -26,6 +26,7 @@ case "$a" in
   *"compute instances describe"*"value(status)"*) cat "$S/instance" ;;
   *"compute instances get-serial-port-output"*) echo "serial: boot"; echo "MF-EVAL 2026 [STATUS] $(cat "$S/guest_status" 2>/dev/null)" ;;
   *"compute instances delete"*) rm -f "$S/instance" ;;
+  *"compute instances add-metadata"*) echo "$*" >> "$S/metadata_refreshes.log" ;;
   *"compute instances start"*) echo RUNNING > "$S/instance" ;;
   *"compute instances create"*) echo RUNNING > "$S/instance"; echo "mf-eval us-central1-a c2-standard-8 true RUNNING" ;;
   *"get-guest-attributes"*"mf/status"*) cat "$S/guest_status" 2>/dev/null ;;
@@ -77,8 +78,8 @@ rc=$(scenario live RUNNING RUNNING 0 0)
   && pass "live instance: refused, nothing deleted or created" || fail "live instance (rc=$rc): $(tail -3 "$T/live.out")"
 
 rc=$(scenario resumable TERMINATED RUNNING 1 0)
-{ [ "$rc" = 0 ] && called resumable "instances start" && ! called resumable "instances delete" && ! called resumable "instances create" && ! unhandled resumable; } \
-  && pass "preempted job with a bucket checkpoint: resumed, not recreated" || fail "resumable (rc=$rc): $(tail -5 "$T/resumable.out")"
+{ [ "$rc" = 0 ] && called resumable "instances start" && called resumable "instances add-metadata" && ! called resumable "instances delete" && ! called resumable "instances create" && ! unhandled resumable; } \
+  && pass "preempted job with a bucket checkpoint: resumed, not recreated, startup script refreshed first" || fail "resumable (rc=$rc): $(tail -5 "$T/resumable.out")"
 
 rc=$(scenario fresh TERMINATED RUNNING 1 0 --fresh)
 { [ "$rc" = 0 ] && called fresh "instances delete" && called fresh "instances create" && ! called fresh "instances start"; } \
