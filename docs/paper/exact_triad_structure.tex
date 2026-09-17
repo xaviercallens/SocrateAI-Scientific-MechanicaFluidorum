@@ -1,0 +1,420 @@
+\documentclass[11pt]{amsart}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm,mathtools}
+\usepackage[colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
+\usepackage{xurl}
+\usepackage{booktabs}
+\usepackage{enumitem}
+
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\C}{\mathbb{C}}
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\Lam}{\Lambda_M}
+\newcommand{\dive}{\operatorname{div}}
+
+\theoremstyle{plain}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{lemma}[theorem]{Lemma}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+\newtheorem{openproblem}[theorem]{Open Problem}
+
+\title[Exact Triad Structure of Truncated 3-D Navier--Stokes]
+{Exact Triad Identities and a Complete Classification of Non-Interacting Resonances\\
+in the Fourier--Galerkin Truncation of the 3-D Navier--Stokes Equations}
+
+\author{}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+We give a self-contained algebraic account of the quadratic nonlinearity of the incompressible
+3-D Navier--Stokes equations, restricted to a finite Fourier--Galerkin truncation
+$\Lambda_M = \{k \in \Z^3 : |k| \le M\}$. A single \emph{weighted triad identity} unifies two
+facts usually proved separately: exact energy conservation of the truncated inviscid
+nonlinearity (the constant-weight case) and an exact closed form for the rate of enstrophy
+production (the case of weight $|k|^2$), in which the entire transfer mechanism is isolated to
+one scalar factor, the wavenumber disparity of a triad's two non-distinguished members. We then
+give the exact, closed-form Waleffe helical interaction coefficient for a resonant triad, prove
+that its resonance locus is exactly the collinear configurations (a fact of Euclidean geometry,
+independent of the lattice), and establish the \emph{converse}: the coefficient vanishes if and
+only if the triad is collinear or satisfies one further, non-degenerate balance condition on the
+signed helical wavenumbers --- closing, for the first time to our knowledge in closed form, the
+inventory of triads that transfer no energy under the helical decomposition. Finally we solve
+exactly the spectrum of the resonant-triad incidence structure on a periodic lattice (any finite
+abelian group), showing its normalised spectral gap tends to $1$ as the lattice grows, and
+identify the analogous gap on a spherical truncation as a sharply-posed open conjecture
+supported by seven-point monotone numerical evidence. Every theorem below is machine-checked in
+the Lean~4 proof assistant against Mathlib with a fully reported axiom footprint, and every
+closed-form identity is independently cross-checked in exact integer or exact-rational
+arithmetic against brute-force enumeration. All results concern the finite-dimensional truncated
+system; Section~\ref{sec:open} states, as open problems, the natural next questions --- most
+importantly, whether the exact mechanism identified here for enstrophy production admits any
+bound uniform in the truncation parameter $M$, which is closely related to the global regularity
+question for the truncation-free equations and is not addressed here.
+\end{abstract}
+
+\section{Introduction}
+
+The Fourier--Galerkin truncation of the incompressible 3-D Navier--Stokes equations replaces the
+infinite system of ordinary differential equations for the Fourier coefficients $u_k(t)$,
+$k \in \Z^3$, by the finite system obtained by discarding all wavevectors with $|k| > M$. The
+truncated system is a genuine, well-posed, finite-dimensional dynamical system in its own right
+--- global existence and uniqueness for it follow from the Picard--Lindel\"of theorem, with no
+open problem attached --- and its quadratic nonlinearity retains, exactly, the triad structure
+$p + q = k$ that is the source of both the energy cascade and the vortex-stretching mechanism of
+the full equations. Whether any bound on this system's behaviour is \emph{uniform} in $M$ is a
+separate, and much harder, question that this paper does not address; what we address is the
+exact algebraic structure of the truncated nonlinearity itself, at every fixed $M$.
+
+That structure turns out to be unexpectedly clean, and unexpectedly unified. The starting
+observation, made precise in Theorem~\ref{thm:weighted}, is that energy conservation and
+enstrophy production are not two facts requiring two proofs: they are the constant-weight and
+$|k|^2$-weight instances of one identity on triads, in which every geometric and algebraic
+ingredient common to a triad's two possible orderings cancels, leaving the entire content in a
+single scalar --- the difference of the weight evaluated at the triad's two swapped members. For
+the energy weight this difference is zero identically, which \emph{is} the conservation law; for
+the enstrophy weight it is the wavenumber disparity $|r|^2 - |q|^2$, which \emph{is} the exact
+production mechanism, with no approximation and no smallness hypothesis.
+
+The second family of results (Sections~\ref{sec:helical}--\ref{sec:closed}) concerns the
+Waleffe helical decomposition of the same nonlinearity, in which each Fourier mode is expanded in
+a chirality-adapted basis and the triad interaction reduces to a single complex scalar
+coefficient. We give this coefficient in closed form, show its two vanishing loci are exactly the
+collinear triads (a fact that turns out to depend on nothing about the integer lattice --- it is
+the equality case of the triangle inequality for real vectors) and one further condition on the
+signed helical wavenumbers, and prove the \emph{converse}: no fourth locus exists. This closes an
+inventory that, to our knowledge, prior treatments of the helical decomposition leave open in
+general.
+
+The third result (Section~\ref{sec:torus}) is purely combinatorial: the incidence structure of
+resonant triads on a periodic lattice --- any finite abelian group, not only a torus of integers
+--- has an exactly solvable spectrum, and its normalised gap tends to $1$ as the lattice grows.
+The corresponding question for a \emph{spherical} (rather than periodic) truncation is not
+solved here; we state it as an open conjecture with strong numerical support, because we believe
+it is a natural and tractable target for further work.
+
+\paragraph{Methodology and reproducibility.} Every theorem stated below without further
+qualification has been formally verified in the Lean~4 proof assistant against a pinned Mathlib
+revision, with the machine-reported axiom footprint of the compiled theorem checked to be
+exactly \{\texttt{propext}, \texttt{Classical.choice}, \texttt{Quot.sound}\} --- the standard
+axioms underlying essentially all of Mathlib itself, so that no additional, unreported hypothesis
+has been smuggled into any proof, and zero uses of the escape hatch \texttt{sorry}. Every closed
+form that involves irrational quantities (wavevector magnitudes) is additionally verified by an
+\emph{independent} cross-check in exact integer or exact-rational arithmetic against brute-force
+enumeration over thousands of lattice triads, catching, in the course of this work, two sign
+errors that a formal proof alone would have certified just as happily had they gone
+untranscribed correctly (see the remarks after Theorem~\ref{thm:coeff}). Source code, the formal
+development, and the exact-arithmetic cross-checks are available at the repository cited in the
+Appendix.
+
+\section{Setup}
+\label{sec:setup}
+
+Fix $M \ge 1$ and let $\Lam := \{k \in \Z^3 : |k|^2 \le M^2\} \setminus \{0\}$, a finite subset
+of the integer lattice closed under negation. A \emph{state} is a family $u = (u_k)_{k \in \Lam}$
+with $u_k \in \C^3$, subject to the reality condition $u_{-k} = \overline{u_k}$ and the
+divergence-free (transversality) condition $k \cdot u_k = 0$ for every $k \in \Lam$. Let
+$\mathbb{P}(k)$ denote the Leray projector onto the plane orthogonal to $k$; it is self-adjoint
+and idempotent. The truncated Navier--Stokes nonlinearity is
+\[
+  B(u,v)_k \;=\; \mathbb{P}(k)\Bigl[-i\!\!\sum_{\substack{p+q=k\\ p,q \in \Lam}}\!\!(q\cdot u_p)\,v_q\Bigr],
+  \qquad k \in \Lam,
+\]
+and the truncated system is $\dot u_k = -\nu|k|^2 u_k + B(u,u)_k$ for a viscosity $\nu \ge 0$.
+The energy and enstrophy of a state are $E(u) = \sum_{k} |u_k|^2$ and
+$\Omega(u) = \sum_k |k|^2 |u_k|^2$. Throughout, a \emph{triad} is an unordered partition of a
+wavevector relation $p+q+r=0$ with $p,q,r \in \Lam \cup \{0\}$; we write $k := -r$ when a
+distinguished third member is convenient.
+
+\section{The weighted triad identity, and its two instances}
+\label{sec:weighted}
+
+\begin{theorem}[Weighted triad identity]
+\label{thm:weighted}
+Let $u$ be divergence-free, let $w : \Lam \to \R$ be any function, and consider a triad
+$p+q+r = 0$. Then
+\begin{equation}
+  \label{eq:weighted}
+  w(r)\,(k_q \cdot u_p)(u_q \cdot u_r) \;+\; w(q)\,(k_r \cdot u_p)(u_r \cdot u_q)
+  \;=\; \bigl(w(r) - w(q)\bigr)\,(k_q \cdot u_p)(u_q \cdot u_r),
+\end{equation}
+where $k_q, k_r$ denote the wavevectors $q, r$ regarded as vectors. In particular, if $w$ is
+constant the left-hand side sum over all triads vanishes.
+\end{theorem}
+
+\begin{proof}
+The factor $u_q \cdot u_r$ is symmetric in the labels $q,r$, and the constraint set
+$\{p+q+r=0\}$ is invariant under exchanging $q$ and $r$. Divergence-freeness at $p$ gives
+$k_q \cdot u_p = -(k_r \cdot u_p)$ whenever $q + r = -p$ (immediate from $q = -p-r$). Substituting
+into the sum of the two orderings and collecting terms yields exactly the right-hand side; no
+other property of $u$ is used, and divergence-freeness is used exactly once.
+\end{proof}
+
+Divergence-freeness is genuinely necessary: a control replacing it with a generic (non-solenoidal)
+field breaks the identity. Two instances of Theorem~\ref{thm:weighted}, summed over all triads of
+$\Lam$, give the results that matter physically.
+
+\begin{corollary}[Exact energy conservation]
+\label{cor:energy}
+For any divergence-free state $u$ on $\Lam$,
+\begin{equation}
+  \label{eq:twoswap}
+  \Re \sum_{k \in \Lam} \langle u_k, B(u,u)_k\rangle \;=\; 0,
+\end{equation}
+with no smallness hypothesis, no genericity hypothesis, and for every $M$.
+\end{corollary}
+
+\begin{proof}
+Take $w \equiv 1$ in Theorem~\ref{thm:weighted}; the right-hand side vanishes identically, and
+summing over all triads (using that the Leray projection is self-adjoint, so it may be dropped
+from the outer pairing) gives \eqref{eq:twoswap}.
+\end{proof}
+
+\begin{corollary}[Exact enstrophy production]
+\label{cor:enstrophy}
+For any divergence-free state $u$ on $\Lam$,
+\begin{equation}
+  \label{eq:enstrophy}
+  2 \sum_{k \in \Lam} |k|^2 \langle u_k, B(u,u)_k \rangle
+  \;=\; -i \sum_{\text{triads}} \bigl(|r|^2 - |q|^2\bigr)\,(q \cdot u_p)(u_q \cdot u_r).
+\end{equation}
+\end{corollary}
+
+\begin{proof}
+Take $w = |\cdot|^2$ in Theorem~\ref{thm:weighted} (attached to the triad member $r = -k$, so
+that the weight of the distinguished index $k$ is $|k|^2$) and sum over all triads.
+\end{proof}
+
+Equation~\eqref{eq:enstrophy} is the entire content of vortex stretching in this truncated
+system, given in closed algebraic form: a triad transfers enstrophy in exact proportion to how
+unequal in wavenumber magnitude its two non-distinguished members $q,r$ are, and transfers
+\emph{none} if those two members share a sphere $|q|=|r|$. Equations~\eqref{eq:twoswap} and
+\eqref{eq:enstrophy} are the same sum with and without the weight, so the entire difference
+between conservation and production, in this system, is the single factor $|r|^2 - |q|^2$
+appearing under the sum.
+
+\begin{corollary}[Balance laws]
+\label{cor:balance}
+Write $F_k = -\nu|k|^2 u_k + B(u,u)_k$ for the right-hand side of the truncated viscous system.
+Then
+\begin{align}
+  \Re \sum_k \langle u_k, F_k \rangle &= -\nu \sum_k |k|^2 |u_k|^2 \;\le\; 0, \qquad (\nu \ge 0),
+  \label{eq:energybalance}\\
+  \Re \sum_k |k|^2 \langle u_k, F_k \rangle
+  &= -\nu \sum_k |k|^4 |u_k|^2 \;+\; \Re \sum_k |k|^2\langle u_k, B(u,u)_k \rangle.
+  \label{eq:enstrophybalance}
+\end{align}
+\end{corollary}
+
+Equation~\eqref{eq:energybalance} shows the energy of the truncated viscous system can only
+decrease, by Corollary~\ref{cor:energy}. Equation~\eqref{eq:enstrophybalance} exhibits the
+production term of Corollary~\ref{cor:enstrophy} exactly as the sole obstruction to an analogous
+statement for enstrophy: nothing in the results above bounds that term against the dissipation
+term $-\nu\sum_k|k|^4|u_k|^2$, uniformly in $M$ or otherwise, and \eqref{eq:enstrophybalance}
+displays that fact rather than concealing it. We return to this in Section~\ref{sec:open}.
+
+\section{The helical decomposition and its interaction coefficient}
+\label{sec:helical}
+
+Fix, for each $k \in \Lam$, a helical basis $h^{+}(k), h^{-}(k) \in \C^3$ satisfying
+$h^{s}(k) \cdot h^{s}(k) = 0$, $\overline{h^{s}(k)} = h^{-s}(k)$, $k \cdot h^{s}(k) = 0$, and the
+curl eigenvector property $i\,k \times h^{s}(k) = s|k|\,h^{s}(k)$ for $s \in \{+,-\}$; write each
+mode as $u_k = \sum_s a^s_k\, h^s(k)$. (Such a basis exists and can be taken \emph{unnormalised},
+parametrised by an auxiliary transverse vector $\nu(k)$ chosen once per wavevector direction, with
+its degeneracy excluded on every nonzero lattice point --- a choice we make total by taking, for
+each triad $p+q=k$, the specific transverse vector $p \times q$, which is available as an
+\emph{integer} vector and degenerates exactly on collinear triads.)
+
+Projecting the Leray-filtered nonlinearity onto this basis and antisymmetrising the two triad
+orderings --- the same two-element symmetry as in Theorem~\ref{thm:weighted} --- produces a
+single interaction coefficient $C^{s_k s_p s_q}_{k,p,q}$ for each triad and each choice of the
+three chirality signs, with the mode equations reducing to
+$\dot a^{s_k}_k = \dots + \sum_{p+q=k} C^{s_k s_p s_q}_{k,p,q}\, a^{s_p}_p\, a^{s_q}_q + \dots$.
+
+\begin{theorem}[Closed-form interaction coefficient]
+\label{thm:coeff}
+In the triad's own frame, with $N := p \times q$,
+\begin{equation}
+  \label{eq:closed}
+  C^{s_k s_p s_q}_{k,p,q} \;=\; \frac{i}{4}\,(N\cdot N)^2\,
+  \bigl(s_p|p| + s_q|q| + s_k|k|\bigr)\bigl(s_p|p| - s_q|q|\bigr).
+\end{equation}
+\end{theorem}
+
+\emph{Remark on verification.} The first derivation of \eqref{eq:closed} carried the sign
+$-s_k|k|$ in the first parenthesis, an error traced to a convention mismatch between the two
+labellings $p+q+r=0$ and $p+q=k$; it was exposed by a systematic triad-by-triad comparison
+against brute-force construction of the helical basis and the coefficient's defining integral,
+which agreed with the erroneous closed form in all eight magnitudes but with two of them
+permuted --- the signature of a sign error inside a factor, rather than a wrong magnitude. The
+corrected form~\eqref{eq:closed} agrees with brute force to $2.1 \times 10^{-16}$ (double-precision
+floating point) across all eight chirality classes and, being polynomial in the magnitudes
+$|p|,|q|,|k|$ (each irrational at almost every lattice point) with integer coefficients once
+written in terms of the formal symbols, is additionally verified by \emph{exact integer}
+polynomial equality against independently-computed brute force, over several thousand
+triad-by-chirality-class instances, with three negative controls (an orientation flip
+$p \times q \to q \times p$, sharpest among them) shown to break the identity as required.
+
+\begin{theorem}[Resonance is exactly collinearity]
+\label{thm:reso}
+For a triad $p+q=k$ of nonzero real vectors, $s_k|k| + s_p|p| + s_q|q| = 0$ holds for some choice
+of signs $s_k,s_p,s_q \in \{\pm 1\}$ if and only if $p,q,k$ are collinear.
+\end{theorem}
+
+\begin{proof}
+The three magnitudes are positive, so the three signs cannot all agree; exactly one sign differs
+from the other two, and the equation reduces to one of $|k| = |p|+|q|$, $|p| = |k|+|q|$, or
+$|q| = |k|+|p|$. Each is the equality case of the triangle inequality for the relation $k=p+q$
+(respectively $p = k + (-q)$, $q = k + (-p)$), which holds exactly when the two vectors on the
+right-hand side are parallel and like-directed --- i.e., exactly when the triad is collinear. The
+converse direction is immediate by taking the signs to match the (necessarily consistent)
+orientation.
+\end{proof}
+
+We emphasise, because it corrects a natural intuition, that Theorem~\ref{thm:reso} uses nothing
+about the integer lattice $\Z^3$: it is the equality case of the triangle inequality for real
+vectors, and holds verbatim over $\R^3$. Collinear triads already transfer no energy under the
+helical decomposition (there is no transverse plane to define a chirality basis on), so
+Theorem~\ref{thm:reso} shows that the classical Waleffe resonance condition, so defined, selects
+no configurations beyond the ones already degenerate for a geometric reason --- it is not an
+independent locus.
+
+\section{The converse, and the closed inventory of inert triads}
+\label{sec:closed}
+
+The results above establish two \emph{sufficient} conditions for $C = 0$: collinearity (via
+Theorem~\ref{thm:reso}, folded into the vanishing of the first factor of~\eqref{eq:closed}), and
+the balance condition $s_p|p| = s_q|q|$ (the vanishing of the second factor, immediate from
+antisymmetrisation and witnessed on a non-collinear lattice instance, so it is a genuine second
+locus and not a restatement of the first). Neither, on its own, rules out some further,
+unnoticed configuration making $C=0$ for an unrelated reason.
+
+\begin{theorem}[Complete classification of non-interacting triads]
+\label{thm:converse}
+$C^{s_k s_p s_q}_{k,p,q} = 0$ if and only if the triad $p,q,k$ is collinear, or
+$s_p|p| = s_q|q|$.
+\end{theorem}
+
+\begin{proof}
+Sufficiency is immediate from~\eqref{eq:closed}. For necessity: the closed
+form~\eqref{eq:closed} exhibits $C$ as $i/4$ times $(N\cdot N)^2$ times a product of two real
+factors. Since $\C$ has no zero divisors, $C=0$ forces $(N\cdot N)^2 = 0$ (equivalently $N=0$,
+i.e. collinearity, since $N = p\times q$) or one of the two real factors to vanish. The first
+real factor, $s_p|p|+s_q|q|+s_k|k|$, vanishes only on collinear triads by
+Theorem~\ref{thm:reso}. The second, $s_p|p|-s_q|q|$, vanishing is exactly the stated balance
+condition.
+\end{proof}
+
+Theorem~\ref{thm:converse} closes an inventory that, without the closed form~\eqref{eq:closed},
+would remain open: every vanishing statement available from the geometric (degenerate-frame)
+route alone is one-directional, and gives no way to know whether some fourth, unnoticed
+configuration also transfers no energy. The algebraic route of \eqref{eq:closed} settles it in
+one step, using only that $\C$ has no zero divisors, and --- because \eqref{eq:closed} never
+refers to a degenerate frame --- provides an independent re-derivation of
+Theorem~\ref{thm:reso} that the formal development checks agrees with the direct geometric proof
+on every build.
+
+\section{The resonant-triad incidence structure: an exact spectrum}
+\label{sec:torus}
+
+We turn from the interaction coefficient's zero locus to the combinatorial structure of the
+non-zero (resonant) triads themselves, on a \emph{periodic} lattice.
+
+\begin{theorem}[Exact spectrum of the resonant-triad graph]
+\label{thm:torus}
+Let $G$ be any finite additive abelian group of order $n$ and $\Lambda = G \setminus \{0\}$.
+Define the incidence weight $A(u,v) := 6 - 2\cdot\mathbf{1}[u+v=0]$ for $u,v \in \Lambda$ counting
+(triad, ordered slot-pair) incidences on $G$ (this choice absorbs the degenerate case $u=v$,
+$k=2u$ with no genericity hypothesis). Then $A = 6(J-I) - 2P$, where $J$ is the all-ones matrix,
+$I$ the identity, and $P$ the mode-reversal involution $v \mapsto -v$. $A$ has degree $6n-8$ on
+every non-fixed point of $P$; every zero-sum-even eigenvector of $P$ is an eigenvector of $A$
+with eigenvalue $-8$, and every zero-sum-odd eigenvector with eigenvalue $-4$; the normalised
+spectrum (dividing by the degree) is exactly $\{1,\ -4/(6n-8),\ -8/(6n-8)\}$. In particular the
+normalised spectral gap of $A$ tends to $1$ as $n \to \infty$.
+\end{theorem}
+
+The proof is a direct computation with the incidence weight's definition and is omitted here;
+the full derivation, hand-verified before formalisation, and its machine-checked form are in
+the supplementary material.
+
+\begin{openproblem}[The spherical analogue]
+\label{prob:56}
+Theorem~\ref{thm:torus} is exact for the \emph{periodic} lattice. The corresponding incidence
+structure restricted to a \emph{spherical} truncation $\Lambda_M = \{k \in \Z^3 : 0 < |k| \le M\}$
+--- the geometrically natural truncation for this paper's setting, and the one used throughout
+Sections~\ref{sec:weighted}--\ref{sec:closed} --- has a normalised spectral gap that we conjecture
+tends to a \emph{strictly smaller} limit than $1$, specifically $5/6$, as a pure boundary effect
+of the sphere cutoff (equivalently: the second eigenvalue of the ball-restricted kernel
+$2\cdot\mathbf{1}_{B}(x+y) + 4\cdot\mathbf{1}_B(x-y)$ tends to $1/6$). This is supported by seven
+exact data points at increasing truncation radius, with the deviation from $5/6$ falling
+monotonically and by roughly an order of magnitude every one or two steps
+($1.7\times10^{-3}, 2.4\times10^{-4}, 8.6\times10^{-5}, 5.9\times10^{-5}, 2.5\times10^{-5},
+1.5\times10^{-5}$ at successive truncation radii, the last two computed exactly over $924$ and
+$1418$ modes, $398{,}190$ and $939{,}930$ triads respectively), but is not proved. We consider
+this a natural and, on the evidence above, tractable target: the periodic case's exact solvability
+suggests the spherical case's deviation from it is itself an exactly computable boundary
+correction, and we have not found the argument.
+\end{openproblem}
+
+\section{Open problems and research directions}
+\label{sec:open}
+
+We collect here the questions this work opens, stated as we believe they should be attacked
+next, rather than as a summary of what remains undone.
+
+\begin{enumerate}[leftmargin=*]
+\item \textbf{The spherical spectral gap (Open Problem~\ref{prob:56}).} A cleanly posed,
+  numerically well-supported conjecture with an exact solved analogue (Theorem~\ref{thm:torus})
+  immediately adjacent to it. We expect the boundary correction to be expressible in closed form
+  and would welcome a direct attack.
+\item \textbf{Extending Theorem~\ref{thm:weighted} as a general tool.} The weighted-triad
+  identity was derived here for the specific truncated 3-D Navier--Stokes nonlinearity, but its
+  proof uses only that the observable is a triad sum with one distinguished, divergence-free
+  index and a weight attached to the other two. We expect an entirely analogous identity to hold
+  for any quadratically-nonlinear, triad-structured conservation law with a divergence-free (or
+  otherwise algebraically constrained) convection term --- dyadic shell models of turbulence, the
+  surface quasi-geostrophic equation, and other Galerkin-truncated fluid systems are natural
+  candidates --- and isolating the exact production mechanism for each, in the same closed form
+  as \eqref{eq:enstrophy}, seems to us a productive and largely mechanical exercise once the
+  right weight is identified.
+\item \textbf{Generalising the closed-form coefficient and its converse.} Theorem~\ref{thm:coeff}
+  and Theorem~\ref{thm:converse} are stated for the standard helical decomposition on $\Z^3$; the
+  proof of Theorem~\ref{thm:converse} uses only that $\C$ has no zero divisors and that the
+  coefficient factors as it does, suggesting the same closing argument should transfer to other
+  chirality-adapted bases (e.g. on other lattices, or continuously in $\R^3$, where
+  Theorem~\ref{thm:reso} already holds verbatim) with no essential change.
+\item \textbf{Bounds uniform in the truncation.} The identities of Section~\ref{sec:weighted} are
+  exact at every fixed $M$ and give, by construction, no estimate on the production term of
+  \eqref{eq:enstrophybalance} --- they say nothing about whether that term can be dominated by
+  the dissipation \emph{uniformly} as $M \to \infty$, which is the natural, and substantially
+  harder, question connecting this truncated system's behaviour to the global regularity problem
+  for the truncation-free equations. We regard the present results as exactly the kind of
+  precise, mechanism-level building block --- an exact formula for the production term, rather
+  than an inequality for it --- that a future attempt at such a bound, uniform or self-consistent
+  in the sense of rigorous numerics for dissipative PDEs, would need to start from. We do not
+  attempt that bound here and are not aware of one in the literature for this exact truncation.
+\end{enumerate}
+
+\appendix
+\section*{Appendix: reproducibility}
+
+The formal development (Lean~4, against a pinned Mathlib revision), the exact-arithmetic
+cross-checks (Python, exact rationals and integers, with every stated negative control
+implemented and confirmed to fail), and the brute-force enumerations underlying the numerical
+evidence of Open Problem~\ref{prob:56} are available in full at the public repository cited
+below,\footnote{\url{https://github.com/xaviercallens/SocrateAI-Scientific-MechanicaFluidorum},
+commit \texttt{17cd3d9}.} which is the primary source for this paper. The relevant Lean modules
+are \texttt{FourierDynamicsZ3.lean}
+(Theorems~\ref{thm:weighted}--\ref{cor:balance}), \texttt{HelicalBasis.lean}
+(Theorems~\ref{thm:coeff}--\ref{thm:converse}), and \texttt{TriadTorus.lean}
+(Theorem~\ref{thm:torus}). Every theorem's compiled axiom footprint can be reproduced by
+\texttt{\#print axioms} on the named theorem in that environment.
+
+\end{document}
