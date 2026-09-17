@@ -1,0 +1,30 @@
+{
+  "title": "MechanicaFluidorum: a verifier-in-the-loop program on 3-D Navier-Stokes global regularity",
+  "description": "Staged, verifier-in-the-loop research program on 3-D Navier-Stokes global regularity (\"Hypothesis U\", uniform enstrophy control of the frequency-truncated system). Combines Lean 4 / Mathlib kernel-checked theorems (zero sorry, axiom footprint {propext, Classical.choice, Quot.sound}), exact-rational-arithmetic checkers with demonstrated-failing negative controls, and clearly quarantined floating-point exploration under a strict three-tier epistemic gating system (see SPEC.md, LEDGER.md). Includes docs/paper/exact_triad_structure.pdf, a standalone peer-reviewed paper on the program's proven results: a weighted-triad identity unifying exact energy conservation and enstrophy production, a closed form and exact vanishing locus for Waleffe's helical triad interaction coefficient, and the exact spectrum of the resonant-triad incidence structure on a periodic lattice, with a stated 5/6-gap conjecture on the spherical truncation. Hypothesis U itself remains open; no claim of resolution is made anywhere in this archive.",
+  "creators": [
+    {
+      "name": "Callens, Xavier"
+    }
+  ],
+  "keywords": [
+    "Navier-Stokes",
+    "global regularity",
+    "formal verification",
+    "Lean 4",
+    "Mathlib",
+    "turbulence",
+    "helical decomposition",
+    "triad interactions",
+    "Fourier-Galerkin truncation",
+    "computer-assisted proof"
+  ],
+  "upload_type": "software",
+  "access_right": "open",
+  "related_identifiers": [
+    {
+      "identifier": "https://github.com/xaviercallens/SocrateAI-Scientific-MechanicaFluidorum",
+      "relation": "isSupplementTo",
+      "resource_type": "software"
+    }
+  ]
+}
