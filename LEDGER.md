@@ -1277,6 +1277,33 @@ number, and doubles as the check against the table version's 42-sweep sequence. 
 its own author: a cost quoted from a model instead of a clock. No `M = 32` claim, and no VM
 request, until it lands.**
 
+### Tier C — the exact `M = 64` record certified, and two verification-tooling bugs found and fixed after the machine had already computed the right answer (2026-09-16–17)
+
+`CORE_TAIL_CAP.md` §4.3.12. The exact `i128` evaluation of the `M = 64` seed converged on GCP:
+`S(σ) = 13 477 832 078 223 027 252 042 752`, all `548 958` classes checked, zero improving —
+**matches the float record exactly** (`init = best`, `0` polish flips, polished phases
+byte-identical to the seed, sha256 verified independently three times), extending the
+strict-local-optimum pattern from `M = 8, 16, 32` to the fourth point. `exploration/scout_runs/
+S5_M64_result.json`, `S5_M64_polished_phases.txt`.
+
+**Two bugs, both in the verification tooling, both found live, neither in the actual
+computation.** (1) The runner's log-parsing used a plain text search against a file that
+contained a handful of null bytes — an artefact of the log being deliberately never `fsync`'d
+(only the checkpoint is), so an abrupt spot preemption can leave a small zero-filled gap at a
+boot boundary; the search silently matched nothing rather than erroring, reporting a converged
+job as failed and quarantining its valid checkpoint. (2) Fixing that and attempting to resume
+exposed an independent second defect: the resume logic unconditionally read a checkpoint field
+that a *completed* run's checkpoint never writes, so the very first resume of a
+successfully-finished checkpoint failed and the same quarantine policy discarded it again,
+restarting the ~16.6 h evaluation from scratch. Both diagnosed by reading raw bytes directly,
+not by trusting either search; the second reproduced deterministically against the pre-fix
+binary before being trusted as fixed; both fixed and confirmed by 44 local test scenarios before
+being trusted on the live job again. `exploration/dual_scale_scout_rs/src/main.rs`,
+`exploration/gcp/vm_eval.sh`, commits `9df63f1`, `408043f`. No further cloud time was spent
+recovering the answer: the quarantined checkpoint was mirrored to the bucket independently of
+the instance uselessly recomputing it, and the fixed binary run against it locally reproduced
+the identical, independently-verified result in under a second.
+
 ### Tier C — `M = 64`: the sixth point, protocol S-5 closed, inside its pre-registered bracket (2026-09-15)
 
 `CORE_TAIL_CAP.md` §4.3.10–4.3.11, `SPECTRAL_ALIGNMENT.md` §3.2(C). Reached by a spectral

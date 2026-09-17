@@ -2486,18 +2486,47 @@ same way as everything above --- list before copying, distinguish a confirmed-em
 failed one, surface the tool's actual error instead of a guess --- and confirmed against the
 running job immediately afterward.
 
-\textbf{The result, as this is written, is not yet final: the verification sweep is in progress.}
-The exact initial value has been computed for the first time --- $S(\sigma) =
-13\,477\,832\,078\,223\,027\,252\,042\,752$, itself $\approx 2.96\times10^4$ times the $M=32$
-value, the growth expected of an objective built from $\sim M^6$ triad terms --- and the sweep has
-so far checked $265\,516$ of $548\,958$ classes, just under half, without a single one improving
-the objective read directly from the machine's own log rather than inferred from a summary.
-That extends, provisionally, the pattern already established at every smaller $M$: the spectral
-optimiser's result is already a strict local optimum of the \emph{exact} integer objective, not
-only the floating-point one used to reach it. It is reported here as exactly what it is --- an
-interim reading with just over half the search space still unchecked, capable of being overturned
-by the next class checked --- and will be recorded as a result, not a progress note, only when the
-sweep itself reports convergence.
+\textbf{The exact record is now certified, and getting there needed two more bugs found and
+fixed after the machine had already computed the right answer.} The verification sweep
+converged inside the fourth boot (three preemptions in, $4\,833.2$ s of wall time for the final
+segment), with the exact initial value computed for the first time,
+\[
+  S(\sigma) = 13\,477\,832\,078\,223\,027\,252\,042\,752 \approx 2.96\times10^4 \times
+  \text{the } M=32 \text{ value --- the growth expected of an objective built from } \sim M^6
+  \text{ triad terms,}
+\]
+and every one of the $548\,958$ classes checked without a single one improving it: the spectral
+optimiser's result is a strict local optimum of the \emph{exact} integer objective at $M=64$,
+extending the pattern already established at every smaller $M$, not provisionally this time.
+
+\textbf{The machine's own verification of that success then failed, twice, for two unrelated
+reasons, and each failure quarantined the correct answer and tried to recompute it from
+scratch.} First, the step that extracts the two lines confirming convergence used a plain text
+search against a log file that happened to contain a handful of null bytes --- an artefact of
+the log being deliberately never flushed to disk on every write, only the checkpoint is, so an
+abrupt preemption can leave a small zero-filled gap at the exact byte where one boot's output
+stops and the next one's begins. A file containing even one such byte is treated as binary by
+that search, which then matches nothing at all and reports nothing at all, rather than an error
+that would have been noticed. The job was reported failed, its perfectly valid checkpoint was
+set aside as unusable, and the runner began recomputing the entire evaluation. Second, fixing
+that and resuming exposed a genuine defect in the checkpoint format itself: the resume logic
+unconditionally read a field that a completed run's checkpoint never wrote, because that field
+is needed only while a sweep is still in progress and is provably never read once one has
+finished --- so the very first attempt to resume a \emph{successfully finished} checkpoint failed
+with a missing-field error, and the same quarantine-and-restart policy discarded it a second
+time. Both defects were confirmed by reading the raw bytes of the log directly rather than
+trusting either search, and the second was reproduced deterministically against the pre-fix
+binary before being trusted as diagnosed.
+
+Once both were fixed and each confirmed by twenty-plus local test scenarios --- driven, as
+throughout this section, by killing real processes and inspecting real bytes rather than by
+argument --- the already-computed answer did not need a third cloud run to recover: the
+quarantined checkpoint had been mirrored to the results bucket independently of the instance
+that was busy uselessly recomputing it, and running the now-fixed binary against that recovered
+checkpoint \emph{locally}, in under a second, reproduced the identical result, independently
+sha256-verified and byte-identical to the seed it started from (zero polish flips, exactly as
+the exact record above states). No further cloud time was spent. The instance that had begun
+recomputing was destroyed.
 
 \subsection{What the division of labour actually did here}
 \label{sec:collab}

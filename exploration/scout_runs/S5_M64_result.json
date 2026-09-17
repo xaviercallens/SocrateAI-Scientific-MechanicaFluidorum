@@ -1,0 +1,13 @@
+{
+  "m": 64,
+  "initial_exact_S": "13477832078223027252042752",
+  "final_exact_S": "13477832078223027252042752",
+  "sweeps": 1,
+  "polish_flips": 0,
+  "polished_sha256": "f20ee281ba112eab9c8ce3e50892e2704d02857fcb0c912927f80584fb7470b5",
+  "seed_sha256": "f20ee281ba112eab9c8ce3e50892e2704d02857fcb0c912927f80584fb7470b5",
+  "checkpoint_boots_on_gcp": 5,
+  "checkpoint_resets_due_to_bug": 1,
+  "provenance": "computed on GCP (c2-standard-8, us-central1-b, spot, boots 1-4, converged in boot 4 at 4833.2s wall for the final segment after three preemptions); the runner's own verification of this exact result then failed on a false-negative bug (grep silently refusing a file containing a NUL byte from an unflushed write torn across a preemption boundary), which quarantined this checkpoint and began recomputing it from scratch; both this bug and a second one found in fixing it (checkpoint field 's' read unconditionally on a phase=done checkpoint that never wrote it) are fixed in exploration/dual_scale_scout_rs/src/main.rs and exploration/gcp/vm_eval.sh (commits 9df63f1, 408043f); this result.json was produced by running the FIXED binary locally against the quarantined checkpoint recovered from gs://mf-eval-gen-lang-client-0625573011/m64/ckpt-quarantine/20260917T172041/, reproducing in seconds, with no VM, the exact result the GCP job had already computed -- verified byte-identical to the seed and independently sha256-checked",
+  "finished_utc": "2026-09-17T06:17:04Z"
+}

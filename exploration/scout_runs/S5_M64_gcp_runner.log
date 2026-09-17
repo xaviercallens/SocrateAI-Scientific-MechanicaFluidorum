@@ -1,0 +1,40 @@
+MF-EVAL 2026-09-15T20:26:13Z [INFO] boot 1 instance=mf-eval zone=us-central1-b machine=c2-standard-8 nproc=8 mem=31.3G disk_free=26G
+MF-EVAL 2026-09-15T20:26:13Z [STATUS] PREFLIGHT boot 1
+MF-EVAL 2026-09-15T20:26:14Z [STATUS] FETCH bundle gs://mf-eval-gen-lang-client-0625573011/m64/job/
+MF-EVAL 2026-09-15T20:26:15Z [INFO] bundle verified: GIT_REV=b41814cbdce385ac0be5e6668342d2e46e94111e GIT_DIRTY_FILES=0 
+MF-EVAL 2026-09-15T20:26:15Z [STATUS] SMOKE binary smoke test
+MF-EVAL 2026-09-15T20:26:15Z [INFO] no checkpoint locally or in the bucket: starting from the beginning
+MF-EVAL 2026-09-15T20:26:15Z [STATUS] RUNNING attempt 1/4, boot 1
+MF-EVAL 2026-09-16T04:46:55Z [INFO] boot 2 instance=mf-eval zone=us-central1-b machine=c2-standard-8 nproc=8 mem=31.3G disk_free=26G
+MF-EVAL 2026-09-16T04:46:55Z [STATUS] PREFLIGHT boot 2
+MF-EVAL 2026-09-16T04:46:56Z [STATUS] FETCH bundle gs://mf-eval-gen-lang-client-0625573011/m64/job/
+MF-EVAL 2026-09-16T04:46:56Z [INFO] bundle verified: GIT_REV=b41814cbdce385ac0be5e6668342d2e46e94111e GIT_DIRTY_FILES=0 
+MF-EVAL 2026-09-16T04:46:56Z [STATUS] SMOKE binary smoke test
+MF-EVAL 2026-09-16T04:46:57Z [INFO] local checkpoint present: this run RESUMES
+MF-EVAL 2026-09-16T04:46:57Z [STATUS] RUNNING attempt 1/4, boot 2
+MF-EVAL 2026-09-16T18:23:19Z [INFO] boot 3 instance=mf-eval zone=us-central1-b machine=c2-standard-8 nproc=8 mem=31.3G disk_free=26G
+MF-EVAL 2026-09-16T18:23:19Z [STATUS] PREFLIGHT boot 3
+MF-EVAL 2026-09-16T18:23:20Z [STATUS] FETCH bundle gs://mf-eval-gen-lang-client-0625573011/m64/job/
+MF-EVAL 2026-09-16T18:23:20Z [INFO] bundle verified: GIT_REV=b41814cbdce385ac0be5e6668342d2e46e94111e GIT_DIRTY_FILES=0 
+MF-EVAL 2026-09-16T18:23:20Z [STATUS] SMOKE binary smoke test
+MF-EVAL 2026-09-16T18:23:21Z [INFO] local checkpoint present: this run RESUMES
+MF-EVAL 2026-09-16T18:23:21Z [STATUS] RUNNING attempt 1/4, boot 3
+MF-EVAL 2026-09-17T04:56:24Z [INFO] boot 4 instance=mf-eval zone=us-central1-b machine=c2-standard-8 nproc=8 mem=31.3G disk_free=26G
+MF-EVAL 2026-09-17T04:56:24Z [STATUS] PREFLIGHT boot 4
+MF-EVAL 2026-09-17T04:56:25Z [STATUS] FETCH bundle gs://mf-eval-gen-lang-client-0625573011/m64/job/
+MF-EVAL 2026-09-17T04:56:25Z [INFO] bundle verified: GIT_REV=b41814cbdce385ac0be5e6668342d2e46e94111e GIT_DIRTY_FILES=0 
+MF-EVAL 2026-09-17T04:56:25Z [STATUS] SMOKE binary smoke test
+MF-EVAL 2026-09-17T04:56:26Z [INFO] local checkpoint present: this run RESUMES
+MF-EVAL 2026-09-17T04:56:26Z [STATUS] RUNNING attempt 1/4, boot 4
+MF-EVAL 2026-09-17T06:17:04Z [STATUS] VERIFY checking the output
+MF-EVAL 2026-09-17T06:17:04Z [STATUS] FAILED_RUN could not read the exact |S| values from scout.log
+MF-EVAL 2026-09-17T06:17:05Z [INFO] holding 900s before power-off so the failure can be inspected (serial console / ssh)
+MF-EVAL 2026-09-17T17:20:39Z [INFO] boot 5 instance=mf-eval zone=us-central1-b machine=c2-standard-8 nproc=8 mem=31.3G disk_free=26G
+MF-EVAL 2026-09-17T17:20:39Z [STATUS] PREFLIGHT boot 5
+MF-EVAL 2026-09-17T17:20:40Z [STATUS] FETCH bundle gs://mf-eval-gen-lang-client-0625573011/m64/job/
+MF-EVAL 2026-09-17T17:20:40Z [INFO] bundle verified: GIT_REV=b41814cbdce385ac0be5e6668342d2e46e94111e GIT_DIRTY_FILES=0 
+MF-EVAL 2026-09-17T17:20:40Z [STATUS] SMOKE binary smoke test
+MF-EVAL 2026-09-17T17:20:40Z [INFO] local checkpoint present: this run RESUMES
+MF-EVAL 2026-09-17T17:20:40Z [STATUS] RUNNING attempt 1/4, boot 5
+MF-EVAL 2026-09-17T17:20:41Z [WARN] CHECKPOINT UNUSABLE (exit 3): quarantined to /var/lib/mf-eval/quarantine/20260917T172041 and the bucket; restarting from the beginning:    [align/free] RESUMED from /var/lib/mf-eval/eval.ckpt (phase=done)    [align/free] M=64 classes=548958 dense state 10.7 MB    [align/free] FATAL: checkpoint field s missing or malformed 
+MF-EVAL 2026-09-17T17:20:41Z [STATUS] RUNNING attempt 2/4, boot 5

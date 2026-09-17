@@ -987,6 +987,49 @@ on this workstation, where the exact greedy would have needed the alignment alon
 days` (§4.3.5) — the spectral optimiser plus the fixed-budget screen (`SPECTRAL_ALIGNMENT.md`
 §3.2(C)) is what made this point reachable at all.
 
+#### 4.3.12 The exact record certified — and two bugs in the verification tooling found on the way (2026-09-16–17)
+
+The exact `i128` evaluation of the `M = 64` seed (`--align free --phases-start`, the job
+`SPECTRAL_ALIGNMENT.md` calls off the critical path) ran on GCP (`exploration/gcp/
+provision_eval.sh`) starting 2026-09-15. It converged inside its fourth boot, `4 833.2 s` of
+wall time for the final segment after three spot preemptions, all recovered cleanly by the
+checkpoint mechanism:
+
+> **`S(\sigma) = 13 477 832 078 223 027 252 042 752`, ≈ `2.96×10⁴×` the `M = 32` value.
+> Every one of `548 958` classes checked, zero improving the objective.**
+
+**The exact record matches the float record exactly, which is what "certifies" means here**:
+`init = best`, `0` polish flips, the polished phases file byte-identical to the seed
+(sha256 `f20ee281ba112eab9c8ce3e50892e2704d02857fcb0c912927f80584fb7470b5`, verified
+independently three separate times). The initial excess computed from this exact object matches
+the float figure reported in §4.3.10 (`8.978824`) to the precision both were measured at — the
+spectral optimiser's `M = 64` result is a strict local optimum of the *exact* integer objective,
+extending the pattern from `M = 8, 16, 32` to the fourth point in a row.
+
+**Getting the runner to admit this took two more fixes, after the machine had already computed
+the right answer.** (1) The verification step's text search silently matched nothing on a log
+file containing a handful of null bytes — an artefact of the log being deliberately never
+`fsync`'d (only the checkpoint is), so an abrupt preemption can leave a small zero-filled gap at
+a boot boundary; a file containing even one such byte is treated as binary and the search
+reports nothing, not an error. The job was marked failed and its valid checkpoint quarantined.
+(2) Fixing that and resuming exposed a second, independent defect: the resume logic
+unconditionally read a checkpoint field that a *completed* run's checkpoint never writes (it is
+needed only mid-sweep, and is provably unused once a sweep has converged) — so the very first
+attempt to resume a successfully-finished checkpoint failed with a missing-field error and the
+same quarantine policy discarded it a second time, restarting the entire evaluation from
+scratch. Both diagnosed by reading raw bytes directly rather than trusting either search; the
+second reproduced deterministically against the pre-fix binary before being trusted as fixed;
+both fixed and each confirmed by the full local test suites (44 scenarios total) before being
+trusted again. `exploration/dual_scale_scout_rs/src/main.rs`, `exploration/gcp/vm_eval.sh`,
+commits `9df63f1`, `408043f`.
+
+**No further cloud time was spent to recover the answer.** The quarantined checkpoint had been
+mirrored to the results bucket independently of the instance that was uselessly recomputing it;
+running the fixed binary against the recovered checkpoint *locally* reproduced the identical
+result in under a second. `exploration/scout_runs/S5_M64_result.json`,
+`S5_M64_polished_phases.txt`, `S5_M64_gcp_{scout,runner}.log` (the latter carries the whole
+incident, including the null bytes, as the authentic record rather than a cleaned-up one).
+
 ## 5. The certificate's arithmetic, built and measured (Tier B)
 
 The whole Core-Tail construction rests on one primitive: a **rigorous upper bound on the
