@@ -80,7 +80,22 @@ for f in LocalDualScale DyadicShells DyadicShell_Statements EnstrophyProduction 
   if [ -n "$BAD" ]; then
     echo "TIER A GATE: FAIL ($f: non-clean axiom footprint):"; echo "$BAD"; FAILED=1; continue
   fi
-  echo "$OUT" | grep -c "depends on axioms" | xargs -I{} echo "   {} theorems, all footprints clean"
+  # A file that emits NO `#print axioms` output passes every check above trivially: there is no
+  # error, no `sorry`, and no offending axiom, because there is nothing at all.  The guard at the
+  # top of this gate defends against lake CACHING suppressing that output; this one defends
+  # against a file that never asked for it -- a new file wired into the loop above without
+  # `#print axioms` lines would print "0 theorems, all footprints clean" and be counted as
+  # verified.  Latent, not live, when this was added (2026-09-18): all twelve files carry
+  # directives.  It is the same hole found in a sibling repository that same day, where a build's
+  # exit code was reported as "17/17 targets, 0 errors" while twelve `sorry`s stood -- `sorry` is
+  # a warning, and a gate that asks a question its subject never answers always hears yes.
+  NPRINTS=$(echo "$OUT" | grep -c "depends on axioms")
+  if [ "$NPRINTS" -eq 0 ]; then
+    echo "TIER A GATE: FAIL ($f: compiled cleanly but emitted no axiom footprint at all)"
+    echo "   Add '#print axioms <name>' for every theorem this file is gated on."
+    FAILED=1; continue
+  fi
+  echo "   $NPRINTS theorems, all footprints clean"
 done
 [ "$FAILED" -eq 0 ] || exit 1
 echo "TIER A GATE: PASS (no axiom outside {propext, Classical.choice, Quot.sound}, zero sorry)"

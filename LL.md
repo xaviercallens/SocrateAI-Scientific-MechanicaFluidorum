@@ -1100,6 +1100,94 @@ read-back should be automated rather than done by hand.
 
 ---
 
+## LL-37 — a build's exit code is not a proof gate when the failure is a warning (2026-09-18)
+
+**Incident.** A full audit of a sibling repository's Lean track found a helper reporting
+`LeanFlow formal verification PASSED (17/17 targets built with 0 errors)` on the strength of
+`lake build` returning 0. There were twelve `sorry`s in the library it built. `sorry` elaborates
+to `sorryAx` and emits a **warning**, not an error, so the build exits 0 with every one of them
+standing. That "0 errors" line was then copied into a coverage table as "zero axiom footprint" —
+a quantity which `#print axioms` appears nowhere in that repository to have measured.
+
+**Why this repo was not bitten, and where it still could be.** `scripts/verify.sh` Gate 2 does not
+read an exit code: it greps the elaborator's output for `error|sorry` and parses every
+`depends on axioms` line. It also already defends against `lake build` caching a target and thereby
+emitting no footprint output at all. But a **third** path existed and was closed the same day: a
+file wired into the Gate 2 loop that simply contains no `#print axioms` directives passes every
+check trivially — no error, no `sorry`, no offending axiom, because there is nothing — and printed
+`0 theorems, all footprints clean`. Latent rather than live (all twelve gated files carry
+directives), and now a hard failure.
+
+**The guard was demonstrated to fire before it was committed**, per this project's own rule that a
+check never observed to fail is not known to work. A scratchpad file containing one theorem, no
+`sorry`, no error and no `#print axioms` directive was compiled against the same environment and
+run through the identical per-file logic:
+
+```
+negative control (no #print axioms): FAIL (compiled cleanly but emitted no axiom footprint at all)
+positive control (DyadicShells):     PASS (3 theorems)
+```
+
+The full run after the change: Gate 1 all harnesses pass, ledger gate passes, Gate 2 reports 193
+theorems across twelve files with clean footprints.
+
+**Rule.** A gate must be able to distinguish *the subject answered and the answer was good* from
+*the subject was never asked*. Any check whose pass condition is an absence — no errors, no
+offending axioms, no findings — needs a companion assertion that the check actually ran on
+something, and that assertion must itself be able to fail. This is LL-2 (self-reports are not
+evidence) applied to a tool's silence rather than to its claims.
+
+---
+
+## LL-38 — a CI file in the wrong directory is indistinguishable from a passing gate (2026-09-18)
+
+**Incident.** The same repository carried a well-formed Lean CI workflow at
+`spec/.github/workflows/lean_action_ci.yml`. GitHub Actions reads workflows only from the
+repository root, so it was never registered and never ran; the API lists two workflows, neither of
+them Lean. **The Lean code had never been compiled in continuous integration at all.** Separately,
+all twenty most recent runs of the two workflows that *do* exist were failures, and because the job
+died at a cross-compile step, the `cargo test` step after it never executed — so the one crate in
+that tree with real negative controls is tested by no passing job.
+
+**Rule.** A gate must be shown to have *fired*, not merely to exist as a file. When adding or
+inheriting CI, check the provider's list of registered workflows and the last run's status, not the
+presence of the YAML. And a red pipeline is not a partial pass: every step after the failing one
+did not run, so their guarantees are absent, not weakened. The `amcp` case recorded elsewhere in
+this file is the same shape from the other end — 28 runs, 28 failures, beneath a library of green
+self-reports.
+
+---
+
+## LL-39 — a clean axiom footprint certifies the proof, never the statement (2026-09-18)
+
+**Incident.** Three shapes found in one afternoon's audit, all of which our Tier A gate would pass:
+
+1. `theorem decay_implies_regularity_ingredient (_cert) (_h : …) : True := by trivial` — the
+   conclusion is literally `True`, both arguments discarded, and the entire claim is in the name.
+2. `theorem regularity (h₁ : A) … (h₅ : E) (_h₆ : F) : A ∧ B ∧ C ∧ D ∧ E := ⟨h₁, …, h₅⟩` — assume
+   five conjuncts, conclude their conjunction. Sorry-free, footprint clean, docstring asserting
+   "the solution remains in H¹ with bounded norm", and **no solution and no H¹ anywhere in the
+   statement**. The whole Navier–Stokes formalisation in that tree is `def … : Unit := ()`.
+3. `theorem pfc_globally_bounded … := (lemma_with_a_sorry …).2` — sorry-free *in its own source*
+   and inheriting `sorryAx` through what it rests on. Only the compiled footprint shows it.
+
+Shape 1 is caught by a `Prop := True` scan. Shape 3 is caught by `#print axioms` on the compiled
+artefact, which is why CLAUDE.md says the gate is never the source text. **Shape 2 is caught by
+neither**, and it is the dangerous one: honest proof, correct kernel, clean footprint, and the
+claim relocated entirely into the docstring and into what the hypotheses were permitted to assume.
+
+**Rule.** Vacuity and hypothesis smuggling are different defects and only the first is mechanical.
+For every Tier A promotion, a human reads the *statement* with the docstring covered and says what
+it asserts; if that differs from what the name and docstring claim, the theorem is not the theorem.
+This is why `HypothesisU_Statements.lean` carries a DRAFT banner pending a statement-adequacy audit
+rather than a tier — machine verification checks proofs, and only a human audit can certify that a
+statement means what the physics is claiming. Keep these three as the positive-control corpus for
+any future vacuity tooling, together with the `axiomAnchor : True` idiom, which is `True` on
+purpose and must **not** be flagged. A detector that cannot separate those four cases is not a
+detector.
+
+---
+
 # Synthesis — the three blind spots of a two-gate system
 
 LL-20 through LL-27 are one pattern, and it is not the control pattern below. Every one of them
