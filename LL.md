@@ -815,7 +815,7 @@ But flipping one class's sign does not disturb the other terms. Maintaining the 
 and updating it by `S ↦ S − 2·(sum of the terms that flip)` — where the terms that flip are
 exactly those whose triad contains the class an **odd** number of times, since a class occurring
 twice multiplies its term by `(−1)² = 1` — reduces a sweep from `O(classes × triads)` to
-`O(3 × triads)`: a factor `classes/3`, i.e. `2846` at `M = 16` and `22 876` at `M = 32`.
+`O(3 × triads)`: a factor `classes/3`, i.e. `2846` at `M = 16` and `22 844` at `M = 32`.
 
 The measured gain was `~12×` under contention, well short of the operation-count ratio, because
 random gathers into a multi-GB table are far less efficient per byte than the sequential scan

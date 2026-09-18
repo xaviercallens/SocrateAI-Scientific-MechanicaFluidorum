@@ -319,7 +319,7 @@ Maintain the signed total and update it,
 
 where the terms that flip are exactly those whose triad contains that class an **odd** number of
 times — a class occurring twice multiplies its term by `(−1)² = 1` and does not move. A sweep
-becomes `O(3 × triads)`: a factor `classes/3`, **2846** at `M = 16` and `22 876` at `M = 32`.
+becomes `O(3 × triads)`: a factor `classes/3`, **2846** at `M = 16` and `22 844` at `M = 32`.
 
 **Held to a refactor's standard, not argued.** Same integer arithmetic, same visit order, same
 strict-improvement test, therefore the same alignment — and checked as such: the archived `M = 8`
@@ -846,7 +846,7 @@ excursion stops growing, `Z_max/Z₀ ≤ 1.040`. Route C (`(log₂M)²`, refitte
 saturating-ish factors" from "slow power law" — stated plainly. What it *does* separate: Route B
 (`≤ 1.040`) from A/D (`≥ 1.041`) by `≥ 0.001`, ten times the `10⁻⁴` halving precision, and C
 (`1.056`) from A/D by `0.009`. **The question this point answers is whether the excursion is
-still growing at the sixth doubling**, not what law it follows.
+still growing at the sixth point**, not what law it follows.
 
 **Outcomes, fixed in advance:**
 
@@ -955,7 +955,7 @@ Z_max/Z₀ − 1      0.0023  0.0122  0.0267  0.0324  0.0386  0.0431
   local exponent      +2.407  +1.130  +0.279  +0.253   +0.158
 ```
 
-The local exponent **fell again** at the sixth doubling (`0.253 → 0.158`) after the `M = 32`
+The local exponent **fell again** at the sixth point (`0.253 → 0.158`) after the `M = 32`
 reading (`0.279 → 0.253`) had looked like a plateau — the `M^{0.27}` post-diction of §4.3.8
 over-predicts (`0.27` vs measured `0.158`); a fit on the last three exponents (`0.279, 0.253,
 0.158`) is closer to `M^{0.16}`, itself a new post-diction with the same status as the last one:
@@ -965,7 +965,7 @@ growing at `M = 64`, has not turned over, and its ceiling — if it has one — 
 
 **What this closes and does not close.** `O5` stands, in the same sense it has stood at every
 point in this series: the transient enstrophy excursion of one constructed adversarial family
-grows with `M` across six doublings without saturating, currently `≈ 4.3 %` at `M = 64`, slowing
+grows with `M` across five doublings without saturating, currently `≈ 4.3 %` at `M = 64`, slowing
 but not stopping. This is **Tier C throughout** and bears on Hypothesis U only as a bound the
 Core-Tail certificate's Gevrey tail envelope must cover — it says nothing about the dynamics'
 own worst case, nothing about a counterexample, nothing about the limit `M → ∞`. Protocol S-5 is

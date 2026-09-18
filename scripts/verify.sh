@@ -2,7 +2,7 @@
 # Two-gate verification (spec v0.2 §5).
 #  Gate 1 (Tier B): exact rational arithmetic harnesses — no floats.
 #  Gate 2 (Tier A): Lean 4 kernel compile, zero sorry, and the #print axioms
-#                   footprint must be exactly [propext, Classical.choice, Quot.sound].
+#                   footprint must name no axiom outside [propext, Classical.choice, Quot.sound].
 #
 # LEAN_ENV_DIR points at a Lake project with a built Mathlib matching
 # lean_src/lean-toolchain.  Interim default: the shared local build below.

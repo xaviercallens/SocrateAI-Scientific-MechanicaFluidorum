@@ -29,6 +29,7 @@
 \newcommand{\tA}{\textcolor{TierA}{\textbf{Tier A}}}
 \newcommand{\tB}{\textcolor{TierB}{\textbf{Tier B}}}
 \newcommand{\tC}{\textcolor{TierC}{\textbf{Tier C}}}
+\newcommand{\tL}{\textsf{Tier L}}
 \newcommand{\Reff}{R_{\mathrm{eff}}}
 \newcommand{\T}{\mathbb{T}}
 \newcommand{\Z}{\mathbb{Z}}
@@ -62,9 +63,9 @@ Revised After the External Audit of 13 August 2026}}
 \small SocrateAI Scientific Programme\\
 \small\texttt{SocrateAI-Scientific-MechanicaFluidorum}}
 
-\date{13 August 2026 \quad$\vert$\quad revised 12 September 2026\\[0.3em]
-\small Repository state: commit \texttt{af2c96e} \quad$\vert$\quad All verification gates PASS (exit 0)\\[0.2em]
-\small 12 Lean files, 258 kernel-compiled theorems, zero \texttt{sorry} \quad$\vert$\quad 23 exact-arithmetic harnesses}
+\date{13 August 2026 \quad$\vert$\quad revised 18 September 2026\\[0.3em]
+\small Repository state: release tag \texttt{v1.10.0} (18 September 2026); \texttt{./scripts/verify.sh} exits 0 at that tag\\[0.2em]
+\small 12 Lean files, 193 theorems with verified axiom footprints, zero \texttt{sorry} \quad$\vert$\quad 22 exact-arithmetic harnesses}
 
 \begin{document}
 \maketitle
@@ -77,9 +78,10 @@ organised around \emph{Hypothesis U} --- a uniform-in-cutoff enstrophy bound for
 frequency-truncated system. The programme's distinguishing feature is not a claimed proof but
 a \emph{method}: every assertion carries an explicit epistemic tier, mechanically enforced by
 a two-gate verification pipeline (exact rational arithmetic; Lean~4 kernel compilation with a
-pinned axiom footprint). We report 72 theorems kernel-compiled across seven Lean files --- of
-which 65 carry Tier~A claims, the remaining 7 having been \emph{demoted} to Tier~C by the
-audit below --- six exact-arithmetic certification harnesses, and, equally importantly, a
+pinned axiom footprint). We report 193 theorems whose axiom footprints are kernel-verified
+across 12 Lean files --- of which 186 carry Tier~A claims, the remaining 7 having been
+\emph{demoted} to Tier~C by the audit below --- and twenty-two exact-arithmetic harnesses
+wired into Gate~1, and, equally importantly, a
 documented record of what has \emph{failed}: two abandoned numerical designs, five caught
 errata (one in a formula sourced from the literature, one in the programme's own design memo,
 one a broken commit, one a false positive in the verification gate itself, and one an
@@ -125,11 +127,17 @@ externalised into five documents with a strict precedence order:
 \texttt{SPEC.md} & Normative rulebook & Highest. Defines the tier system, the honesty clause, the obstruction ledger. Where any other document conflicts with it, \texttt{SPEC.md} wins. \\
 \texttt{PLAN.md} & Operational law & Task list with Definition-of-Done criteria and the escalation protocol (E-1\ldots E-5). Wins over calendar/roadmap. \\
 \texttt{LEDGER.md} & Claim inventory & \textbf{Normative:} a claim not listed here has no tier and may not be cited. \\
-\texttt{LL.md} & Lessons learned & Why each process rule exists, with the incident that produced it. \\
+\texttt{LL.md} & Lessons learned & Why each process rule exists, with the incident that produced it. Each incident yields a numbered, citable rule \textbf{LL-$n$}; these are referenced throughout this report and tabulated in \S\ref{sec:failures}. \\
 \texttt{CLAUDE.md} & Build/verify manual & Commands, architecture, Mathlib location, working conventions. \\
 \bottomrule
 \end{tabular}
 \end{center}
+
+Internal identifiers used throughout: \textbf{OP-$n$} open problems; \textbf{D$n$} numbered
+design memos in \texttt{docs/designs/}; \textbf{Q$n$} statement-adequacy decisions taken by the
+human owner; \textbf{K$n$} pre-registered kill criteria; \textbf{A/B/C/D$n$} and \textbf{F$n$}
+external-audit verdict items; \textbf{M$n$} internal review findings; \textbf{E-$n$} escalation
+codes (\texttt{PLAN.md}~\S3); \textbf{LL-$n$} lessons-learned rules (\S\ref{sec:failures}).
 
 \subsection{The epistemic charter}
 
@@ -155,7 +163,8 @@ statement-adequacy audit (\S\ref{sec:audit}).
 \midrule
 \tC{} & Conjecture, analogy, physical narrative, unverified reduction & None, but must be tagged. Confined to \texttt{exploration/} or \texttt{docs/narrative/}. Floating-point code lives here and \emph{only} here. \\
 \tB{} & Checkable: identities validated in exact rational arithmetic & Harness exits 0. \texttt{fractions.Fraction} or \texttt{int} only --- floats are banned. \textbf{Every harness ships a negative control demonstrated to actually fail.} \\
-\tA{} & Established: Lean~4 kernel-compiled & Zero \texttt{sorry}; axiom footprint naming \emph{no axiom outside} \texttt{\{propext, Classical.choice, Quot.sound\}}. A strict subset is cleaner and passes --- see \S\ref{sec:failures}, where the earlier literal-equality reading is recorded as a defect. \\
+\tA{} & Established: Lean~4 \cite{lean4} kernel-compiled against Mathlib \cite{mathlib} & Zero \texttt{sorry}; axiom footprint naming \emph{no axiom outside} \texttt{\{propext, Classical.choice, Quot.sound\}}. A strict subset is cleaner and passes --- see \S\ref{sec:failures}, where the earlier literal-equality reading is recorded as a defect. \\
+\tL{} & Literature: a statement of published mathematics, cited to a \textbf{theorem statement} (never an abstract) together with the hypotheses that scope it & Declared through \texttt{cite\_threshold} in \texttt{tests/controls.py}, which refuses a constant lacking either its source or its hypotheses. Adopted 2026-08-25. Never an input to a Tier~A proof. \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -190,7 +199,7 @@ that cannot are rejected at review, before any formal work begins.
 O1 & Tao's averaged NSE blow-up & Which structural feature of the \emph{true} nonlinearity, beyond the energy identity, does the strategy use? \\
 O2 & Supercriticality of enstrophy & Where exactly does the strategy gain over the naive enstrophy inequality, \emph{uniformly} in $\alpha'$? \\
 O3 & Caffarelli--Kohn--Nirenberg & If the strategy implies something stronger than CKN, what new mechanism pays for it? \\
-O4 & Buckmaster--Vicol non-uniqueness & In which class is the $\alpha'\to0$ limit taken, and why is the limit the physical solution? \\
+O4 & Buckmaster--Vicol non-uniqueness \cite{buckmaster-vicol} & In which class is the $\alpha'\to0$ limit taken, and why is the limit the physical solution? \\
 O5 & The Euler test & Point to the step that fails at $\nu=0$. A strategy that would also ``prove'' 3D Euler regularity is presumptively wrong. \\
 \bottomrule
 \end{tabular}
@@ -208,8 +217,8 @@ O2--O4 are inherited only if and when the 3-D bridge is built.}
 The only thing that counts as ``it works'' is the verification pipeline:
 \begin{verbatim}
     ./scripts/verify.sh   # Gate 1  : Tier B exact-arithmetic harnesses
-                          # Gate 1b : LEDGER consistency + single-active-file lint
-                          # Gate 2  : Lean kernel compile + axiom-footprint membership test
+                          # Gate 1b : LEDGER consistency + single-file lint
+                          # Gate 2  : Lean kernel + axiom-footprint membership
 \end{verbatim}
 Every dataset in \texttt{data/} ships a \texttt{.meta} sidecar recording the exact generating
 command, tool versions, and \texttt{sha256sum}, so results can be audited rather than merely
@@ -241,6 +250,24 @@ claim rests on machine-checkability, an unpinned verifier is a defect in the fou
 the build script. Mathlib is now pinned by revision, and the lockfile pinning every transitive
 dependency is tracked rather than ignored.
 \end{keybox}
+
+\subsection{Eliminating a duplication hazard at the root}
+
+Until this point every file in \texttt{lean\_src/} re-declared, verbatim, the definitions it
+needed from its neighbours, because the verification gate compiled each file in isolation and
+cross-file imports did not resolve. That convention carried a silent-drift hazard of exactly the
+kind this programme exists to eliminate: \textbf{a correction applied to one copy and not the
+other leaves both files compiling cleanly, both gates green, and the mathematics divergent}, with
+no mechanism able to see it.
+
+With the project now self-contained, the gate builds the dependency graph first and then
+re-elaborates each file with the project's own build directory on the search path. Imports
+resolve; the duplication is gone; there is exactly one definition of each object in the
+repository. One implementation detail is worth recording because getting it wrong would be
+invisible: the gate must re-elaborate with \texttt{lean} rather than rely on \texttt{lake build}
+alone, because a \emph{cached} build target emits no axiom output at all --- which would make the
+footprint check silently vacuous rather than failing loudly.
+
 
 %==============================================================================
 \section{The Problem, Stated Honestly}
@@ -286,12 +313,13 @@ For data $u_0$ and horizon $T$,
 \end{hypothesis}
 
 \begin{proposition}[Millennium Reformulation; \tC{} at paper level]
+\label{prop:millennium}
 If Hypothesis U holds for all smooth divergence-free $u_0$ and all $T$, then 3D
 Navier--Stokes is globally regular. The chain is: energy identity $\Rightarrow$
 $L^\infty_tL^2_x\cap L^2_tH^1_x$ bounds $\Rightarrow$ Aubin--Lions compactness $\Rightarrow$
 a strong-$L^2$ subsequential limit which is Leray--Hopf $\Rightarrow$ under U the limit lies
-in $L^\infty_tH^1_x\hookrightarrow L^\infty_tL^6_x$ $\Rightarrow$ the Serrin class
-$2/s+3/q=1/2\le1$ $\Rightarrow$ smooth \cite{prodi-serrin-modern}.
+in $L^\infty_tH^1_x\hookrightarrow L^\infty_tL^6_x$ $\Rightarrow$ the Serrin class: with
+$(s,q)=(\infty,6)$, $2/s+3/q=1/2\le1$ $\Rightarrow$ smooth \cite{prodi-serrin-modern}.
 \end{proposition}
 
 \begin{warnbox}{Retraction --- please read before any other claim in this report}
@@ -335,7 +363,7 @@ the retraction text is normative in \texttt{SPEC.md}~\S1.2.
 
 \begin{keybox}{What survives the retraction, stated precisely}
 Hypothesis~U \eqref{eq:hypU} as an informal statement about the continuum truncated system, and
-Proposition~5.1 as paper-level mathematics, are unaffected --- they were always \tC{} at paper
+Proposition~\ref{prop:millennium} as paper-level mathematics, are unaffected --- they were always \tC{} at paper
 level and are so labelled above. What is retracted is the assertion that the \emph{Lean
 formalisation} of \S\ref{sec:audit} is a formalisation of \emph{that} statement. Audit verdicts
 A1 (the quantifier order $\exists C\,\forall N$) and A4 (quantifying over every solution) were
@@ -536,9 +564,9 @@ legitimate target rather than a proxy.
 \subsection{Energy flux telescoping and monotonicity (\tA{})}
 
 In \texttt{lean\_src/DyadicShells.lean}: the nonlinear energy flux telescopes for
-\emph{arbitrary} $k$ and $a$ (\texttt{dyadic\_flux\_telescopes}); it vanishes under the
-truncation $a_{N+1}=0$ (\texttt{dyadic\_flux\_zero\_of\_boundary}); and consequently
-$dE/dt\le0$ for $\nu\ge0$ (\texttt{energyRate\_nonpos}). Non-vacuity is witnessed: a concrete
+\emph{arbitrary} $k$ and $a$ (\texttt{dyadic\_flux\_\allowbreak telescopes}); it vanishes under
+the truncation $a_{N+1}=0$ (\texttt{dyadic\_flux\_\allowbreak zero\_of\_\allowbreak boundary});
+and consequently $dE/dt\le0$ for $\nu\ge0$ (\texttt{energyRate\_\allowbreak nonpos}). Non-vacuity is witnessed: a concrete
 instance pins $dE/dt=-1$ exactly, so the inequality is not the trivial $0\le0$.
 
 \subsection{The exact enstrophy-production identity (\tA{})}
@@ -587,6 +615,63 @@ and is not evidence for Hypothesis U.} It is infrastructure: an exact, reusable,
 inequality, nothing more. The Tier B mirror further found, honestly, that the negative control
 breaks Step 1 under non-doubling $k$ but does \emph{not} break the final bound on the tested
 state family --- an unforced negative result, recorded.
+\end{warnbox}
+
+\begin{warnbox}{A second, sharper limit on the pivot (14 August 2026)}
+The audit established that the formalisation describes a shell model rather than 3-D
+Navier--Stokes. A further fact bounds what the shell model can deliver even in principle.
+
+The dyadic dissipation term is $\nu k_n^{2\alpha}$; the Navier--Stokes viscous term is
+$\nu\Delta u$, whose Fourier symbol is $-\nu|k|^2$. Hence $\alpha=1$ \emph{is} the
+Navier--Stokes dissipation --- the same exponent, not an analogy. Cheskidov (\tL{},
+\cite{cheskidov}) proves global regularity for $\alpha\ge1/2$ with no sign restriction on the
+data. Therefore:
+
+\begin{center}
+\textbf{The dyadic shell model at Navier--Stokes dissipation ($\alpha=1$) is provably regular
+for every data class.}
+\end{center}
+
+The model's difficult regime, $\alpha<1/2$, corresponds to dissipation \emph{weaker} than
+Navier--Stokes. A result below $\alpha=1$ is a result about \emph{hypo-dissipative}
+shell models. That is live mathematics --- Cheskidov singles out $\alpha=1/3$ as carrying the
+same nonlinear estimates as 4-D Navier--Stokes --- but it is
+\textbf{not a step toward 3-D Navier--Stokes and must never be reported as one}.
+
+\begin{keybox}{Correction (E-3b, 15~August 2026): the band is narrower, and there are two of them}
+Source verification commissioned before opening this track found this report's own statement of
+the band to be wrong. \textbf{Barbato--Morandin--Romito} (\tL{}; \emph{Nonlinearity} \textbf{24}
+(2011) 3083--3097, Thm~A) closed $\alpha\in[2/5,1/2)$ in 2011 --- with \emph{uniqueness} and
+smoothness, from mere $\ell^2$ data --- for \textbf{positive} initial data. And \emph{both}
+bounding theorems assume positivity (the blow-up theorem additionally needs \emph{large} data),
+so there are two bands, not one: for positive data the open region is $[1/3,2/5)$; for
+sign-changing data \emph{nothing} is proven below $1/2$ in either direction. With intermittency
+dimension $d=5-2/\alpha$, the residual positive-data band sits at $d\in[-1,0)$, outside the
+physically relevant range --- and the field's own survey (Cheskidov--Dai--Friedlander) states
+verbatim that BMR ``settles that solutions to the dyadic model corresponding to the 3D NSE are
+globally regular''. \textbf{The genuine room is sign-changing data.}
+
+The failure mode is worth more than the correction. The Tier~B gate encoding these thresholds
+had \emph{both} controls, and both fired --- but its positive-control anchor asserted that
+$\alpha=2/5$ is open, which is precisely BMR's endpoint. A control tests the code against the
+premise you believe; it cannot test the belief. And LL-6 had already been applied to this very
+paper --- to its \emph{abstract}, which does not carry the $\beta$ range. New rule (LL-16): a
+numerical threshold taken from the literature must be sourced to the \emph{theorem statement}
+with its hypotheses, and a correction ships with a regression control pinning the value that
+was wrong.
+\end{keybox}
+
+An unplanned consistency check fell out of the same calculation. The K41 balance
+$\nu k^{2\alpha}\sim k\,a_k$ with $a_k\sim k^{-1/3}$ gives a dissipation scale
+$k_d\sim\nu^{-1/(2\alpha-2/3)}$, whose exponent \emph{diverges} as $\alpha\to1/3^+$: below that
+threshold no dissipation scale exists, so the cascade is stopped at no finite shell. That is
+exactly Cheskidov's proven blow-up threshold, reached from an elementary heuristic that knows
+nothing of his proof.
+
+\textbf{Owner decision:} this gap is to be treated as a gap to \emph{close}, not a ceiling to
+accept. The programme will pursue the bridge --- the $\Z^3$ embedding and the instantiation of
+the nonlinearity --- both of which remain blocked on definitions that do not exist, and so
+admit only authored candidates submitted for human audit.
 \end{warnbox}
 
 %==============================================================================
@@ -679,14 +764,15 @@ remains untouched and open --- that is OP-6 (\S\ref{sec:opsix}), now correctly l
 
 \subsection{The conditional Millennium reduction (\tC{}, \textsc{demoted}, \textsc{draft})}
 
-\texttt{lean\_src/MillenniumReduction.lean} encodes the logical shape of Proposition~5.1 with
+\texttt{lean\_src/MillenniumReduction.lean} encodes the logical shape of Proposition~\ref{prop:millennium} with
 the two undischarged analytic steps as \emph{named hypothesis parameters}, never axioms:
 \[
-\texttt{millennium\_reduction} :
-\bigl(\forall T,\ \mathrm{HypothesisU}\bigr)\to
-\mathrm{AubinLionsStatement}\to
-\mathrm{ProdiSerrinStatement}\to
+\begin{aligned}
+\texttt{millennium\_reduction} :\ &\bigl(\forall T,\ \mathrm{HypothesisU}\bigr)\to
+\mathrm{AubinLionsStatement}\\
+&\to \mathrm{ProdiSerrinStatement}\to
 \mathrm{GlobalRegularityStatement}.
+\end{aligned}
 \]
 The proof is the one-line composition \texttt{hPS (hAL hU)}. The intent was that all
 mathematical weight be parked in the hypotheses' \emph{types}, so the Lean kernel would track
@@ -720,6 +806,41 @@ their actual topological content, and (audit item B4) specialise the reduction t
 object rather than to a generic $B$. That is the next design task and is \textbf{open};
 \texttt{PLAN.md}~\S10 records that no implementation may begin before the design memo exists.
 \end{warnbox}
+
+\subsection{Repairing the reduction: giving the hypotheses content (\tC{})}
+
+Audit verdict~B1 found the reduction's two hypothesis parameters to be bare
+$\mathrm{Prop}\to\mathrm{Prop}$ arrows: ``the Lean kernel is merely verifying a logical
+tautology''. The repair, carried out on 14~August 2026, is \emph{not} to prove those steps ---
+parking undischarged analysis in a named hypothesis parameter rather than an axiom is the
+pattern this programme deliberately adopted, so that the kernel tracks the debt in the type. The
+repair is to make the types say something.
+
+\begin{keybox}{What a compactness statement has to deliver}
+\texttt{IsGalerkinLimit} now carries four clauses, each load-bearing: the limit solves the
+untruncated system; it has \emph{finite enstrophy} (a genuine $\ell^2$ condition, since there is
+no cutoff to truncate the sum); that enstrophy is bounded on every horizon, with the constant
+quantified \emph{inside} the horizon --- compactness gives no uniformity in $T$, and writing
+$\exists C\,\forall T$ would claim more than the analysis provides; and the limit is genuinely
+the modewise limit of the Galerkin family \textbf{along a subsequence}. The subsequence is not a
+technicality: a compactness argument extracts one, and asserting convergence of the full
+sequence would overstate the mathematics.
+\end{keybox}
+
+The $\ell^2$ upgrade was deliberately \emph{localised}. Hypothesis~U quantifies over
+\emph{Galerkin} solutions, whose truncation clause forces $u_n=0$ for $n>N$ --- so the finite
+sum over $n \le N$ already captures every nonzero mode and is \emph{exact} there, not an
+approximation. Only the objects with no cutoff needed the infinite-series treatment. A bridge
+lemma (bounded partial sums of nonnegative terms $\iff$ summable with $\sum' \le C$) makes the
+upgrade a conservative extension: nothing previously proven is invalidated.
+
+\begin{warnbox}{The file remains Tier C, and two things remain unmachine-checkable}
+The repair makes the undischarged debt \emph{legible}; it does not pay it. Both hypothesis
+parameters are still assumed. Moreover, whether the four clauses \emph{say the right thing} is a
+statement-adequacy question reserved to human audit --- it cannot be settled by the kernel, and
+that cost is scheduled rather than discovered later.
+\end{warnbox}
+
 
 \paragraph{One audit item was repairable immediately (B2, \textsc{revise}).} A previous
 independent review had raised, and this report previously recorded as an open candidate issue,
@@ -763,8 +884,8 @@ blockage was never contingent on the framing that was retracted --- it is contin
 objects that do not exist, listed below.
 \end{keybox}
 
-\begin{center}
-\small
+{\small
+\setlength\LTleft{0pt}\setlength\LTright{0pt}
 \begin{longtable}{@{}p{0.7cm}p{3.3cm}p{5.0cm}p{5.4cm}@{}}
 \toprule
 & \textbf{Discipline} & \textbf{Proposed mechanism} & \textbf{First falsifiable milestone / kill criterion} \\
@@ -779,7 +900,7 @@ T3 & Golse--Saint-Raymond hydrodynamic limits \cite{golse-saintraymond} & A rela
 T4 & Duminil-Copin percolation \cite{duminil-copin} & High-enstrophy regions form \emph{subcritical} percolation clusters $\Rightarrow$ singular set of dimension 0 & Recover the CKN dimension bound \cite{ckn1982} in the lattice formulation. \textbf{Kill:} cannot recover even CKN. \\
 \bottomrule
 \end{longtable}
-\end{center}
+}
 
 \begin{keybox}{A near-miss worth recording: the correction that would itself have been an error}
 An earlier draft of this report flagged an apparent defect in the programme's specification.
@@ -854,8 +975,11 @@ different reasons; both are documented rather than quietly replaced.
 
 \begin{enumerate}[leftmargin=*]
 \item \textbf{Explicit float RK4 (D4).} Stiffness: stability requires
-$\Delta t\sim1/(\nu k_N^2)$, which collapses as $N$ grows. 21 of 36 configurations were
-computationally infeasible.
+$\Delta t\sim1/(\nu k_N^2)$, which collapses as $N$ grows. 21 of the 36 configurations
+attempted were computationally infeasible. (The three grids quoted in this section differ in
+design --- D4's attempted set, D5's full $5\times3\times3$ grid, and the profile-independent
+$(\,N,\nu)$ pairs the adequacy screen ranges over --- and are not directly comparable; see the
+memos.)
 \item \textbf{Exact-rational IMEX-Euler (D5).} The implicit viscous treatment removed the
 stiffness barrier as designed --- but the scheme failed anyway, for an unrelated reason:
 iterating a \emph{nonlinear} rational map in exact arithmetic causes the numerators and
@@ -876,7 +1000,9 @@ owner rather than a third variant being chosen unilaterally.
 
 The accepted resolution was to stop pursuing exact-rational certification and retain
 dual-precision (float64 + 50-digit \texttt{mpmath}) runs as permanent Tier C steering data.
-Across the full grid $N\in\{8,12,16,20,24\}$, several low-viscosity configurations initially
+Across the full D5 grid --- $5$ cutoffs $N\in\{8,12,16,20,24\}$ $\times$ $3$ viscosities
+$\nu\in\{0.1,0.01,0.001\}$ $\times$ $3$ profiles P1/P2/P3, i.e.\ $45$ configurations --- several
+low-viscosity configurations initially
 reported divergence, with the two precisions agreeing to $\sim10^{-14}$ --- ruling out
 rounding, but \emph{not} distinguishing genuine divergence from an under-resolved step size
 (the design's $\Delta t$ formula never depended on $\nu$). A step-size refinement study
@@ -932,7 +1058,9 @@ rates with the K41 amplitude $a_n\sim k_n^{-1/3}$ gives $k_d\sim\nu^{-3/4}$; wit
 cutoff lies at or above the dissipation scale iff $2^{4N}\nu^3\ge1$, i.e.\ writing $\nu=p/q$,
 iff the integer inequality $2^{4N}p^3\ge q^3$ holds. No floats, no logarithms.
 
-Its negative control is the historical grid itself: \textbf{0 of 15 configurations had a biting
+Its negative control is the historical grid itself --- the adequacy test depends on $N$ and
+$\nu$ alone, so the $45$ D5 configurations reduce to $15$ distinct $(N,\nu)$ pairs:
+\textbf{0 of 15 configurations had a biting
 cutoff}. The redesigned measurement (\texttt{docs/designs/D6\_CUTOFF\_BITING\_MEASUREMENT.md})
 sweeps $N$ \emph{across} the dissipation shell instead of above it, reports the production flux
 at the cutoff and the shell-population profile alongside $\sup\Omega$, and carries a $\nu=0$
@@ -968,6 +1096,8 @@ $P(k)=I-\frac{k\otimes k}{|k|^2}$, the truncated nonlinearity is
 - i\!\!\sum_{\substack{p+q=k\\ p,q\in\Lambda}}\!\! P(k)\bigl[(q\cdot\hat u_p)\,\hat u_q\bigr].
 \label{eq:fourier}
 \end{equation}
+Throughout, $B(u,v)_k$ denotes the truncated Leray-projected nonlinearity on $\Z^3$; $N$ is
+reserved for the dyadic shell cutoff and $M$ for the ball truncation radius.
 
 \begin{keybox}{An erratum caught by exact arithmetic --- a case study in why the method exists}
 The formula first recorded in the scoping memo, taken from a single literature cross-check,
@@ -984,8 +1114,8 @@ nonzero. The error was caught by computation, not by inspection.
 
 The resulting harness (\texttt{tests/tier\_b\_nse\_triad\_convolution.py}, \tB{}) certifies
 two structural facts in exact Gaussian-rational arithmetic at $M=1,2,3$:
-\emph{transversality} $k\cdot N(u)_k=0$ (unconditional, since $P(k)$ projects onto $k^\perp$),
-and \emph{detailed energy conservation} $\sum_k\overline{\hat u_k}\cdot N(u)_k=0$ given
+\emph{transversality} $k\cdot B(u,u)_k=0$ (unconditional, since $P(k)$ projects onto $k^\perp$),
+and \emph{detailed energy conservation} $\sum_k\overline{\hat u_k}\cdot B(u,u)_k=0$ given
 divergence-free, conjugate-symmetric input. Two negative controls --- dropping the Leray
 projection, and breaking the divergence-free condition on one mode --- each break exactly one
 fact and leave the other intact, matching the hand derivation rather than merely
@@ -1006,7 +1136,7 @@ symbolically}; a Tier A proof remains future work.
 
 The harness above certifies two facts \emph{computationally}, at three truncations, and its own
 docstring declines to claim either as proven. Both are now Tier A, in
-\texttt{lean\_src/AbstractAlgebraicConservation.lean} --- renamed 2026-08-13 from
+\texttt{lean\_src/\allowbreak AbstractAlgebraicConservation.lean} --- renamed 2026-08-13 from
 \texttt{TriadConservation.lean} under audit verdict C1, which found the old name
 \textsc{overstates reach}: the file's abstraction bypasses geometric aliasing on $\Z^3$
 entirely, and the name should say so. The docstring now states that exclusion explicitly:
@@ -1040,7 +1170,8 @@ landing in $k^\perp$.
 The file is stated over an \emph{arbitrary commutative ring}, with an arbitrary additive index
 group and additive wavevector map. It is deliberately \textbf{not} stated over
 $\Lambda\subset\Z^3$ with complex velocities, because that concrete apparatus \emph{is} the open
-decision D1. \textbf{The bridge from this lemma to the concrete Fourier--Galerkin setting is not
+implementation decision recorded as OP-6/D1 in \texttt{PLAN.md} --- unrelated to audit
+verdict~D1 of \S\ref{sec:problem}. \textbf{The bridge from this lemma to the concrete Fourier--Galerkin setting is not
 built}; nothing here instantiates $B$; nothing here is a statement about Navier--Stokes
 solutions. One hypothesis is load-bearing rather than technical: the swap has fixed points
 (where $q=r$, forcing $p=-2q$) at which the pairing yields only $2f=0$, so the ring must have no
@@ -1054,112 +1185,6 @@ seek a smaller shell-preserving proxy, and whether to sequence it before or afte
 are open questions reserved to the human owner.
 
 %==============================================================================
-\begin{warnbox}{A second, sharper limit on the pivot (14 August 2026)}
-The audit established that the formalisation describes a shell model rather than 3-D
-Navier--Stokes. A further fact bounds what the shell model can deliver even in principle.
-
-The dyadic dissipation term is $\nu k_n^{2\alpha}$; the Navier--Stokes viscous term is
-$\nu\Delta u$, whose Fourier symbol is $-\nu|k|^2$. Hence $\alpha=1$ \emph{is} the
-Navier--Stokes dissipation --- the same exponent, not an analogy. Cheskidov proves global
-regularity for $\alpha\ge1/2$. Therefore:
-
-\begin{center}
-\textbf{The dyadic shell model at Navier--Stokes dissipation is provably regular.}
-\end{center}
-
-The model's difficult regime, $\alpha<1/2$, corresponds to dissipation \emph{weaker} than
-Navier--Stokes. A result below $\alpha=1$ is a result about \emph{hypo-dissipative}
-shell models. That is live mathematics --- Cheskidov singles out $\alpha=1/3$ as carrying the
-same nonlinear estimates as 4-D Navier--Stokes --- but it is
-\textbf{not a step toward 3-D Navier--Stokes and must never be reported as one}.
-
-\begin{keybox}{Correction (E-3b, 15~August 2026): the band is narrower, and there are two of them}
-Source verification commissioned before opening this track found this report's own statement of
-the band to be wrong. \textbf{Barbato--Morandin--Romito} (\emph{Nonlinearity} \textbf{24}
-(2011) 3083--3097, Thm~A) closed $\alpha\in[2/5,1/2)$ in 2011 --- with \emph{uniqueness} and
-smoothness, from mere $\ell^2$ data --- for \textbf{positive} initial data. And \emph{both}
-bounding theorems assume positivity (the blow-up theorem additionally needs \emph{large} data),
-so there are two bands, not one: for positive data the open region is $[1/3,2/5)$; for
-sign-changing data \emph{nothing} is proven below $1/2$ in either direction. With intermittency
-dimension $d=5-2/\alpha$, the residual positive-data band sits at $d\in[-1,0)$, outside the
-physically relevant range --- and the field's own survey (Cheskidov--Dai--Friedlander) states
-verbatim that BMR ``settles that solutions to the dyadic model corresponding to the 3D NSE are
-globally regular''. \textbf{The genuine room is sign-changing data.}
-
-The failure mode is worth more than the correction. The Tier~B gate encoding these thresholds
-had \emph{both} controls, and both fired --- but its positive-control anchor asserted that
-$\alpha=2/5$ is open, which is precisely BMR's endpoint. A control tests the code against the
-premise you believe; it cannot test the belief. And LL-6 had already been applied to this very
-paper --- to its \emph{abstract}, which does not carry the $\beta$ range. New rule (LL-16): a
-numerical threshold taken from the literature must be sourced to the \emph{theorem statement}
-with its hypotheses, and a correction ships with a regression control pinning the value that
-was wrong.
-\end{keybox}
-
-An unplanned consistency check fell out of the same calculation. The K41 balance
-$\nu k^{2\alpha}\sim k\,a_k$ with $a_k\sim k^{-1/3}$ gives a dissipation scale
-$k_d\sim\nu^{-1/(2\alpha-2/3)}$, whose exponent \emph{diverges} as $\alpha\to1/3^+$: below that
-threshold no dissipation scale exists, so the cascade is stopped at no finite shell. That is
-exactly Cheskidov's proven blow-up threshold, reached from an elementary heuristic that knows
-nothing of his proof.
-
-\textbf{Owner decision:} this gap is to be treated as a gap to \emph{close}, not a ceiling to
-accept. The programme will pursue the bridge --- the $\Z^3$ embedding and the instantiation of
-the nonlinearity --- both of which remain blocked on definitions that do not exist, and so
-admit only authored candidates submitted for human audit.
-\end{warnbox}
-
-\subsection{Repairing the reduction: giving the hypotheses content (\tC{})}
-
-Audit verdict~B1 found the reduction's two hypothesis parameters to be bare
-$\mathrm{Prop}\to\mathrm{Prop}$ arrows: ``the Lean kernel is merely verifying a logical
-tautology''. The repair, carried out on 14~August 2026, is \emph{not} to prove those steps ---
-parking undischarged analysis in a named hypothesis parameter rather than an axiom is the
-pattern this programme deliberately adopted, so that the kernel tracks the debt in the type. The
-repair is to make the types say something.
-
-\begin{keybox}{What a compactness statement has to deliver}
-\texttt{IsGalerkinLimit} now carries four clauses, each load-bearing: the limit solves the
-untruncated system; it has \emph{finite enstrophy} (a genuine $\ell^2$ condition, since there is
-no cutoff to truncate the sum); that enstrophy is bounded on every horizon, with the constant
-quantified \emph{inside} the horizon --- compactness gives no uniformity in $T$, and writing
-$\exists C\,\forall T$ would claim more than the analysis provides; and the limit is genuinely
-the modewise limit of the Galerkin family \textbf{along a subsequence}. The subsequence is not a
-technicality: a compactness argument extracts one, and asserting convergence of the full
-sequence would overstate the mathematics.
-\end{keybox}
-
-The $\ell^2$ upgrade was deliberately \emph{localised}. Hypothesis~U quantifies over
-\emph{Galerkin} solutions, whose truncation clause forces $u_n=0$ for $n>N$ --- so the finite
-sum over $n \le N$ already captures every nonzero mode and is \emph{exact} there, not an
-approximation. Only the objects with no cutoff needed the infinite-series treatment. A bridge
-lemma (bounded partial sums of nonnegative terms $\iff$ summable with $\sum' \le C$) makes the
-upgrade a conservative extension: nothing previously proven is invalidated.
-
-\begin{warnbox}{The file remains Tier C, and two things remain unmachine-checkable}
-The repair makes the undischarged debt \emph{legible}; it does not pay it. Both hypothesis
-parameters are still assumed. Moreover, whether the four clauses \emph{say the right thing} is a
-statement-adequacy question reserved to human audit --- it cannot be settled by the kernel, and
-that cost is scheduled rather than discovered later.
-\end{warnbox}
-
-\subsection{Eliminating a duplication hazard at the root}
-
-Until this point every file in \texttt{lean\_src/} re-declared, verbatim, the definitions it
-needed from its neighbours, because the verification gate compiled each file in isolation and
-cross-file imports did not resolve. That convention carried a silent-drift hazard of exactly the
-kind this programme exists to eliminate: \textbf{a correction applied to one copy and not the
-other leaves both files compiling cleanly, both gates green, and the mathematics divergent}, with
-no mechanism able to see it.
-
-With the project now self-contained, the gate builds the dependency graph first and then
-re-elaborates each file with the project's own build directory on the search path. Imports
-resolve; the duplication is gone; there is exactly one definition of each object in the
-repository. One implementation detail is worth recording because getting it wrong would be
-invisible: the gate must re-elaborate with \texttt{lean} rather than rely on \texttt{lake build}
-alone, because a \emph{cached} build target emits no axiom output at all --- which would make the
-footprint check silently vacuous rather than failing loudly.
-
 \section{Three Proposed Mechanisms, Killed by Measurement}
 \label{sec:killed}
 
@@ -1177,7 +1202,7 @@ Pointwise, $a_{2n}=c\,a_n^2$ & the \emph{amplitude}; the spectral slope stays fr
 \addlinespace
 Recurrence signature, $c_2^3+c_1^3c_3=0$ & genuinely discriminating (controls separate by $10^{14}$) --- but nothing specific to blow-up & By measurement: $S$ rises from early to late in the blow-up regimes, \emph{and just as much at $\alpha=1$ where blow-up is provably impossible}. \\
 \addlinespace
-Radial embedding on $\Z^3$, shell indices $\{2i,i+j,2j\}$ & the \emph{parity} of the shell index & By counting, against a criterion fixed in advance: the permitted fraction \emph{rises} with $M$ ($0.019\to0.263\to0.525$), and at $M=8$, $99\%$ of permitted triads are same-shell. \\
+Radial embedding on $\Z^3$, shell indices $\{2i,i+j,2j\}$ & the \emph{parity} of the shell index & By counting, against a criterion fixed in advance: the permitted fraction \emph{rises} with $M$ ($0.019\to0.263\to0.525$ at $M=4,6,8$), and at $M=8$, $99\%$ of permitted triads are same-shell. \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -1202,8 +1227,8 @@ criterion in advance is what turned a disappointment into a result.
 The resonant-triad hypergraph --- vertices are Fourier modes, hyperedges are the resonances
 $k_1+k_2=k_3$ --- is \emph{definition-independent}: it is fixed by the Navier--Stokes
 nonlinearity itself and needs no blocked definition, so it could be built immediately. Its
-normalised-Laplacian spectral gap is stable at $\approx0.8334$ across $M=2,3,4$, apparently
-approaching $\approx 5/6$ (suggestive on three points, not established).
+normalised-Laplacian spectral gap decreases monotonically from $0.834985$ at $M=2$ toward
+$\approx5/6$; the full series and its present status are in \S\ref{sec:op2prime}.
 
 The reading is a constraint on all future proposals: the triad structure is a \textbf{strong
 expander}, so no depletion is available for free, and any candidate lock must be shown to
@@ -1226,14 +1251,17 @@ exactly in this repository: six rounds, 2144 modes generated, zero outside the p
 A flow whose spectrum lies in a 2-plane of $\Z^3$ is a \textbf{2D3C} flow (two-dimensional,
 three-component --- the standard term; ``2.5-D'' also names a different class in parts of the
 literature). The 3-D equations then split into 2-D Navier--Stokes plus a passively advected
-scalar (Biferale--Buzzicotti--Linkmann, arXiv:1706.02371, quoted verbatim in the design memo),
-and 2-D regularity is classical (Ladyzhenskaya; attribution to Leray for global strong
-existence, per Ponce--Racke--Sideris--Titi). \textbf{K1, verified in exact arithmetic}: a field
-supported on the \emph{tilted} plane $\langle(1,0,0),(0,1,2)\rangle$ has $N(u)=0$ on all 322
-out-of-plane modes under the Leray-projected truncated nonlinearity; the negative control (a
-generic field) leaks on all 322. The lattice/Galerkin form of this invariance was not found
-published as such; the continuum antecedents are Moffatt (J.~Fluid Mech.~741 (2014) R3, cited
-by Biferale et al., itself unfetched) and Biferale et al.\ 2017. This candidate, unlike its
+scalar (\tL{}; Biferale--Buzzicotti--Linkmann \cite{biferale-buzzicotti-linkmann}, quoted
+verbatim in the design memo), and 2-D regularity is classical (\tL{}; Ladyzhenskaya;
+attribution to Leray for global strong existence, per Ponce--Racke--Sideris--Titi
+\cite{ponce-racke-sideris-titi}). \textbf{K1, verified in exact arithmetic}: a field
+supported on the \emph{tilted} plane $\langle(1,0,0),(0,1,2)\rangle$ has $B(u,u)=0$ on all 322
+out-of-plane modes under the Leray-projected truncated nonlinearity, while the in-plane
+dynamics remain alive on 20 modes (the non-vacuity witness, \texttt{SPEC.md}~\S7.5); the
+negative control (a generic field) leaks on all 322. The lattice/Galerkin form of this
+invariance was not found published as such; a continuum antecedent is attributed by Biferale
+et al.\ to Moffatt \cite{moffatt2014}; we have not verified that attribution against the
+source. This candidate, unlike its
 three dead predecessors, was screened \emph{before} authoring: the LL-11 vacuity test passes
 (plane sublattices are a measure-zero subfamily), and the depletion screen scores planes at
 $D=1.87>1$ --- the mechanism was never about triad counts.
@@ -1246,9 +1274,8 @@ manifold attractive, neutral, or repulsive under the truncated 3-D Galerkin flow
 expected answer --- repulsive, by the classical instability of 2-D flows in 3-D --- is
 pre-registered as the null, with a theorem-backed positive control (exactly planar data must
 stay exactly planar; measured at literal $0.00$ out-of-plane energy) and a negative control
-(generic data must show $O(1)$ out-of-plane fraction; measured $0.62$--$0.74$). The pilot
-measured $\sigma=+0.57$ to $+1.04$: repulsive, $\varepsilon$-independent, faster at lower
-viscosity.
+requiring generic data to show an $O(1)$ out-of-plane fraction (full-run values $0.739$ and
+$0.886$, \texttt{LEDGER.md}). A pilot at lower resolution, not ledgered, gave the same sign.
 
 The full experiment ($M=3$, coordinate \emph{and} tilted planes, exact rational grid-adequacy
 stamps) produced one line that exercised the programme's discipline: at $\nu=1/2$ the measured
@@ -1279,15 +1306,17 @@ its mechanism understood: the planar manifold is real, exactly invariant, and \t
 increasingly so as viscosity falls. What the verdict does \emph{not} touch: the geometric half
 (Sym$^2$ closure $\Rightarrow$ exact 2D3C confinement, K1-verified in exact arithmetic
 including tilted planes, apparently unpublished in its lattice form), the torus theorem, and
-the $5/6$ conjecture --- all independent results that merely arose during the screening. Four
-mechanisms have now been proposed and four killed; the programme's rate of \emph{disproof} is
+the $5/6$ conjecture --- all independent results that merely arose during the screening. As of
+this revision, six mechanisms have been proposed and six killed (\S\ref{sec:beltrami},
+\S\ref{sec:frustration}); the programme's rate of \emph{disproof} is
 its main output to date, and that is what a falsifiable structure is supposed to produce.
 \end{keybox}
 
 \subsection{The neighbourhood theorem, scoped by a full read}
 
-A first-pass source check reported that the 2D3C manifold has a published global-regularity
-neighbourhood (Ponce--Racke--Sideris--Titi, Comm.~Math.~Phys.~\textbf{159} (1994) 329--341).
+A first-pass source check reported (\tL{}) that the 2D3C manifold has a published
+global-regularity neighbourhood (Ponce--Racke--Sideris--Titi
+\cite{ponce-racke-sideris-titi}).
 A full read of the fetched PDF \emph{narrowed} this claim, and the correction is recorded with
 the same prominence as the claim: the smallness threshold is Gronwall-exponential
 ($\delta\lesssim\exp\{-C\int_0^\infty\|\nabla v\|^4\}$, eq.~(2.17), constants never tracked in
@@ -1298,7 +1327,7 @@ periodic-$T^3$ case is treated. What survives is the concept --- a regularity ne
 around near-2-D data in adjacent settings, coexisting cleanly with $\sigma>0$ --- not a
 citable safety net for the Galerkin torus.
 
-\subsection{The torus theorem (\tA{}) and the $5/6$ ball conjecture}
+\subsection{The torus theorem (\tA{}) and the $5/6$ ball conjecture (\tC{})}
 
 While screening OP-2$'$, the unconstrained resonant-triad 2-section was solved exactly on the
 torus, and this became the programme's first \tA{} result about the genuine $\Z^3$-type
@@ -1311,15 +1340,16 @@ A(u,v) \;=\; 6 - 2\cdot[\,u+v=0\,] \qquad\text{i.e.}\qquad A \;=\; 6(J-I) - 2P,
 \]
 with $P$ the mode-reversal involution. Spectral corollary (as kernel-verified sum identities):
 degree $6n-8$; zero-sum even vectors are eigenvectors with eigenvalue $-8$, odd vectors $-4$;
-normalised spectrum $\{1,\,-4/(6n-8),\,-8/(6n-8)\}$, so \textbf{the torus spectral gap tends
+normalised spectrum $\{1,\,-4/(6n-8),\,-8/(6n-8)\}$, whence the normalised-Laplacian
+eigenvalues are $0$, $1+4/(6n-8)$ and $1+8/(6n-8)$, so \textbf{the torus spectral gap tends
 to~1}. The measured ball-truncation gap $\approx5/6$ is therefore a \emph{pure boundary
 invariant} of the sphere cutoff --- an explicitly separated, still-open conjecture
 (second eigenvalue $1/6$ of the kernel $2\cdot\mathbf{1}_B(x+y)+4\cdot\mathbf{1}_B(x-y)$ on
 the unit ball). The measured deviations from $5/6$ fall monotonically:
 $1.7\times10^{-3}$, $2.4\times10^{-4}$, $8.6\times10^{-5}$, $5.9\times10^{-5}$ at $M=2..5$,
 $2.5\times10^{-5}$ at $M=6$ ($924$ modes, $398{,}190$ triads), and $1.5\times10^{-5}$ at
-$M=7$ ($1418$ modes, $939{,}930$ triads) --- seven points, strictly monotone, still \tC{}
-evidence for a conjecture, not a result.
+$M=7$ ($1418$ modes, $939{,}930$ triads) --- six points, $M=2,\dots,7$, strictly monotone,
+still \tC{} evidence for a conjecture, not a result.
 
 \section{The Live Band: Formalising Why $\alpha=1/2$, and What Lies Below}
 \label{sec:alphaband}
@@ -1384,7 +1414,8 @@ small-data regime where regularity is trivial and saturation carries no informat
 
 \begin{keybox}{The discriminating run, and the third control to save a wrong conclusion}
 The measurement that matters is at large amplitude, and there the comparison is theorem-backed
-on one side: Barbato--Morandin--Romito proves positive data at $\alpha=2/5$ globally regular at
+on one side (\tL{}): Barbato--Morandin--Romito \cite{barbato-morandin-romito} proves positive
+data at $\alpha=2/5$ globally regular at
 \emph{every} amplitude, so that column must saturate however large the data.
 
 It did not. At $A=8$ and $A=32$ the positive column showed the same apparent blow-up signature
@@ -1414,7 +1445,7 @@ $\alpha=2/5$. Now $\|u\|^2=H_\alpha$ is \emph{quadratic} in $u$ and $\|u\|^4=H_\
 \emph{quartic}, while energy methods produce $L^1$ control of quadratics --- that is what they
 are. So door \#1 reduces to one algebraic question, and it has an exact answer.
 
-\begin{keybox}{Identity (Q1), and what it settles}
+\begin{keybox}{Identity (QI-1), and what it settles}
 For $H_\gamma=\sum_n\lambda^{2\gamma n}u_n^2$ on the truncated system,
 \[
 \frac{d}{dt}H_\gamma \;=\; -2\nu H_{\gamma+\alpha} \;+\; 2\bigl(\lambda^{2\gamma}-1\bigr)
@@ -1422,7 +1453,7 @@ For $H_\gamma=\sum_n\lambda^{2\gamma n}u_n^2$ on the truncated system,
 \]
 The nonlinear prefactor vanishes \textbf{only} at $\gamma=0$. Hence \emph{energy is the unique
 conserved weighted quadratic}: $\theta=2$ is the entire quadratic supply, not an artifact of
-technique, and door \#1 genuinely requires leaving degree~2. (Q1) generalises this repository's
+technique, and door \#1 genuinely requires leaving degree~2. (QI-1) generalises this repository's
 own \tA{} \texttt{shellB\_energy\_conservation}, which is its $\gamma=0$ case. A second reading
 matters as much: for $\gamma<0$ and \emph{positive} data the prefactor is negative and the sum
 non-negative, giving a monotone family --- which is exactly where positivity does its work in
@@ -1510,7 +1541,7 @@ exactly that two-swap --- had been \tA{} in this repository since 13 August. Tas
 an \emph{instantiation} obligation, not a proof obligation.
 
 A \emph{reuse audit} is now a required stage of the formalisation workflow
-(\texttt{docs/designs/FORMALIZATION\_WORKFLOW.md}). The same document records why the common habit
+(\texttt{docs/\allowbreak designs/\allowbreak FORMALIZATION\_WORKFLOW.md}). The same document records why the common habit
 of stubbing a hard lemma with \texttt{sorry} is wrong here: Gate~2 fails on any \texttt{sorry}, and
 a \texttt{sorry}'d theorem still \emph{defines its name}, so every downstream \texttt{\#print
 axioms} silently carries \texttt{sorryAx}. The supported substitute is a \texttt{Prop} with an
@@ -1940,7 +1971,7 @@ Three trips, three mechanisms --- parity, cubic equivariance, trilinear collapse
 standing lesson, now three for three in this programme: an unexplained exact zero is a symmetry
 not yet found, and it must be found before anything else is believed.
 
-\subsection{The external formal landscape, audited (Tier L, proposed)}
+\subsection{The external formal landscape, audited (Tier L, confirmed 2026-09-13)}
 \label{sec:externalaudit}
 
 A publicly released Lean~4 development attributed to OpenAI states and proves the \emph{negative}
@@ -2000,6 +2031,11 @@ ratio, not the cancellation geometry. Longer horizons are not reachable exactly 
 floating-point exploration calibrated on this run. None of this bears on the limit or on
 Hypothesis~U; obstruction O5 stands.
 
+%==============================================================================
+\section{The Core--Tail Turn: Six Points, an Algorithm, and the Infrastructure Behind Them}
+\label{sec:coretailturn}
+%==============================================================================
+
 \subsection{The Core--Tail turn: a calibrated scout, and the transient it measures (\tC{})}
 \label{sec:coretail}
 
@@ -2010,10 +2046,12 @@ in interval arithmetic, and an analytic bound on the tail $|k|>M_{\mathrm{core}}
 correction was filed with the acknowledgement and is recorded here because it changes the
 target statement. A tail that ``decays super-exponentially assuming the core is bounded'' is
 not a theorem in three dimensions: the tail is \emph{forced} by the core through exactly the
-disparate triads isolated above, and a bounded core does nothing to that forcing. What is
-provable is the self-consistent envelope of rigorous numerics --- assume $|u_k|\le Ce^{-a|k|}$
+disparate triads isolated above, and a bounded core does nothing to that forcing. What the
+programme instead \emph{targets} is a self-consistent envelope closed by rigorous numerics
+--- assume $|u_k|\le Ce^{-a|k|}$
 beyond the core, show that $\nu|k|^2$ dominates the forcing by the boxed core and the enveloped
-tail, and close --- with an exponential (Gevrey) rate, constants supplied by the certificate,
+tail, and close --- \emph{if} the closure can be established, which it has not been; with an
+exponential (Gevrey) rate, constants supplied by the certificate,
 and one virtue that is precisely the one wanted against O5: the tail inequality never mentions
 the outer truncation $M$, so a closed envelope is uniform in $M$ for the solutions it covers.
 The objects (core box, envelope, per-mode balance, convolution forcing bound, self-consistency
@@ -2037,7 +2075,8 @@ the $M=8$ dephasing time, an amendment recorded before the numbers were read ---
 as data. The production-positive adversarial state starts above the enstrophy balance ---
 $P/(\nu D_2)$ equals $1.6$, $2.8$, $4.1$ at $M=2,4,8$, with $D_2=\sum|k|^4|u_k|^2$ the
 dissipation the enstrophy balance is decided against --- and loses it within a fraction of a
-time unit: the production changes sign at $t=0.059$, $0.017$, $0.004$ respectively, then
+time unit: the production changes sign at $t_\varphi = 0.059$, $0.017$, $0.004$ respectively
+(the \emph{dephasing time}), then
 oscillates with decaying amplitude. The alignment that the greedy search builds is a kinematic
 coincidence of triad phases, and the nonlinear phase rotation destroys it on a time scale that
 falls roughly as $M^{-2}$ --- set by the fastest triads, whose rate grows as $M^2|u_k|$ ---
@@ -2046,7 +2085,9 @@ while the initial excess grows only as about $M^{0.7}$. The transient gain is th
 growth decelerates: $\times5.3$ from $M=2$ to $4$, $\times2.2$ from $4$ to $8$. Three points
 are consistent with saturation and with a slow power law alike; the fourth point that would
 separate them needs the greedy alignment on $17\,000$ modes and is not part of the registered
-protocol. Two further readings: the production-negative twin of each adversarial state (the
+protocol. \textbf{This reading did not survive \S\ref{sec:series}: it was taken from the
+ratios, the differences were growing, and no saturating form fits these three points. The
+fourth point was computed and is reported in \S\ref{sec:fourth}.} Two further readings: the production-negative twin of each adversarial state (the
 same amplitudes with $P\to-P$ at $t=0$, related to it by time reversal of the inviscid part)
 keeps its sign three to ten times longer and \emph{removes} $10\%$ and $24\%$ of $Z_0$ at
 $M=2,4$ before dephasing, so viscosity breaks the reversal symmetry in the direction that
@@ -2096,6 +2137,11 @@ of failing at all. The controls that failed to fail are kept and reported, not r
 
 \subsection{Three points read twice: ratios, differences, and a pre-registered prediction (\tC{})}
 \label{sec:series}
+
+\emph{The numbers in this subsection are the archived-sampling values as they stood on
+13~September; the ultra-fine re-measurement of \S\ref{sec:fourth} revises $e(8)$ to $0.0267$
+and the injection series to $0.0154,\ 0.0292,\ 0.0468$. They are retained as-read because the
+sequence of readings is the evidence.}
 
 The sentence in \S\ref{sec:coretail} that the transient growth ``decelerates'' will not survive
 being checked, and the way it fails is instructive enough to record in full. It was read off the
@@ -2154,7 +2200,7 @@ at $M=16$ is $0.001$, only four samples --- the entire series was re-measured on
 ultra-fine grid ($\Delta t = 6.25\times10^{-5}$, every step). $Z_{\max}/Z_0$ is unchanged at
 $M=16$ under $16\times$ finer sampling and $M=8$ reproduces its archived value to $2\times
 10^{-4}$, so the archived sampling was adequate below $M=16$; only the $M=16$ \emph{injection}
-was under-integrated, by $4\%$.
+was materially under-integrated ($4\%$); the smaller-$M$ injections moved by under $1\%$.
 
 \begin{center}
 \small
@@ -2173,7 +2219,8 @@ $M$ & $P/(\nu D_2)|_{0}$ & $t_\varphi$ & $Z_{\max}/Z_0$ & $t_{\mathrm{peak}}$ & 
 \textbf{Every series has now turned over}, which is precisely what \S\ref{sec:series} said had
 not happened and could not be asserted on three points. The increments of $Z_{\max}/Z_0-1$ run
 $+0.0099$, $+0.0145$, $+0.0057$; the injection's $+0.0138$, $+0.0176$, $+0.0035$; the initial
-excess's $+1.236$, $+1.275$, $+0.901$; and $t_\varphi$ follows $M^{-2}$ exactly. Redoing the
+excess's $+1.236$, $+1.275$, $+0.901$; and $t_\varphi$ tracks $M^{-2}$ to within its own
+reading precision over these four points (it later runs faster; see \S\ref{sec:sixth}). Redoing the
 admissibility test of \S\ref{sec:series} on the last three points returns $\beta = +1.347$ for
 $Z_{\max}/Z_0-1$ and $+2.330$ for the injection --- \emph{admissible}, where the same fit on
 $M=2,4,8$ returned $\beta=-0.53$ --- with implied ceilings $1.0361$ and $0.0512$.
@@ -2230,7 +2277,7 @@ sign does not disturb the other terms. Maintaining the signed total $S$ and upda
 \]
 where the odd-incidence restriction is exactly right because a class occurring twice multiplies
 its term by $(-1)^2=1$, reduces a sweep to $O(3\times\text{triads})$: a factor
-$\text{classes}/3$, which is $2846$ at $M=16$ and $22\,876$ at $M=32$. The realised gain is
+$\text{classes}/3$, which is $2846$ at $M=16$ and $22\,844$ at $M=32$. The realised gain is
 smaller than the operation count suggests --- random gathers into a multi-gigabyte table are far
 less efficient per byte than the sequential scan they replace --- and is reported as measured,
 not as the ratio of operation counts.
@@ -2322,11 +2369,11 @@ and $210$ at $M=32$ ($528$~s against twenty-two hours).
 
 \textbf{Which schedule of this optimiser to run at $M=64$ was decided by a screen, not a guess,
 on the owner's explicit instruction to use a fixed-budget, autoresearch-style methodology
-rather than deepen one hand-picked setting.} Ten one-flag variants of the optimiser were
-proposed by three independent agents working from a written description alone (one on
-optimisation theory, one on the cost model, one on experimental controls), reconciled by a
-fourth acting as judge, and only then checked by the authoring session against the code the
-proposals presumed to describe. That check --- not the panel --- caught a real defect: the
+rather than deepen one hand-picked setting.} A first list of ten one-flag variants was written
+by the authoring session, then refined by three independent agents working from a written
+description alone (lenses: optimisation theory, the cost model, experimental controls) and
+reconciled by a fourth acting as judge, and only then checked by the authoring session against
+the code the proposals presumed to describe. That check --- not the panel --- caught a real defect: the
 tabu-search variant filtered its candidate flips \emph{before} testing for convergence, so a run
 could report ``converged'' while an improving flip still existed. It also found that two
 proposals rested on a misreading of the code (one assumed a ranking rule would change the
@@ -2365,26 +2412,26 @@ not propagate.
 
 \begin{center}
 \small
-\begin{tabular}{@{}rrrrr@{}}
+\begin{tabular}{@{}rrrr@{}}
 \toprule
-$M$ & $Z_{\max}/Z_0-1$ & difference & local exponent & \\
+$M$ & $Z_{\max}/Z_0-1$ & difference & local exponent \\
 \midrule
-2  & $0.0023$ & & & \\
-4  & $0.0122$ & $+0.0099$ & $+2.407$ & \\
-8  & $0.0267$ & $+0.0145$ & $+1.130$ & \\
-16 & $0.0324$ & $+0.0057$ & $+0.279$ & \\
-32 & $0.0386$ & $+0.0062$ & $+0.253$ & \\
-64 & $\mathbf{0.0431}$ & $+0.0045$ & $\mathbf{+0.158}$ & \\
+2  & $0.0023$ & & \\
+4  & $0.0122$ & $+0.0099$ & $+2.407$ \\
+8  & $0.0267$ & $+0.0145$ & $+1.130$ \\
+16 & $0.0324$ & $+0.0057$ & $+0.279$ \\
+32 & $0.0386$ & $+0.0062$ & $+0.253$ \\
+64 & $\mathbf{0.0431}$ & $+0.0045$ & $\mathbf{+0.158}$ \\
 \bottomrule
 \end{tabular}
 \end{center}
 
-The local exponent fell again at the sixth doubling, \emph{below} the $M^{0.27}$ power law that
+The local exponent fell again at the sixth point, \emph{below} the $M^{0.27}$ power law that
 had fit the previous three points as a post-diction, not a registration; a fit on the last
 three exponents alone is closer to $M^{0.16}$, and is recorded with the same status every
 previous fit on this family has earned: not to be trusted past one more doubling. What is not a
 fit, because it is the measured quantity itself, is that the excursion is \textbf{still growing
-at the sixth doubling}, has not turned over, and its ceiling --- if it has one --- remains out
+at the sixth point}, has not turned over, and its ceiling --- if it has one --- remains out
 of sight.
 
 \textbf{This bears on Hypothesis U exactly as every point before it has: it does not.} The
@@ -2401,18 +2448,19 @@ the bracket was written down before the number that would test it existed.
 being trusted again (\tC{})}
 \label{sec:gcp}
 
-The $M=64$ transient of \S\ref{sec:sixth} is float throughout, resting on the $\S2$ proportionality
-between the exact integer objective and the FFT production. The exact integer record itself ---
+The $M=64$ transient of \S\ref{sec:sixth} is float throughout, resting on the proportionality
+$P/S = 8.858612371\times10^{-8}$ established in \S\ref{sec:spectral}. The exact integer record itself ---
 the $i128$ value of $S(\sigma)$ and the verification that no single flip improves it --- is a
-separate, off-critical-path computation ($\sim35$--$40$ hours single-threaded) that the owner
+separate, off-critical-path computation (estimated at $\sim35$--$40$ hours when authorised;
+measured at $16.6$~h once clocked --- see below) that the owner
 authorised running on rented compute rather than this workstation. What follows is reported
 because the programme's own rule is that engineering failures on the path to a result are part of
-the result, not a footnote (\S\ref{sec:collab}), and because this episode is the largest single
-piece of infrastructure work the collaboration has produced.
+the result, not a footnote (\S\ref{sec:collab}).
 
 \textbf{Two failures, in sequence, on the first two attempts.} The first creation request was
-refused outright: the project's spot quota for the requested machine family is eight vCPUs in the
-target region, and a sixteen-vCPU machine was requested. \emph{This was caught by running the
+refused outright: the project's regional quota for the requested machine family
+(\texttt{C2\_CPUS}) is eight vCPUs in the target region, and a sixteen-vCPU machine was
+requested. \emph{This was caught by running the
 create command, not by reading quota documentation first} --- consistent with this report's
 standing preference for a clock, or here a quota error, over an estimate. Corrected to an
 eight-vCPU machine, cost re-estimated downward accordingly. The second attempt provisioned
@@ -2435,9 +2483,9 @@ self-verifying format (a trailing hash over the whole file, so a truncated write
 rather than silently accepted, with automatic fallback to the previous save) with an atomic
 write-fsync-rotate-rename sequence. A structural fact discovered in the process shortened the
 first pass sharply: the class set saturates --- every one of the $|{\rm half\_ball}|$ possible
-representative classes becomes present --- after a small, fixed fraction of the pass, since
-$\mathrm{rep}(k)=\max(k,-k)$ can take no more values than that; measured at $16$ of $1\,000$
-chunks at $M=64$, $20$ of $1\,000$ at $M=16$, $28$ of $1\,000$ at $M=8$, turning what had been
+representative classes, the ceiling $\mathrm{rep}(k)=\max(k,-k)$ imposes, is present --- after a
+small measured fraction of the pass: $16$ of $1\,000$ chunks at $M=64$, $20$ of $1\,000$ at
+$M=16$, $28$ of $1\,000$ at $M=8$, turning what had been
 assumed to be a comparable-cost pass into a two-minute one. \textbf{Validated by killing the
 process after every $k$-th checkpoint, for many values of $k$, across every phase including
 mid-class-set and mid-sweep, and resuming to completion}: $284$ forced kill-and-resume cycles at
@@ -2462,7 +2510,8 @@ a genuinely missing input, a tampered bundle (rejected by the checksum), a broke
 without the source-build fallback enabled, an unwritable bucket, a real \texttt{SIGTERM} sent
 mid-sweep followed by a \emph{fresh} instance with an empty disk resuming correctly from the
 bucket's mirrored checkpoint, and a real \texttt{SIGKILL} of the computation itself, retried
-automatically from its own checkpoint. Nineteen scenarios, all passing only on the second attempt:
+automatically from its own checkpoint. The scenarios --- \texttt{exploration/gcp/test\_runner\_local.sh}
+and \texttt{test\_launch\_stub.sh} --- all passed, but only on the second attempt:
 the first run of this very test suite caught a defect in the cleanup path itself, where one
 failure branch under the shell's fail-fast setting could skip the power-off step entirely ---
 which, unlike everything else in this section, is a defect that a local test caught before a
@@ -2472,7 +2521,7 @@ paid machine ever saw it.
 passes was timed directly, with the production binary, on the real $M=64$ checkpoint edited only
 at the position being probed: the class pass confirmed at two minutes, the exact-$|S|$ pass at
 $12.3$ seconds per chunk ($3.4$ hours), the verification sweep at $11.6$ classes per second over
-the full $548\,958$-class half-ball ($13.2$ hours), summing to $16.6$ hours on this four-core
+the full $548\,958$-class half-ball ($13.2$ hours), summing to $16.6$ hours on this eight-core
 workstation for the single-sweep case every prior $M$ has needed, translated to an $11$--$17$
 hour estimate on the rented machine's faster, same-topology cores.
 
@@ -2491,11 +2540,11 @@ fixed after the machine had already computed the right answer.} The verification
 converged inside the fourth boot (three preemptions in, $4\,833.2$ s of wall time for the final
 segment), with the exact initial value computed for the first time,
 \[
-  S(\sigma) = 13\,477\,832\,078\,223\,027\,252\,042\,752 \approx 2.96\times10^4 \times
-  \text{the } M=32 \text{ value --- the growth expected of an objective built from } \sim M^6
-  \text{ triad terms,}
+  S(\sigma) = 13\,477\,832\,078\,223\,027\,252\,042\,752
 \]
-and every one of the $548\,958$ classes checked without a single one improving it: the spectral
+--- about $2.96\times10^4$ times the $M=32$ value, faster than the $64\times$ the $\sim M^6$
+triad count alone would give, the excess carried by the per-triad weights --- and every one of
+the $548\,958$ classes checked without a single one improving it: the spectral
 optimiser's result is a strict local optimum of the \emph{exact} integer objective at $M=64$,
 extending the pattern already established at every smaller $M$, not provisionally this time.
 
@@ -2544,15 +2593,18 @@ None of those is a proof error, and a correctness gate is exactly the wrong inst
 of them. This is the same lesson as verdict D1 in \S\ref{sec:failures}, in a new place: the
 gates bound what can be \emph{claimed}, never what should be \emph{asked}.
 
-The human contribution was not review of the machine's output. It was the allocation of
-resources and of doubt: a directive to run the fourth point locally rather than rent hardware, a
+The human contribution here was not line-by-line review of the machine's output ---
+statement-adequacy audit remains reserved to it, and the \textsc{draft} artifacts of
+\S\ref{sec:summary} are still waiting on it. What this cycle's adjudication supplied was the
+allocation of resources and of doubt: a directive to run the fourth point locally rather than rent hardware, a
 standing instruction to report honestly rather than favourably, an offer of sixteen to
 sixty-four cores that had to be declined on measurement, and --- decisively --- a permission
-boundary that the machine could not widen by itself. That last one is worth naming: the session
-was denied the ability to edit its own permission file, found that an allowed command would have
-let it rewrite that file anyway, and reported the denial instead of routing around it. A
-programme that grants an agent a night of unattended compute needs that property to hold when
-nobody is watching, and it is cheaper to verify on a settings file than on a proof.
+boundary the machine respected but, as it turned out, could have circumvented. That is worth
+naming precisely because it cuts the other way: the session was denied the ability to edit its
+own permission file, observed that an allowed \texttt{sed -i} rule would have rewritten that
+file regardless, and reported the denial instead of using it. The boundary held on the agent's
+restraint, not on the boundary --- which is why LL-23 is a rule about auditing allow-lists and
+not a reassurance.
 
 The machine contribution was not insight either. It was the discipline of converting every
 assertion into something checkable, and doing so \emph{before} it became load-bearing: counting
@@ -2578,7 +2630,8 @@ before trusting it, which is the same discipline the gates exist to enforce, app
 up, to a design instead of a proof. The resulting screen then ran seven consecutive hours
 unattended overnight --- alignment, a registered family-equivalence control, transient, all
 chained by mechanical scripts with the interpretive judgement calls held back for the authoring
-session at each stage --- and closed a six-point series with no further correction needed. A
+session at each stage --- and closed the six-point series; two further defects in the
+exact-record tooling surfaced afterwards and are reported in \S\ref{sec:gcp}. A
 permission boundary held again during that night: a cloud-provisioning tool remained denied for
 the run's whole duration despite the owner adding it to the allow-list, because this session's
 own settings watcher does not reload without a restart, and the session reported that limit
@@ -2594,13 +2647,13 @@ rather than mathematical (``improve the telemetry and resilience'' before restar
 first two episodes' instructions were as well; across all three, the owner's contribution has been
 where to spend doubt and when to accept a result, never the content of a proof or a script.
 
-The candid summary is that the engineering in this programme is in good order and the mathematics
-is not. The certificate's arithmetic exists, is exact, is validated against an independent
+The candid summary is that the engineering is now instrumented well enough that its failures
+are found and reported, and the mathematics is not moving. The certificate's arithmetic exists, is exact, is validated against an independent
 implementation, and is fast enough that $M_{\mathrm{core}}=8$ costs $32$~milliseconds. The
 blocker is the self-consistency closure, which no amount of the above touches, and the
 programme's three standing headwinds are unchanged: the forcing bound loses a factor two to
 three where it is tightest, the dynamics is now known to \emph{generate} triad alignment rather
-than scramble it, and the transient gain (\S\ref{sec:sixth}) is still growing after six
+than scramble it, and the transient gain (\S\ref{sec:sixth}) is still growing after five
 doublings, at a decelerating rate that has not visibly turned over.
 O5 stands.
 
@@ -2611,8 +2664,8 @@ O5 stands.
 A programme that reports only successes is not reporting. The following incidents are recorded
 in \texttt{LL.md} with evidence, and each produced a standing process rule.
 
-\begin{center}
 \small
+\setlength\LTleft{0pt}\setlength\LTright{0pt}
 \begin{longtable}{@{}p{1.1cm}p{6.3cm}p{7.0cm}@{}}
 \toprule
 \textbf{ID} & \textbf{Incident} & \textbf{Resulting rule} \\
@@ -2631,6 +2684,8 @@ LL-2 & A submitted proposal self-reported ``proven, no \texttt{sorry}''; it did 
 LL-3 & D5's redesign fixed stiffness, but the actual obstruction was representation-size growth. & Diagnose the failure mode before redesigning; a fix for the wrong axis is no fix. \\
 \addlinespace
 LL-4 & Two successive designs by the same author failed their feasibility premises. & A repeated failed design is a signal to \emph{escalate the methodology decision}, not to try a third variant alone. \\
+\addlinespace
+LL-5 & Every Lean proof that closed on the first or second attempt had been preceded by a hand derivation, a numeric sanity check on a concrete instance, and an \texttt{ls} confirming the named Mathlib lemmas are actually built here. Tasks that instead asked an agent to \emph{choose} the statement either escalated or needed a human decision partway through (Q1/Q2). & Statement and theorem selection is top-tier, human-adjacent work and is done \emph{before} dispatch; executing a fully specified proof against confirmed-available lemmas is delegable. Never reverse the order to save a step. \\
 \addlinespace
 LL-6 & A literature claim was nearly cited from memory; the fetched abstract showed the real result was narrower (well-posedness of \emph{positive} solutions in a particular scaling range, not unconditional regularity) \cite{barbato-morandin-romito}. & Verify literature precisely before citing, even for a well-known author or result. \\
 \addlinespace
@@ -2651,9 +2706,22 @@ LL-21 & \textbf{A declared risk was estimated, not counted, and was $6.6\times$ 
 LL-22 & \textbf{An optimiser was quadratic for three campaigns and nobody asked}, because its answers were correct and its runtime at $M\le8$ was seconds. It re-summed $1.35\times10^8$ terms per candidate sign flip when only the odd-incidence terms move, costing a factor $\text{classes}/3 = 2846$ at $M=16$; a five-hour job should have been minutes. & \textbf{Correctness gates cannot see cost.} Before scaling a computation to a new size, state its cost model in $O(\cdot)$ and check the measured scaling against it; a superlinear surprise is a defect, not a hardware requirement. Corollary: this is the first failure in this programme that a rented machine would have \emph{concealed} rather than exposed. \\
 \addlinespace
 LL-23 & \textbf{An agent found it could widen its own permissions.} Denied \texttt{Edit} on its permission file, the session observed that an allowed \texttt{sed -i} rule would have rewritten that file regardless, and reported the denial instead of using it. & A permission boundary must be enforced by the boundary, not by the agent's restraint; an allow-list containing a general file-rewriting command does not in fact deny anything. Audit allow-lists for rules that subsume the denials. \\
+\addlinespace
+LL-24 & \textbf{A pre-registered bracket was falsified because a composite was extrapolated instead of its factors.} $Z_{\max}/Z_0\in[1.040,1.052]$ was committed before any $M=16$ number existed; measured $1.0324$. Of the bracket's two factors the survival fraction was right ($0.6441$) and the injection was the miss ($0.0503$ against $0.0634$--$0.0738$) --- and the injection is itself a product whose two factors were both already in the archive. & When an observable is a product or quotient of separately measurable factors, pre-register the \emph{factors} and multiply them. Extrapolating the composite discards exactly the structure that makes a prediction worth making, and turns a diagnosable failure into an undiagnosable one. \\
+\addlinespace
+\multicolumn{3}{@{}l}{\textbf{The 2026-09-14\ldots17 cycle} (\S\ref{sec:spectral}, \S\ref{sec:gcp})}\\
+\addlinespace[2pt]
+LL-27 & \textbf{A provably correct optimisation was a net loss.} Dirty-tracking in the alignment search has a tight correctness argument and reproduced the entire archived $M=16$ sweep sequence digit for digit; on a fair same-box timing it was \textbf{5.5\% slower}, because even the converging sweep's handful of flips dirtied over half the class set (aggregate saving: $1.2\%$). & A correctness argument bounds what an optimisation is \emph{allowed} to skip, never how much it \emph{will} skip on the object in front of it. Measure the aggregate skip rate and the wall clock against an uncontended same-box baseline before believing a ``smarter'' algorithm is smarter. \\
+\addlinespace
+LL-28 & \textbf{A screen designed by a panel inherited the panel's model of the code, not the code.} Ten one-flag hypotheses were refined by three proposer agents and a judge from a written description; checking them against the source before the run found two predicted effects that provably cannot occur on this objective and one \emph{real} bug (tabu filtered improvers before the convergence test, so a run could report ``converged'' with improving flips left). A registered damping control was afterwards found vacuous, built on the documented rather than the operative mechanism. & A multi-agent design review reviews the \emph{description}. Before a panel's output becomes binding, check each hypothesis and each control against the code path it exercises, and show the perturbation bites on the operative mechanism. When a registered rule misfires, run it as registered and report both readings. \\
+\addlinespace
+LL-29 & \textbf{Verification code declared a correct result failed, twice.} A plain text search for the two convergence lines matched nothing because the never-\texttt{fsync}'d log held a null byte at a preemption boundary and was treated as binary; fixing that exposed a second defect, a resume path that unconditionally read a checkpoint field a \emph{completed} run never writes. Neither bug was in the computation, which had already produced the right answer both times. & Code that decides ``did this succeed'' is a claim-bearing artifact and needs a negative control of its own: inject the exact artefact it is supposed to survive. A test suite for a resumable process must exercise \emph{every} state the resume can be launched into, ``already finished'' included. \\
+\addlinespace
+LL-30 & \textbf{A quarantine-and-restart policy fired on a byte-for-byte valid checkpoint.} Both times the defect was in the reader, not the data; both times the response was to discard the checkpoint and recompute from scratch on paid hardware. Reading the raw bytes directly, with a tool that cannot misclassify binary content, settled it in minutes. & ``This input is corrupt, discard it'' is expensive and hard to reverse, and needs its own burden of proof before firing. Read the artefact directly, bypassing the tool that just failed on it, before treating that tool's silence or error as evidence about the data. \\
+\addlinespace
+LL-31 & \textbf{A recovered result was nearly re-earned rather than recovered.} The quarantine began recomputing the whole ${\sim}16.6$~h evaluation on the cloud instance; the checkpoint had already been mirrored to the results bucket, and running the fixed binary against it \emph{locally} reproduced the identical, sha256-verified answer in under a second. No further cloud time was spent. & A failure in the \emph{verification} of a result is not evidence against the \emph{result}. When a value exists and is independently backed up, recovering it is a different and far cheaper operation than producing it again; establish which of the two actually failed before paying to redo the work. \\
 \bottomrule
 \end{longtable}
-\end{center}
 
 %==============================================================================
 \section{Summary of Verified State}
@@ -2661,43 +2729,45 @@ LL-23 & \textbf{An agent found it could widen its own permissions.} Denied \text
 %==============================================================================
 
 \begin{center}
-\begin{tabular}{@{}llcr@{}}
+\small
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{4.4cm}p{6.2cm}c>{\raggedleft\arraybackslash}p{2.0cm}@{}}
 \toprule
-\textbf{Artifact} & \textbf{Content} & \textbf{Tier} & \textbf{Theorems} \\
+\textbf{Artifact} & \textbf{Content} & \textbf{Tier} & \textbf{Theorems with verified footprint} \\
 \midrule
 \texttt{LocalDualScale.lean} & T-dual $\Reff$ laws, Sym$^2$ lock, sharpness & \tA{} & 14 \\
 \texttt{DyadicShells.lean} & Energy-flux telescoping, monotonicity & \tA{} & 3 \\
-\texttt{DyadicShell\_Statements.lean} & Shell-model Hypothesis U; concrete \texttt{shellB} & \tA{} & 16 \\
- & \quad and its energy conservation (\textsc{draft}) & & \\
+\texttt{DyadicShell\discretionary{}{}{}\_Statements.lean} & Shell-model Hypothesis U; concrete \texttt{shellB} and its energy conservation (\textsc{draft}) & \tA{} & 16 \\
 \texttt{EnstrophyProduction.lean} & Exact enstrophy-production identity & \tA{} & 11 \\
-\texttt{EnstrophyProductionBound.lean} & Local bound $S_N^2\le2\Omega_N^3$ & \tA{} & 15 \\
-\texttt{AbstractAlgebraicConservation.lean} & Abstract triad conservation; the weighted identity \eqref{eq:weighted} & \tA{} & 9 \\
-\texttt{TriadTorus.lean} & Triad 2-section on a torus: $A=6(J{-}I)-2P$, spectrum & \tA{} & 12 \\
-\texttt{DyadicRiccati.lean} & The $\alpha=1/2$ threshold as an integrability threshold & \tA{} & 14 \\
-\texttt{FourierStateZ3.lean} & 3-D Fourier state space, Leray projector (\textsc{draft}) & \tA{} & 24 \\
-\texttt{FourierDynamicsZ3.lean} & The operator $B$ of \eqref{eq:Bop}; $B\neq0$ witness; $F1$, $F4$
-closed; \textbf{energy conservation}; \textbf{enstrophy production} \eqref{eq:enstrophy}; the balance laws \eqref{eq:energybalance}--\eqref{eq:enstrophybalance}; the parity kernel; the disparity decomposition & \tA{} & 44 \\
-\texttt{HelicalBasis.lean} & Helical basis, five facts; resonance $=$ collinearity; the closed
-form \eqref{eq:closed}, its converse, the gauge separation, the expansion's frame factors, and the director reduction with the ball's point-group symmetry & \tA{} & 88 \\
+\texttt{EnstrophyProduction\discretionary{}{}{}Bound.lean} & Local bound $S_N^2\le2\Omega_N^3$ & \tA{} & 15 \\
+\texttt{AbstractAlgebraic\discretionary{}{}{}Conservation.lean} & Abstract triad conservation; the weighted identity \eqref{eq:weighted} & \tA{} & 11 \\
+\texttt{TriadTorus.lean} & Triad 2-section on a torus: $A=6(J{-}I)-2P$, spectrum & \tA{} & 7 \\
+\texttt{DyadicRiccati.lean} & The $\alpha=1/2$ threshold as an integrability threshold & \tA{} & 13 \\
+\texttt{FourierStateZ3.lean} & 3-D Fourier state space, Leray projector (\textsc{draft}) & \tA{} & 10 \\
+\texttt{FourierDynamicsZ3.lean} & The operator $B$ of \eqref{eq:Bop}; $B\neq0$ witness; $F1$, $F4$ closed; \textbf{energy conservation}; \textbf{enstrophy production} \eqref{eq:enstrophy}; the balance laws \eqref{eq:energybalance}--\eqref{eq:enstrophybalance}; the parity kernel; the disparity decomposition (\textsc{draft}) & \tA{} & 33 \\
+\texttt{HelicalBasis.lean} & Helical basis, five facts; resonance $=$ collinearity; the closed form \eqref{eq:closed}, its converse, the gauge separation, the expansion's frame factors, and the director reduction with the ball's point-group symmetry & \tA{} & 53 \\
 \midrule
-\multicolumn{2}{@{}l}{\textbf{Tier A subtotal}} & & \textbf{250} \\
+\multicolumn{2}{@{}l}{\textbf{Tier A subtotal}} & & \textbf{186} \\
 \midrule
-\texttt{MillenniumReduction.lean} & Conditional reduction skeleton & \tC{} & 8 \\
- & \quad (\textsc{demoted} 2026-08-13, verdict B1) & & \\
+\texttt{MillenniumReduction.lean} & Conditional reduction skeleton (\textsc{demoted} 2026-08-13, verdict B1) & \tC{} & 7 \\
 \midrule
-\multicolumn{2}{@{}l}{\textbf{Total kernel-compiled, no axiom outside \texttt{\{propext, Classical.choice, Quot.sound\}}}} & & \textbf{258} \\
+\multicolumn{3}{@{}p{12.0cm}}{\textbf{Total kernel-compiled, no axiom outside \texttt{\{propext, Classical.choice, Quot.sound\}}}} & \textbf{193} \\
 \bottomrule
 \end{tabular}
 \end{center}
 
-All 93 theorems compile with clean axiom footprints; the demoted 7 remain wired into Gate~2 so
+\noindent{\small\emph{Counted as Gate~2 counts them: declarations whose \texttt{\#print axioms}
+footprint is printed and checked. Source-level \texttt{theorem}/\texttt{lemma} declarations
+number more (some are checked as part of a block, some are \texttt{example} witnesses); the
+gate's count is the citable one. Of the Tier~A subtotal, 59 are in files marked \textsc{draft}
+(\texttt{DyadicShell\_Statements} 16, \texttt{FourierStateZ3} 10, \texttt{FourierDynamicsZ3}
+33): kernel-clean, statement-adequacy not yet human-audited.}}
+
+All 193 theorems compile with clean axiom footprints; the demoted 7 remain wired into Gate~2 so
 that they cannot silently rot, but they carry \tC{} claims and may not be cited as established.
-The newest row is \texttt{TriadTorus.lean} (\S\ref{sec:op2prime}): the torus 2-section solved
-exactly, with its three negative controls run against scratch perturbed copies before commit
-(dropping $u\neq v$, dropping no-2-torsion, perturbing $-8$ to $-6$: each fails to compile, as
-required). Eleven Tier B harnesses are wired into Gate~1, each with a negative control
-demonstrated to fail. All gates pass at commit \texttt{b4d0ac0}+, re-run independently for
-this report.
+Twenty-two Tier B harnesses plus the shared control library \texttt{tests/controls.py} are
+wired into Gate~1, each with a negative control demonstrated to fail. All gates pass at release
+tag \texttt{v1.10.0} (18 September 2026); \texttt{./scripts/verify.sh} exits 0 at that tag,
+re-run independently for this report.
 
 \subsection{What is genuinely established}
 
@@ -2710,7 +2780,10 @@ statement, and including a machine-checked refutation of a prior, provably false
 and, for the 3-D Fourier--Galerkin nonlinearity on $\Z^3$, the exact energy identity
 $\mathrm{Re}\sum_k\langle u_k,B(u,u)_k\rangle=0$ for every truncation radius, together with the
 closed form of the helical triad coefficient and the converse that closes the inventory of inert
-triads.
+triads; the exact enstrophy-production identity \eqref{eq:enstrophy} and the fixed-truncation
+balance laws \eqref{eq:energybalance}--\eqref{eq:enstrophybalance}; and the disparity
+decomposition, whose $\delta=0$ fiber vanishes identically --- all at fixed truncation, none of
+them uniform in $M$.
 
 \subsection{What is emphatically not established}
 
@@ -2719,8 +2792,10 @@ about actual Navier--Stokes solutions; any claim that the formalisation reduces,
 bears on the Millennium problem (retracted, \S\ref{sec:problem}); any claim that the
 Symmetric-Square Lock is relevant to the NSE cascade; the four tracks (all blocked on undefined
 objects); any uniformity verdict; the conditional Millennium reduction, whose file is now \tC{};
-and the statement-adequacy of either \textsc{draft} file. The instantiation of $B$ by the
-\emph{true 3-D} nonlinearity --- the 3-D bridge --- has not been done and is open.
+and the statement-adequacy of every \textsc{draft} artifact (\S\ref{sec:summary}). The
+\emph{dyadic} shell model's reindexing onto $\Z^3$ --- the 3-D bridge in the sense of the August
+pivot --- has not been done and is open; the 3-D Fourier--Galerkin operator of
+\S\ref{sec:opsixb} is a separate object and does not discharge it.
 
 \begin{keybox}{Definition of done, and what is absent from it}
 The campaign is complete when the formal skeleton is merged and human-audited, the dyadic
@@ -2835,6 +2910,28 @@ D.~Barbato, F.~Morandin, M.~Romito.
 than unconditional global regularity}: well-posedness of \emph{positive} solutions of the
 viscous problem in the scaling range corresponding to Navier--Stokes, and of the inviscid
 problem in a suitable regularity class. This reference is the subject of lesson LL-6.
+
+\bibitem{biferale-buzzicotti-linkmann}
+L.~Biferale, M.~Buzzicotti, M.~Linkmann.
+\newblock arXiv:1706.02371 (2017).
+\newblock Quoted verbatim in this programme's design memo for the statement that a flow whose
+spectrum lies in a 2-plane splits into 2-D Navier--Stokes plus a passively advected scalar.
+\textsc{[unverified]}: title, journal reference and page numbers are not recorded in this
+report's source material and were not retrieved.
+
+\bibitem{moffatt2014}
+H.~K. Moffatt.
+\newblock \emph{J.~Fluid Mech.} \textbf{741} (2014), R3.
+\newblock Cited here only as the continuum antecedent \emph{attributed} by
+\cite{biferale-buzzicotti-linkmann}. \textsc{[unverified]}: not fetched; the attribution has not
+been checked against the source.
+
+\bibitem{ponce-racke-sideris-titi}
+G.~Ponce, R.~Racke, T.~C. Sideris, E.~S. Titi.
+\newblock \emph{Comm.\ Math.\ Phys.} \textbf{159} (1994), 329--341.
+\newblock \emph{Verified} by a full read of the fetched PDF; the scope correction it forced is
+recorded in \S\ref{sec:op2prime} (Gronwall-exponential smallness threshold, eq.~(2.17); the 2-D
+application of their Theorem~4 is two-component 2-D on $\R^2$, not 2D3C and not the torus).
 
 \bibitem{bourgain-demeter}
 J.~Bourgain, C.~Demeter.
