@@ -65,8 +65,12 @@ not have noticed the circular antecedent.
   records it; the unrecorded clause dropped.
 - "converging independently on parts of it [the proof]" — the sister project re-derives no
   part of the proof; it converged on two instruments. *Fixed* in the abstract.
-- Version 5.6.0 vs 5.6.1: the archived (Zenodo) version is 5.6.0; the working source says
-  5.6.1. *Fixed:* "archived version 5.6.0 … working source has since moved to 5.6.1".
+- Version 5.6.0 vs 5.6.1: at audit time the archived (Zenodo) version was 5.6.0 and the
+  working source said 5.6.1. *Fixed:* "archived version 5.6.0 … working source has since moved
+  to 5.6.1". *Superseded the same day:* the sister project archived 5.6.1 as
+  10.5281/zenodo.22828106 nine minutes after this paper's first version was published; the
+  citation was updated to 5.6.1 and this paper republished as a new Zenodo version
+  (10.5281/zenodo.22829767; all versions 10.5281/zenodo.22827933) at release v1.10.2.
 - "twenty-eight design memos" — the directory holds 29 files, two of which are decision
   records. *Fixed:* "twenty-seven design memos and two decision records".
 - `lean4` and `mathlib` were in the bibliography but never cited. *Fixed:* cited in §3.
