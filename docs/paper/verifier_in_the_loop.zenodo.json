@@ -1,0 +1,41 @@
+{
+  "title": "A laboratory method for AI-assisted science: formal proof, exact arithmetic, controlled experiment, and a claim ledger, tested for a month on the Navier-Stokes problem",
+  "description": "Large language models produce mathematics and physics that read well and are sometimes wrong, and the discipline that has grown up around them is verification: proof assistants for proofs, and now public registries that check whether a repository proves what it claims. That discipline is necessary and it stops at the proof. This paper describes a working method that extends verifier-in-the-loop practice to the whole of a laboratory's loop -- choosing questions, building instruments, reading numbers, writing and publishing -- and reports what it did over one month in two small laboratories working on the three-dimensional Navier-Stokes equations: one running the method in full on a machine-checked programme for the frequency-truncated system, the other auditing an AI-generated, Lean-certified blow-up proof and arriving independently at two of the same instruments. The method has four instruments (a tiered epistemic gate with formal proof at the top and exact rational arithmetic below it; a control discipline for every computational measurement; pre-registration of every prediction before the run that tests it; a normative claim ledger and lessons file) and an agent framework in which model tiers, permissions and reusable skills are assigned by the cost of a wrong statement. The evidence is a record of failures, listed with what caught each and the rule each produced, and a 13-rule protocol is proposed in the spirit of Terence Tao's machine-assisted-proof programme extended from proofs to experiments and to the boundary between a mathematical model and the physical system it models. Nothing here is a claim about fluid mechanics or about the regularity of the Navier-Stokes equations, which remains open. The manuscript was drafted by AI agents under the adjudication of the laboratory's human owner and audited before release by the adversarial procedure it describes; the audit record accompanies the source in the repository.",
+  "creators": [
+    {
+      "name": "Socrate AI Lab",
+      "affiliation": "Socrate AI Lab, a non-profit organisation for neuro-symbolic scientific AI"
+    }
+  ],
+  "keywords": [
+    "AI-assisted science",
+    "scientific methodology",
+    "formal verification",
+    "Lean 4",
+    "Mathlib",
+    "pre-registration",
+    "negative controls",
+    "reproducibility",
+    "neuro-symbolic AI",
+    "agent frameworks",
+    "Navier-Stokes"
+  ],
+  "access_right": "open",
+  "related_identifiers": [
+    {
+      "identifier": "https://github.com/xaviercallens/SocrateAI-Scientific-MechanicaFluidorum",
+      "relation": "isSupplementTo",
+      "resource_type": "software"
+    },
+    {
+      "identifier": "10.5281/zenodo.22823607",
+      "relation": "cites",
+      "resource_type": "publication-preprint"
+    },
+    {
+      "identifier": "10.5281/zenodo.22823647",
+      "relation": "cites",
+      "resource_type": "publication-preprint"
+    }
+  ]
+}

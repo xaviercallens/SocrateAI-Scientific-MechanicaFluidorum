@@ -47,6 +47,8 @@ PUBLISH="no"
 TOKEN_FILE=""
 GIT_REF=""
 DEPOSITION=""
+PAPER_OVERRIDE=""
+META_OVERRIDE=""
 
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -56,6 +58,8 @@ while [ $# -gt 0 ]; do
     --token-file) TOKEN_FILE="${2:-}"; shift 2 ;;
     --ref)        GIT_REF="${2:-}"; shift 2 ;;
     --deposition) DEPOSITION="${2:-}"; shift 2 ;;
+    --paper)      PAPER_OVERRIDE="${2:-}"; shift 2 ;;
+    --meta)       META_OVERRIDE="${2:-}"; shift 2 ;;
     -h|--help)    sed -n '1,40p' "$0"; exit 0 ;;
     *) echo "FAILED_ARGS: unknown argument '$1'" >&2; exit 2 ;;
   esac
@@ -97,10 +101,11 @@ fi
 AUTH="Authorization: Bearer ${ZENODO_TOKEN}"
 
 # ---- preflight ----------------------------------------------------------------
-PAPER="docs/paper/exact_triad_structure.pdf"
+PAPER="${PAPER_OVERRIDE:-docs/paper/exact_triad_structure.pdf}"
+META="${META_OVERRIDE:-.zenodo.json}"
 [ -f "$PAPER" ] || { echo "FAILED_PREFLIGHT: missing $PAPER (build it first)" >&2; exit 4; }
-[ -f ".zenodo.json" ] || { echo "FAILED_PREFLIGHT: missing .zenodo.json" >&2; exit 4; }
-jq -e . .zenodo.json >/dev/null 2>&1 || { echo "FAILED_PREFLIGHT: .zenodo.json is not valid JSON" >&2; exit 4; }
+[ -f "$META" ] || { echo "FAILED_PREFLIGHT: missing metadata file $META" >&2; exit 4; }
+jq -e . "$META" >/dev/null 2>&1 || { echo "FAILED_PREFLIGHT: $META is not valid JSON" >&2; exit 4; }
 
 if [ -z "$GIT_REF" ]; then
   GIT_REF="$(git describe --tags --exact-match 2>/dev/null || echo HEAD)"
@@ -126,12 +131,18 @@ trap 'rm -rf "$WORK"' EXIT
 # ---- metadata -----------------------------------------------------------------
 VERSION="$(git describe --tags --abbrev=0 2>/dev/null || echo "0.0.0")"
 if [ "$MODE" = "repo" ]; then
-  jq --arg v "$VERSION" '{metadata: (. + {version: $v})}' .zenodo.json > "$WORK/meta.json"
+  jq --arg v "$VERSION" '{metadata: (. + {version: $v})}' "$META" > "$WORK/meta.json"
+elif [ -n "$META_OVERRIDE" ]; then
+  # A paper-specific metadata file supplies its own title/description; only the
+  # publication type and version are forced.
+  jq --arg v "$VERSION" \
+     '{metadata: (. + {upload_type: "publication", publication_type: "preprint", version: $v})}' \
+     "$META" > "$WORK/meta.json"
 else
   PAPER_TITLE="Machine-checked triad identities for the Fourier-Galerkin truncation of the 3-D Navier-Stokes equations, with the vanishing locus of the helical interaction coefficient in closed form"
   jq --arg t "$PAPER_TITLE" --arg v "$VERSION" \
      '{metadata: (. + {title: $t, upload_type: "publication", publication_type: "preprint", version: $v})}' \
-     .zenodo.json > "$WORK/meta.json"
+     "$META" > "$WORK/meta.json"
 fi
 
 # ---- files to upload ----------------------------------------------------------
