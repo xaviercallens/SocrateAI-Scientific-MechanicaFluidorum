@@ -46,6 +46,7 @@ MODE="repo"
 PUBLISH="no"
 TOKEN_FILE=""
 GIT_REF=""
+DEPOSITION=""
 
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -54,6 +55,7 @@ while [ $# -gt 0 ]; do
     --publish)    PUBLISH="yes"; shift ;;
     --token-file) TOKEN_FILE="${2:-}"; shift 2 ;;
     --ref)        GIT_REF="${2:-}"; shift 2 ;;
+    --deposition) DEPOSITION="${2:-}"; shift 2 ;;
     -h|--help)    sed -n '1,40p' "$0"; exit 0 ;;
     *) echo "FAILED_ARGS: unknown argument '$1'" >&2; exit 2 ;;
   esac
@@ -148,19 +150,39 @@ echo "   ref     : $GIT_REF   version: $VERSION"
 echo "   files   : ${FILES[*]}"
 echo "   publish : $PUBLISH"
 
-# ---- create the deposition ----------------------------------------------------
-code="$(curl -sS -o "$WORK/dep.json" -w '%{http_code}' -X POST "$API/deposit/depositions" \
-        -H "$AUTH" -H 'Content-Type: application/json' -d '{}')"
-if [ "$code" != "201" ]; then
-  echo "FAILED_CREATE: HTTP $code" >&2
-  jq -r '.message? // .' "$WORK/dep.json" >&2 2>/dev/null || head -c 400 "$WORK/dep.json" >&2
-  [ "$code" = "401" ] && echo "   (401 = wrong token for this host; sandbox and production tokens are separate)" >&2
-  exit 7
+# ---- create a new deposition, or reuse an existing draft -----------------------
+# Reuse matters when the DOI is already committed to somewhere it cannot be changed --
+# for instance printed inside the PDF being archived. A new deposition gets a NEW DOI,
+# which would silently invalidate that reference, so --deposition updates in place.
+if [ -n "$DEPOSITION" ]; then
+  code="$(curl -sS -o "$WORK/dep.json" -w '%{http_code}' \
+          "$API/deposit/depositions/$DEPOSITION" -H "$AUTH")"
+  if [ "$code" != "200" ]; then
+    echo "FAILED_FETCH: deposition $DEPOSITION HTTP $code" >&2
+    jq -r '.message? // .' "$WORK/dep.json" >&2 2>/dev/null || head -c 400 "$WORK/dep.json" >&2
+    exit 7
+  fi
+  state="$(jq -r '.state' "$WORK/dep.json")"
+  if [ "$state" != "unsubmitted" ]; then
+    echo "FAILED_STATE: deposition $DEPOSITION is '$state', not 'unsubmitted'." >&2
+    echo "   A published deposition cannot be edited in place. Create a new version instead." >&2
+    exit 7
+  fi
+  echo "   reusing draft deposition $DEPOSITION (state: $state)"
+else
+  code="$(curl -sS -o "$WORK/dep.json" -w '%{http_code}' -X POST "$API/deposit/depositions" \
+          -H "$AUTH" -H 'Content-Type: application/json' -d '{}')"
+  if [ "$code" != "201" ]; then
+    echo "FAILED_CREATE: HTTP $code" >&2
+    jq -r '.message? // .' "$WORK/dep.json" >&2 2>/dev/null || head -c 400 "$WORK/dep.json" >&2
+    [ "$code" = "401" ] && echo "   (401 = wrong token for this host; sandbox and production tokens are separate)" >&2
+    exit 7
+  fi
+  echo "   created deposition $(jq -r '.id' "$WORK/dep.json")"
 fi
 DEP_ID="$(jq -r '.id' "$WORK/dep.json")"
 BUCKET="$(jq -r '.links.bucket' "$WORK/dep.json")"
 HTML="$(jq -r '.links.html' "$WORK/dep.json")"
-echo "   created deposition $DEP_ID"
 
 # ---- upload each file, checking every status ----------------------------------
 for f in "${FILES[@]}"; do
@@ -181,6 +203,33 @@ for f in "${FILES[@]}"; do
   fi
   echo "   uploaded $base ($local_size bytes, server confirms $size)"
 done
+
+# ---- remove files the deposition still carries but this run did not upload -----
+# Uploading by bucket replaces same-named files, but a renamed artifact (a version
+# bump in a tarball name) would otherwise leave the stale copy sitting in the record.
+code="$(curl -sS -o "$WORK/files.json" -w '%{http_code}' \
+        "$API/deposit/depositions/$DEP_ID/files" -H "$AUTH")"
+if [ "$code" != "200" ]; then
+  echo "FAILED_LIST_FILES: HTTP $code (deposition $DEP_ID left as a draft)" >&2
+  exit 8
+fi
+expected=""
+for f in "${FILES[@]}"; do expected="$expected $(basename "$f")"; done
+while IFS=$'\t' read -r fid fname; do
+  [ -n "$fid" ] || continue
+  case " $expected " in
+    *" $fname "*) ;;
+    *)
+      code="$(curl -sS -o /dev/null -w '%{http_code}' -X DELETE \
+              "$API/deposit/depositions/$DEP_ID/files/$fid" -H "$AUTH")"
+      if [ "$code" != "204" ]; then
+        echo "FAILED_DELETE_FILE: '$fname' HTTP $code (deposition $DEP_ID left as a draft)" >&2
+        exit 8
+      fi
+      echo "   removed stale file $fname"
+      ;;
+  esac
+done < <(jq -r '.[] | [.id, .filename] | @tsv' "$WORK/files.json")
 
 # ---- attach metadata ----------------------------------------------------------
 code="$(curl -sS -o "$WORK/meta_resp.json" -w '%{http_code}' -X PUT "$API/deposit/depositions/$DEP_ID" \
