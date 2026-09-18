@@ -998,6 +998,106 @@ instinctive response to "the check says this failed" should not be "start over" 
 established which of the two actually failed. Check whether the value survives the failure
 before paying to re-earn it.
 
+## LL-32 — a manuscript written from memory of the work drifts from the work's formal sources (2026-09-17/18)
+
+**Incident, twice in two days.** The external triad paper was drafted by the session that had
+proved its theorems, from its memory of them, and its first draft carried two blocking defects:
+a novelty claim against a result Waleffe published in 1992, and a theorem stated "for any finite
+abelian group" when the Lean proof requires no element of order 2 — with the degree formula off
+by six for the `n` the paper defined (`docs/paper/REVIEW.md`). The methodology paper, drafted
+the next day from the same session's memory of the month, carried **five** blocking defects: its
+headline sentence ("not one entry was caught by a verification gate") was contradicted by three
+rows of its own table; it gave Palomar three automated checks where the announcement lists two;
+it quoted a sister-lab measurement that the sister lab had already retracted; it called a
+theorem "kernel-checked" whose file does not compile; and it credited an AI-drafted summary page
+to the person it summarises (`docs/paper/REVIEW_verifier_in_the_loop.md`). Every one was caught
+by an auditor that re-read the draft **against the Lean signatures, the source files and the
+retrieved literature**, not against the report the draft was written from.
+
+**Why the gates could not see it.** A theorem certifies its proof, not the sentence that
+describes it. Between `lean_src/` and `docs/paper/` sit a restatement, a choice of which
+hypotheses to mention, a number copied from a ledger that copied it from a log, and a claim about
+what the literature lacks. No gate reads the paper.
+
+**Rule.** No manuscript leaves this repository until an auditor has diffed every theorem's
+hypotheses against its Lean signature, traced every number past the ledger to the file that
+produced it, and retrieved the primary source for every "first"/"new"/"leaves open". The author
+never audits their own draft. Mechanised as `docs/harness/agent-manuscript-auditor.md`; the
+audit record is committed beside the source. **Corollary:** the more the author knows the
+material, the more the audit is needed — familiarity is what lets a stale number pass as
+remembered fact.
+
+## LL-33 — a permanent identifier needs a gate the verification gates do not provide (2026-09-18)
+
+**Incident.** The triad paper was one flag from a permanent DOI with `AUTHOR LIST AND
+AFFILIATIONS TO BE SUPPLIED` in the running head of every page, and with a creator name in the
+metadata *inferred* from a GitHub handle. The inference was wrong: the author of record is an
+organisation, supplied by the owner in one line once asked. The pause that let the placeholder be
+noticed existed only because the deposit script refuses to publish without a second, explicit
+flag. The same day the sister project's changelog recorded a near-miss of the opposite kind: an
+upload script still carrying the metadata of a *withdrawn* framing, which run unmodified would
+have re-published retracted claims under a DOI.
+
+**Rule.** Publishing is the one action here whose blast radius exceeds a bad commit — a DOI is
+superseded, never withdrawn — and it gets its own checklist: author of record supplied, never
+inferred; the artefact matched to a tag by checksum; both gates exit 0 at that tag; metadata
+read against the withdrawn-claims list; a draft created and read back through the API before a
+separate publish step; the live record verified **without credentials**; any credential that
+touched a transcript reported for rotation. Mechanised as `docs/harness/skill-publish-gate.md`
+and enforced by `scripts/zenodo_deposit.sh` (draft by default; production publish gated on
+`scripts/verify.sh`). **Second half, learned the same afternoon:** if the artefact prints its own
+DOI, the deposit must update *that* draft in place — a new deposition mints a new DOI and silently
+invalidates the reference inside the document being archived (`--deposition ID`); and a new
+version of a published record is a `newversion` draft with its own pre-reserved DOI, not a fresh
+deposit.
+
+## LL-34 — a count is a convention, and conventions drift silently (2026-09-18)
+
+**Incident.** Two independent reviewers of the 55-page report found the headline theorem count
+quoted three ways in one document — 72 in the abstract, 258 in the summary table, 93 in the
+sentence beneath it — where the gate certifies **193**; and the harness count quoted as six and
+as eleven where Gate 1 runs 22 plus the shared control library. None was a lie; each was the
+right number under a counting convention that had since changed (source-level `theorem`
+declarations, `#print axioms` lines, an August snapshot). The sister laboratory recorded the same
+class of error independently the day before: "45 theorems" that were 36 under the convention it
+then adopted.
+
+**Rule.** The citable count is the one the gate prints, per file, in the `scripts/verify.sh`
+transcript — `14, 3, 16, 11, 15, 7, 11, 7, 13, 10, 33, 53 = 193` at this writing — and every
+document that quotes a count names the convention in a footnote. Never count by `grep`. Already a
+memory-file rule since 2026-09-13; it reached the report only through an external review, which
+is the reason it is now an LL entry: a rule held in one session's memory is not a rule.
+
+## LL-35 — a transcription error propagates through every record that copies it, and must be fixed at every copy (2026-09-18)
+
+**Incident.** "Seven-point" evidence for the 5/6 conjecture (there are six points, `M = 2..7`)
+travelled from `LEDGER.md` into the report and into the first draft of the triad paper. The
+factor `classes/3 = 22 876` at `M = 32` (it is `68 532 / 3 = 22 844`) travelled from LL-22 into
+`CORE_TAIL_CAP.md`, the report, and the ledger's own LL-22 mirror row. The implementer that
+fixed the report was correctly forbidden from editing the ledger beyond two named phrases, and
+so left the ledger contradicting the two files it had just corrected — and said so.
+
+**Rule.** When a number is found wrong, `grep` the whole repository for it and fix every copy in
+the same commit, or the corrected file now disagrees with its own source. And trace a number to
+the file that *produced* it, never to the record that quoted it — the record is where the error
+lives. The `manuscript-auditor` procedure's Pass 2 is this rule.
+
+## LL-36 — a URL that worked before publication is not a check after it (2026-09-18)
+
+**Incident.** The owner reported "an error on the Zenodo publication": a file URL of the form
+`/api/records/<id>/draft/files/<name>/content` returned 404. The record was published, open,
+complete (66 files, checksums matching the deposit), and both its DOI and its concept DOI
+resolved. The `/draft/` resource ceases to exist at the moment of publication; the same file was
+served from `/api/records/<id>/files/<name>/content`. Nothing was wrong except the URL, which had
+been valid ten minutes earlier.
+
+**Rule.** Post-publish verification must use the *published* endpoints and must be run
+anonymously (LL-2 applied to a deposit: the script's `PUBLISHED` line is a self-report). A
+verifier that reuses a pre-publish URL fails exactly when it matters, and its failure looks like
+a failed publication — the LL-29 pattern (verification tooling reporting failure on a correct
+result) in a new costume. The publish gate's step 7 is this rule; the deposit script's anonymous
+read-back should be automated rather than done by hand.
+
 ---
 
 # Synthesis — the three blind spots of a two-gate system

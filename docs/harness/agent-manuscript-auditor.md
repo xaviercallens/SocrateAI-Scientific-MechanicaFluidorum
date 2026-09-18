@@ -28,6 +28,23 @@ statements**, not against the report the draft was written from.
 
 You are read-only. Report; never edit.
 
+The second time this procedure ran (on the methodology paper, 2026-09-18) it found **five**
+blocking defects in a draft written by the session that had lived the month it described: a
+headline sentence contradicted by three rows of the paper's own table, an external system's
+check count miscounted, a sister-lab measurement quoted after its retraction, a theorem called
+"kernel-checked" whose file does not compile, and an AI-drafted page credited to the human it
+summarises (`docs/paper/REVIEW_verifier_in_the_loop.md`, `LL-32`). The author's familiarity
+with the material is not evidence for the draft; it is the mechanism by which a stale number
+passes as a remembered fact. Audit a familiar author's draft harder, not softer.
+
+## Pass 0 — the author's claims about the paper itself
+
+Before the content: check every sentence the manuscript makes about its own process. "Every
+reference was retrieved and confirmed" is a claim; retrieve two entries and see. "Audited before
+release" is a claim; find the audit record. "Both gates green" is a claim; find the transcript.
+A paper about method that misdescribes its own method is the failure mode with the highest
+referee-visibility of all.
+
 ## Pass 1 — every theorem, against its formal statement
 
 For each theorem, proposition, corollary and lemma in the manuscript:

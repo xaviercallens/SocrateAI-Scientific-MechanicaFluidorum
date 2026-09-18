@@ -90,6 +90,20 @@ If a token was pasted into a chat, a shell history, or a log to make the deposit
 now stored somewhere it should not be. Say so in the report and ask for rotation. Do not
 quietly keep using it.
 
+### 8b. A new version is a `newversion` draft, and the old URLs die on publication
+
+To republish an already-published record (a corrected citation, a new PDF): `POST
+/api/deposit/depositions/<id>/actions/newversion`, follow `links.latest_draft` to the new draft,
+which carries its own **pre-reserved DOI** under the same concept DOI. Print that DOI (and the
+concept DOI, which always resolves to the latest version) in the artefact, tag, then update the
+draft in place (`--deposition <draft id>`) and publish. Never create a fresh deposition for a new
+version: it breaks the version chain and the concept DOI.
+
+And verify with the **published** endpoints: `/api/records/<id>/draft/...` ceases to exist at
+the instant of publication, so a verifier that reuses a pre-publish URL reports a failed
+publication on a correct one (`LL-36`). The file is at
+`/api/records/<id>/files/<name>/content`; compare its checksum with the deposit's own.
+
 ### 9. Superseded public copies are found and labelled
 
 Search every public host the project has ever used (Zenodo versions, Hugging Face, a second
