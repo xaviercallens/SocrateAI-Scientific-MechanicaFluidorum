@@ -12,7 +12,7 @@ resolved by `PLAN.md`, then recorded here.
 session reads. Not edited into `PLAN.md` by the session that wrote this (normative documents go
 through review).
 
-Last refreshed: 2026-09-18, after release v1.10.2.
+Last refreshed: 2026-09-18, after release v1.11.0.
 
 ---
 
@@ -33,6 +33,7 @@ Millennium problem is solved; verdicts are the owner's after external audit.
 | G-56 | **The 5/6 spherical-gap conjecture** | Half proved (gap $\le 5/6$ with an explicit witness); six exact points $M = 2..7$ | Prove $1/2$ is the largest odd eigenvalue (`BALL_SPECTRAL_PROBLEM.md` §5), or compute the continuum kernel's second eigenvalue | A seventh exact point that breaks monotonicity | — |
 | G-PUB | **Publications** | Triad paper archived (10.5281/zenodo.22823607); methodology paper v2 archived (10.5281/zenodo.22829767, all versions 10.5281/zenodo.22827933); report publication-ready at v1.10.0 | Any new claim → `manuscript-auditor` → `publish-gate` | A published sentence found false → tombstone via new version, never silent edit | — |
 | G-M | **The method** (tiers, controls, pre-registration, ledger, harness) | 36 lessons; 6 skills + 2 agents proposed in `docs/harness/`; none installed | Owner installs the harness; the neuro-symbolic harness memo's first milestone (`docs/designs/NEURO_SYMBOLIC_HARNESS.md` §7) | A proposed hook with a false-positive rate on the clean commit history above the memo's threshold is dropped | **Owner: install `docs/harness/`** |
+| G-XS | **Cross-stream integration** (`docs/designs/CROSS_STREAM_INTEGRATION.md`) | Plan written; Phase P0 rehearsed in scratchpad (portable gate passes clean on our tree, 13 files, zero findings; planted probe rejected, exit 1). Three inbound defect reports from Mensura, unactioned for three weeks | **X21**: reproduce the inbound `ν = 0` saturation report on our dyadic model at `T = 2, 8, 32, 64`, with energy drift, in `data/` with a sidecar | X21 does not reproduce → say so plainly and tell them; the report is closed, not left open | **Owner: adopt Tier X?**; **pilot the machine-readable ledger?**; `Reff` migration (open since 2026-08-25) |
 
 ## Standing owner decisions (none urgent, all blocking something)
 
@@ -43,6 +44,12 @@ Millennium problem is solved; verdicts are the owner's after external audit.
 4. **Merge `concurrent-stream`** only after its own two gates pass there (D-4).
 5. **Install `docs/harness/`** into `.claude/` — the session may not (LL-23).
 6. **Rotate the Zenodo token** pasted into the 2026-09-18 transcript.
+7. **Adopt Tier X?** Five tiers were programme notation under `MX-C-0007`; we implemented four,
+   so every float result here carries the letter our design memos use for conjectures.
+   Unblocks `CROSS_STREAM_INTEGRATION.md` Phase P2.
+8. **Pilot the machine-readable ledger?** Ten rows under the `MF` prefix, which the shared
+   schema already reserves. Cheap as a pilot; the upstream expects its schema to break on us and
+   says that breakage is the deliverable. Phase P3.
 
 ## Recently closed (for the record; details in `LEDGER.md`)
 
