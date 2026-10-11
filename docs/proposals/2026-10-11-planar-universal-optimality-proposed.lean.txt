@@ -1,0 +1,761 @@
+-- [ARCHIVED SUBMISSION - VERBATIM] Lean sources from AutoevolveAI, formal_cert/Triangular/.
+-- Toolchain: Lean 4.34.1 + Mathlib d13f23b7 + openai/math adc7f124 (NOT this repository's pinned stack).
+-- Stored as .lean.txt so no gate of this repository compiles or imports it.
+
+-- ===== FILE formal_cert/Triangular/Riesz.lean  sha256 a99c2024b065360bc027ab05bd08b1fbc3335545dbf0815bcf7ee619e2e4b23b  (verbatim) =====
+import OAI.Analysis.Triangular.Energy.Universal
+
+/-!
+# Riesz-energy optimality of the triangular lattice (corollary of upstream universal optimality)
+
+For every `s > 0` the Riesz potential `g(t) = t^{-s/2}` (energy `Σ |x - y|^{-s}` in terms of `t = |x - y|²`)
+is admissible in the sense of `OAI.TriangularUniversal.AdmissiblePotential` (smooth on `(0, ∞)`, non-negative,
+completely monotone). Hence, by the Comparator-accepted theorem `OAI.AtomicTriangular.universal_energy_minimum`,
+the triangular lattice `A` minimises the Riesz `s`-energy among all locally finite configurations of density one.
+
+Everything here is conditional on upstream's theorem, whose statement fidelity has not been audited by a human.
+-/
+
+namespace TriangularRiesz
+
+open OAI.AtomicTriangular
+
+/-- Riesz potential in the variable `t = r²`. -/
+noncomputable def riesz (s : ℝ) : ℝ → ℝ := fun t => t ^ (-(s / 2))
+
+theorem riesz_admissible {s : ℝ} (hs : 0 < s) : AdmissiblePotential (riesz s) := by
+  refine ⟨?_, ?_, ?_⟩
+  · intro x hx
+    exact (Real.contDiffAt_rpow_const_of_ne (ne_of_gt hx)).contDiffWithinAt
+  · intro t ht
+    exact (Real.rpow_pos_of_pos ht _).le
+  · intro r t ht
+    have ha : 0 < s / 2 := by positivity
+    rw [iteratedDeriv_eq_iterate]
+    unfold riesz
+    rw [Real.iter_deriv_rpow_const]
+    have hasc := ascPochhammer_eval_neg_eq_descPochhammer (R := ℝ) (-(s / 2)) r
+    rw [neg_neg] at hasc
+    have hdesc : (descPochhammer ℝ r).eval (-(s / 2)) = (-1) ^ r * (ascPochhammer ℝ r).eval (s / 2) := by
+      have h1 : ((-1 : ℝ) ^ r) * ((-1) ^ r) = 1 := by rw [← mul_pow]; norm_num
+      calc (descPochhammer ℝ r).eval (-(s / 2))
+          = ((-1) ^ r * (-1) ^ r) * (descPochhammer ℝ r).eval (-(s / 2)) := by rw [h1, one_mul]
+        _ = (-1) ^ r * (ascPochhammer ℝ r).eval (s / 2) := by rw [hasc]; ring
+    rw [hdesc]
+    have hpos := ascPochhammer_pos r (s / 2) ha
+    have hpow := Real.rpow_pos_of_pos ht (-(s / 2) - r)
+    have h1 : ((-1 : ℝ) ^ r) * ((-1) ^ r) = 1 := by rw [← mul_pow]; norm_num
+    calc (0 : ℝ) ≤ (ascPochhammer ℝ r).eval (s / 2) * t ^ (-(s / 2) - r) := by positivity
+      _ = (-1) ^ r * ((-1) ^ r * (ascPochhammer ℝ r).eval (s / 2) * t ^ (-(s / 2) - r)) := by
+        rw [← mul_assoc, ← mul_assoc, h1, one_mul]
+
+/-- **Riesz optimality.** For every `s > 0` the triangular lattice minimises the Riesz `s`-energy among all locally
+finite planar configurations of density one (energies in `[0, ∞]`). For `s ≤ 2` the lattice energy is `∞`, so the
+statement then only says `energy C = ∞`; it is informative for `s > 2`, where the lattice energy is finite
+(`latticeEnergy_riesz_lt_top`). -/
+theorem triangular_riesz_optimal {s : ℝ} (hs : 0 < s) (C : Set Plane) (hC : LocallyFinite C) (hd : DensityOne C) :
+    latticeEnergy (riesz s) ≤ energy (riesz s) C :=
+  (universal_energy_minimum (riesz s) C (riesz_admissible hs) hC hd).1
+
+end TriangularRiesz
+
+-- ===== FILE formal_cert/Triangular/RieszFinite.lean  sha256 7aa2f523e83a1d9e981e3610c05acda030aa268c005d8681d6ef2daa4bd57f01  (verbatim) =====
+import Triangular.Riesz
+import OAI.NumberTheory.DirichletL.LatticeSummability
+
+/-!
+# D1b: the Riesz `s`-energy of the triangular lattice is finite for `s > 2`
+
+So `TriangularRiesz.triangular_riesz_optimal` is not the trivial `⊤ ≤ ⊤` there. Ingredients:
+`‖triangularPoint (j, k)‖² = (1/b) (j² + jk + k²)` with `b = √3/2`, reindexing through the injective
+`triangularPoint`, and openai/math's `summable_normForm_neg_rpow` for `x² - xy + y²` after `k ↦ -k`.
+-/
+
+namespace TriangularRiesz
+
+open OAI.AtomicTriangular OAI.SevenEighths
+
+lemma b_pos : 0 < b := by unfold b; positivity
+
+lemma b_sq : b ^ 2 = 3 / 4 := by
+  unfold b
+  rw [div_pow, Real.sq_sqrt (by norm_num)]
+  norm_num
+
+/-- The squared norm of a lattice point. -/
+lemma norm_sq_triangularPoint (j k : ℤ) :
+    ‖triangularPoint (j, k)‖ ^ 2 = (1 / b) * ((j : ℝ) ^ 2 + (j : ℝ) * k + (k : ℝ) ^ 2) := by
+  rw [EuclideanSpace.real_norm_sq_eq]
+  simp only [triangularPoint, Fin.sum_univ_two, PiLp.smul_apply, PiLp.add_apply, EuclideanSpace.single_apply,
+    smul_eq_mul]
+  norm_num
+  have hb := b_pos
+  have hsb : (Real.sqrt b) ^ 2 = b := Real.sq_sqrt hb.le
+  have hb2 := b_sq
+  field_simp
+  rw [hsb, hb2]
+  ring
+
+/-- A chosen index of a lattice point. -/
+noncomputable def toIdx (a : {x : Plane // x ∈ A ∧ x ≠ 0}) : ℤ × ℤ := Classical.choose a.2.1
+
+lemma toIdx_spec (a : {x : Plane // x ∈ A ∧ x ≠ 0}) : triangularPoint (toIdx a) = a.val :=
+  Classical.choose_spec a.2.1
+
+lemma toIdx_injective : Function.Injective toIdx := by
+  intro a a' h
+  apply Subtype.ext
+  rw [← toIdx_spec a, ← toIdx_spec a', h]
+
+/-- **D1b.** For every `s > 2` the Riesz `s`-energy of the density-one triangular lattice is finite. -/
+theorem latticeEnergy_riesz_lt_top {s : ℝ} (hs : 2 < s) : latticeEnergy (riesz s) < ⊤ := by
+  have hσ : 1 < s / 2 := by linarith
+  set Q : ℤ × ℤ → ℝ := fun jk => (jk.1 : ℝ) ^ 2 + (jk.1 : ℝ) * jk.2 + (jk.2 : ℝ) ^ 2 with hQ
+  have hQ0 : ∀ jk, 0 ≤ Q jk := by
+    intro jk
+    simp only [hQ]
+    nlinarith [sq_nonneg ((jk.1 : ℝ) + jk.2), sq_nonneg (jk.1 : ℝ), sq_nonneg (jk.2 : ℝ)]
+  -- Σ Q^(-σ) over ℤ² from openai/math, via (j,k) ↦ (j,-k)
+  have hQsum : Summable (fun jk : ℤ × ℤ => Q jk ^ (-(s / 2))) := by
+    have hn := LatticeSummability.summable_normForm_neg_rpow hσ
+    let e : ℤ × ℤ ≃ ℤ × ℤ := Equiv.prodCongr (Equiv.refl ℤ) (Equiv.neg ℤ)
+    have := (e.summable_iff).2 hn
+    convert this using 2 with jk
+    simp only [e, Function.comp_apply, Equiv.prodCongr_apply, Equiv.coe_refl, id_eq, Prod.map_fst, Prod.map_snd,
+      Equiv.neg_apply, EisensteinTheta.normForm, hQ]
+    push_cast
+    ring_nf
+  have hh : Summable (fun jk : ℤ × ℤ => ((1 / b) * Q jk) ^ (-(s / 2))) := by
+    have : (fun jk : ℤ × ℤ => ((1 / b) * Q jk) ^ (-(s / 2))) =
+        fun jk => (1 / b) ^ (-(s / 2)) * Q jk ^ (-(s / 2)) := by
+      funext jk
+      rw [Real.mul_rpow (by have := b_pos; positivity) (hQ0 jk)]
+    rw [this]
+    exact hQsum.mul_left _
+  set f : {x : Plane // x ∈ A ∧ x ≠ 0} → ℝ := fun a => riesz s (‖a.val‖ ^ 2) with hf
+  have hf0 : ∀ a, 0 ≤ f a := fun a => Real.rpow_nonneg (sq_nonneg _) _
+  have hfsum : Summable f := by
+    have := hh.comp_injective toIdx_injective
+    convert this using 1
+    funext a
+    simp only [hf, Function.comp_apply, riesz]
+    rw [← toIdx_spec a]
+    obtain ⟨j, k⟩ := toIdx a
+    rw [norm_sq_triangularPoint]
+  unfold latticeEnergy
+  rw [show (fun a : {x : Plane // x ∈ A ∧ x ≠ 0} => ENNReal.ofReal (riesz s (‖a.val‖ ^ 2))) = fun a => ENNReal.ofReal (f a) from rfl]
+  rw [← ENNReal.ofReal_tsum_of_nonneg hf0 hfsum]
+  exact ENNReal.ofReal_lt_top
+
+end TriangularRiesz
+
+-- ===== FILE formal_cert/Triangular/AnyDensity.lean  sha256 0a6d86eef3ee24b2b6828ff602707868e160969bfbebc41db375c05b383c5168  (verbatim) =====
+import Triangular.Riesz
+import Triangular.RieszFinite
+
+/-!
+# D2: universal optimality at every density
+
+From upstream's density-one theorem `OAI.AtomicTriangular.universal_energy_minimum`: for every `ρ > 0`, every admissible
+potential `h` and every locally finite configuration `C` of density `ρ`,
+`Σ_{x ∈ A \ 0} h(‖x‖²/ρ) ≤ energy h C`, i.e. the triangular lattice rescaled to density `ρ` (`ρ^{-1/2} A`) is optimal.
+Proof: `√ρ • C` has density one, `t ↦ h(t/ρ)` is admissible, and energies transform under scaling.
+-/
+
+namespace TriangularDensity
+
+open OAI.AtomicTriangular Filter Topology Set
+open scoped Pointwise
+
+/-- `C` has density `ρ`. -/
+def DensityRho (ρ : ℝ) (C : Set Plane) : Prop :=
+  Tendsto (fun R : ℝ => (diskCount C R : ℝ) / (Real.pi * R ^ 2)) atTop (𝓝 ρ)
+
+lemma iterate_deriv_comp_mul (f : ℝ → ℝ) (c : ℝ) :
+    ∀ r : ℕ, deriv^[r] (fun t => f (c * t)) = fun t => c ^ r * deriv^[r] f (c * t)
+  | 0 => by funext t; simp
+  | r + 1 => by
+    rw [Function.iterate_succ_apply', iterate_deriv_comp_mul f c r]
+    funext t
+    rw [deriv_const_mul_field']
+    have h := deriv_comp_mul_left (𝕜 := ℝ) (f := deriv^[r] f) (c := c) (x := t)
+    simp only [smul_eq_mul] at h
+    show c ^ r * deriv (fun x => deriv^[r] f (c * x)) t = c ^ (r + 1) * deriv^[r + 1] f (c * t)
+    rw [h, Function.iterate_succ_apply']
+    ring
+
+lemma admissible_comp_mul {g : ℝ → ℝ} (hg : AdmissiblePotential g) {c : ℝ} (hc : 0 < c) :
+    AdmissiblePotential (fun t => g (c * t)) := by
+  obtain ⟨h1, h2, h3⟩ := hg
+  refine ⟨?_, ?_, ?_⟩
+  · exact h1.comp (contDiff_const.mul contDiff_id).contDiffOn (fun t ht => mul_pos hc ht)
+  · intro t ht
+    exact h2 _ (mul_pos hc ht)
+  · intro r t ht
+    rw [iteratedDeriv_eq_iterate, iterate_deriv_comp_mul]
+    have := h3 r (c * t) (mul_pos hc ht)
+    rw [iteratedDeriv_eq_iterate] at this
+    have hcr : 0 ≤ c ^ r := pow_nonneg hc.le r
+    calc (0 : ℝ) ≤ c ^ r * ((-1) ^ r * deriv^[r] g (c * t)) := mul_nonneg hcr this
+      _ = (-1) ^ r * (c ^ r * deriv^[r] g (c * t)) := by ring
+
+/-! ## Scaling a configuration -/
+
+lemma inter_ball_smul {c : ℝ} (hc : 0 < c) (C : Set Plane) (R : ℝ) :
+    (c • C) ∩ Metric.closedBall (0 : Plane) R = (fun x => c • x) '' (C ∩ Metric.closedBall (0 : Plane) (R / c)) := by
+  ext x
+  simp only [Set.mem_inter_iff, Metric.mem_closedBall, dist_zero_right, Set.mem_image, Set.mem_smul_set]
+  constructor
+  · rintro ⟨⟨y, hy, rfl⟩, hn⟩
+    refine ⟨y, ⟨hy, ?_⟩, rfl⟩
+    rw [norm_smul, Real.norm_of_nonneg hc.le] at hn
+    rw [le_div_iff₀ hc]; linarith
+  · rintro ⟨y, ⟨hy, hn⟩, rfl⟩
+    refine ⟨⟨y, hy, rfl⟩, ?_⟩
+    rw [norm_smul, Real.norm_of_nonneg hc.le]
+    rw [le_div_iff₀ hc] at hn; linarith
+
+lemma locallyFinite_smul {c : ℝ} (hc : 0 < c) {C : Set Plane} (hC : LocallyFinite C) : LocallyFinite (c • C) := by
+  intro R
+  rw [inter_ball_smul hc]
+  exact (hC (R / c)).image _
+
+lemma smul_injective {c : ℝ} (hc : 0 < c) : Function.Injective (fun x : Plane => c • x) :=
+  smul_right_injective _ hc.ne'
+
+lemma diskPoints_smul {c : ℝ} (hc : 0 < c) {C : Set Plane} (hC : LocallyFinite C) (R : ℝ) :
+    diskPoints (c • C) R = (diskPoints C (R / c)).image (fun x => c • x) := by
+  unfold diskPoints OAI.TriangularUniversal.diskPoints
+  rw [dif_pos (locallyFinite_smul hc hC R), dif_pos (hC (R / c))]
+  ext x
+  simp only [Set.Finite.mem_toFinset, Finset.mem_image]
+  rw [inter_ball_smul hc]
+  simp only [Set.mem_image]
+
+lemma diskCount_smul {c : ℝ} (hc : 0 < c) {C : Set Plane} (hC : LocallyFinite C) (R : ℝ) :
+    diskCount (c • C) R = diskCount C (R / c) := by
+  unfold diskCount OAI.TriangularUniversal.diskCount
+  rw [show OAI.TriangularUniversal.diskPoints (c • C) R = diskPoints (c • C) R from rfl, diskPoints_smul hc hC,
+    Finset.card_image_of_injective _ (smul_injective hc)]
+
+lemma density_smul {ρ : ℝ} (hρ : 0 < ρ) {C : Set Plane} (hC : LocallyFinite C) (hd : DensityRho ρ C) :
+    DensityOne (Real.sqrt ρ • C) := by
+  have hs : 0 < Real.sqrt ρ := Real.sqrt_pos.2 hρ
+  have hsq : Real.sqrt ρ ^ 2 = ρ := Real.sq_sqrt hρ.le
+  have ht : Tendsto (fun R : ℝ => R / Real.sqrt ρ) atTop atTop := tendsto_id.atTop_div_const hs
+  have h1 := (hd.comp ht).const_mul ρ⁻¹
+  rw [inv_mul_cancel₀ hρ.ne'] at h1
+  unfold DensityOne OAI.TriangularUniversal.DensityOne
+  refine h1.congr' ?_
+  filter_upwards [eventually_gt_atTop (0 : ℝ)] with R hR
+  simp only [Function.comp_apply]
+  rw [show OAI.TriangularUniversal.diskCount (Real.sqrt ρ • C) R = diskCount (Real.sqrt ρ • C) R from rfl,
+    diskCount_smul hs hC]
+  show ρ⁻¹ * ((diskCount C (R / Real.sqrt ρ) : ℝ) / (Real.pi * (R / Real.sqrt ρ) ^ 2)) =
+    (diskCount C (R / Real.sqrt ρ) : ℝ) / (Real.pi * R ^ 2)
+  rw [div_pow, hsq]
+  field_simp
+
+lemma diskEnergy_smul {c : ℝ} (hc : 0 < c) (g : ℝ → ℝ) {C : Set Plane} (hC : LocallyFinite C) (R : ℝ) :
+    diskEnergy g (c • C) R = diskEnergy (fun t => g (c ^ 2 * t)) C (R / c) := by
+  unfold diskEnergy OAI.TriangularUniversal.diskEnergy
+  rw [show OAI.TriangularUniversal.diskPoints (c • C) R = diskPoints (c • C) R from rfl,
+    show OAI.TriangularUniversal.diskCount (c • C) R = diskCount (c • C) R from rfl, diskCount_smul hc hC,
+    diskPoints_smul hc hC]
+  congr 1
+  rw [Finset.sum_image (fun x _ y _ h => smul_injective hc h)]
+  apply Finset.sum_congr rfl
+  intro x _
+  rw [← Finset.image_erase (smul_injective hc), Finset.sum_image (fun x _ y _ h => smul_injective hc h)]
+  apply Finset.sum_congr rfl
+  intro y _
+  congr 2
+  rw [← smul_sub, norm_smul, Real.norm_of_nonneg hc.le, mul_pow]
+
+lemma liminf_comp_div {c : ℝ} (hc : 0 < c) (F : ℝ → ENNReal) :
+    liminf (fun R => F (R / c)) atTop = liminf F atTop := by
+  have hmap : map (fun R : ℝ => R / c) atTop = atTop := by
+    have h1 := (OrderIso.mulLeft₀ c⁻¹ (inv_pos.2 hc)).map_atTop
+    have h2 : ((OrderIso.mulLeft₀ c⁻¹ (inv_pos.2 hc)) : ℝ → ℝ) = fun R => R / c := by
+      funext R
+      exact (div_eq_inv_mul R c).symm
+    rw [← h2]
+    exact h1
+  rw [show (fun R => F (R / c)) = F ∘ (fun R : ℝ => R / c) from rfl]
+  unfold Filter.liminf
+  rw [← Filter.map_map, hmap]
+
+lemma energy_smul {c : ℝ} (hc : 0 < c) (g : ℝ → ℝ) {C : Set Plane} (hC : LocallyFinite C) :
+    energy g (c • C) = energy (fun t => g (c ^ 2 * t)) C := by
+  unfold energy OAI.TriangularUniversal.energy
+  rw [show OAI.TriangularUniversal.diskEnergy g (c • C) = fun R => diskEnergy g (c • C) R from rfl]
+  simp_rw [diskEnergy_smul hc g hC]
+  exact liminf_comp_div hc (diskEnergy (fun t => g (c ^ 2 * t)) C)
+
+/-- **D2.** Universal optimality at every density `ρ > 0`. -/
+theorem universal_any_density (h : ℝ → ℝ) (hh : AdmissiblePotential h) {ρ : ℝ} (hρ : 0 < ρ) (C : Set Plane)
+    (hC : LocallyFinite C) (hd : DensityRho ρ C) :
+    latticeEnergy (fun t => h (ρ⁻¹ * t)) ≤ energy h C := by
+  have hs : 0 < Real.sqrt ρ := Real.sqrt_pos.2 hρ
+  have hg := admissible_comp_mul hh (inv_pos.2 hρ)
+  have key := (universal_energy_minimum (fun t => h (ρ⁻¹ * t)) (Real.sqrt ρ • C) hg (locallyFinite_smul hs hC)
+    (density_smul hρ hC hd)).1
+  rw [energy_smul hs _ hC] at key
+  have e : (fun t => (fun t => h (ρ⁻¹ * t)) (Real.sqrt ρ ^ 2 * t)) = h := by
+    funext t
+    simp only
+    rw [Real.sq_sqrt hρ.le, ← mul_assoc, inv_mul_cancel₀ hρ.ne', one_mul]
+  rw [e] at key
+  exact key
+
+/-- Riesz `s`-energy optimality of the rescaled triangular lattice at every density (D1 + D2); informative for `s > 2`
+(for `s ≤ 2` the lattice side is `∞`). -/
+theorem riesz_any_density {s : ℝ} (hs : 0 < s) {ρ : ℝ} (hρ : 0 < ρ) (C : Set Plane) (hC : LocallyFinite C)
+    (hd : DensityRho ρ C) :
+    latticeEnergy (fun t => TriangularRiesz.riesz s (ρ⁻¹ * t)) ≤ energy (TriangularRiesz.riesz s) C :=
+  universal_any_density _ (TriangularRiesz.riesz_admissible hs) hρ C hC hd
+
+/-! ## Sharpness, non-vacuity and a negative control
+
+Contributed by the independent D2 verification run (`results/discovery/D2/verification.md`): the hypothesis `DensityRho ρ`
+is satisfiable (by `ρ^{-1/2} A`), that configuration attains the bound, so `universal_any_density` is an optimality
+statement; and without the `ρ⁻¹` rescaling the claim is false (density `1/4`, Riesz `s = 4`). -/
+
+/-! ## Non-vacuity and sharpness: ρ^{-1/2} A has density ρ and attains the bound -/
+lemma A_lf : LocallyFinite A := by
+  rw [OAI.AtomicTriangular.A_eq_support]; exact OAI.TriangularUniversal.triangular_locallyFinite
+
+lemma A_d1 : DensityOne A := by
+  rw [OAI.AtomicTriangular.A_eq_support]; exact OAI.TriangularUniversal.triangular_densityOne
+
+theorem scaled_density {ρ : ℝ} (hρ : 0 < ρ) : DensityRho ρ ((Real.sqrt ρ)⁻¹ • A) := by
+  have hs : 0 < Real.sqrt ρ := Real.sqrt_pos.2 hρ
+  have hc : 0 < (Real.sqrt ρ)⁻¹ := inv_pos.2 hs
+  have hsq : Real.sqrt ρ ^ 2 = ρ := Real.sq_sqrt hρ.le
+  have ht : Tendsto (fun R : ℝ => R / (Real.sqrt ρ)⁻¹) atTop atTop := tendsto_id.atTop_div_const hc
+  have h1 := ((show DensityOne A from A_d1).comp ht).const_mul ρ
+  rw [mul_one] at h1
+  unfold DensityRho
+  refine h1.congr' ?_
+  filter_upwards [eventually_gt_atTop (0 : ℝ)] with R hR
+  simp only [Function.comp_apply]
+  rw [diskCount_smul hc A_lf]
+  rw [div_inv_eq_mul, mul_pow, hsq]
+  field_simp
+
+theorem attained (h : ℝ → ℝ) (hh : AdmissiblePotential h) {ρ : ℝ} (hρ : 0 < ρ) :
+    energy h ((Real.sqrt ρ)⁻¹ • A) = latticeEnergy (fun t => h (ρ⁻¹ * t)) := by
+  have hs : 0 < Real.sqrt ρ := Real.sqrt_pos.2 hρ
+  rw [energy_smul (inv_pos.2 hs) h A_lf, inv_pow, Real.sq_sqrt hρ.le]
+  exact ((universal_energy_minimum _ A (admissible_comp_mul hh (inv_pos.2 hρ)) A_lf A_d1).2).symm
+
+
+/-! ## Negative control: the UNscaled claim at density 1/4 is false (Riesz s = 4) -/
+theorem unscaled_false :
+    ¬ (∀ C : Set Plane, LocallyFinite C → DensityRho (1 / 4) C →
+        latticeEnergy (TriangularRiesz.riesz 4) ≤ energy (TriangularRiesz.riesz 4) C) := by
+  intro H
+  have hρ : (0 : ℝ) < 1 / 4 := by norm_num
+  have key := H _ (locallyFinite_smul (inv_pos.2 (Real.sqrt_pos.2 hρ)) A_lf) (scaled_density hρ)
+  rw [attained _ (TriangularRiesz.riesz_admissible (by norm_num)) hρ] at key
+  -- key : Σ ofReal(t^{-2}) ≤ Σ ofReal((4t)^{-2}); but (4t)^{-2} < t^{-2} termwise and the sum is finite
+  have hfin := TriangularRiesz.latticeEnergy_riesz_lt_top (s := 4) (by norm_num)
+  have hpt : (OAI.AtomicTriangular.triangularPoint (1, 0)) ∈ A ∧ OAI.AtomicTriangular.triangularPoint (1, 0) ≠ 0 := by
+    refine ⟨⟨(1, 0), rfl⟩, ?_⟩
+    intro h0
+    have := TriangularRiesz.norm_sq_triangularPoint 1 0
+    rw [h0, norm_zero] at this
+    have hb := TriangularRiesz.b_pos
+    norm_num at this
+    exact absurd this (by positivity)
+  have hle : ∀ a : {x : Plane // x ∈ A ∧ x ≠ 0},
+      ENNReal.ofReal (TriangularRiesz.riesz 4 ((1 / 4 : ℝ)⁻¹ * ‖a.val‖ ^ 2)) ≤
+        ENNReal.ofReal (TriangularRiesz.riesz 4 (‖a.val‖ ^ 2)) := by
+    intro a
+    apply ENNReal.ofReal_le_ofReal
+    have hp : 0 < ‖a.val‖ ^ 2 := by have := norm_pos_iff.2 a.2.2; positivity
+    unfold TriangularRiesz.riesz
+    apply Real.rpow_le_rpow_of_nonpos hp (by nlinarith) (by norm_num)
+  have hlt : ∀ a : {x : Plane // x ∈ A ∧ x ≠ 0},
+      ENNReal.ofReal (TriangularRiesz.riesz 4 ((1 / 4 : ℝ)⁻¹ * ‖a.val‖ ^ 2)) <
+        ENNReal.ofReal (TriangularRiesz.riesz 4 (‖a.val‖ ^ 2)) := by
+    intro a
+    have hp : 0 < ‖a.val‖ ^ 2 := by have := norm_pos_iff.2 a.2.2; positivity
+    rw [ENNReal.ofReal_lt_ofReal_iff (by unfold TriangularRiesz.riesz; exact Real.rpow_pos_of_pos hp _)]
+    unfold TriangularRiesz.riesz
+    exact Real.rpow_lt_rpow_of_neg hp (by nlinarith) (by norm_num)
+  have hfin2 : latticeEnergy (fun t => TriangularRiesz.riesz 4 ((1 / 4 : ℝ)⁻¹ * t)) ≠ ⊤ :=
+    ne_top_of_le_ne_top hfin.ne (ENNReal.tsum_le_tsum hle)
+  have strict := ENNReal.tsum_lt_tsum hfin2 hle (hlt ⟨_, hpt⟩)
+  exact absurd key (not_le.2 strict)
+
+
+/-- **D2, optimality form.** At every density `ρ > 0` the rescaled lattice `ρ^{-1/2} A` has density `ρ`, and its energy is
+`≤` that of every locally finite density-`ρ` configuration. -/
+theorem triangular_optimal_any_density (h : ℝ → ℝ) (hh : AdmissiblePotential h) {ρ : ℝ} (hρ : 0 < ρ) :
+    LocallyFinite ((Real.sqrt ρ)⁻¹ • A) ∧ DensityRho ρ ((Real.sqrt ρ)⁻¹ • A) ∧
+      ∀ C : Set Plane, LocallyFinite C → DensityRho ρ C → energy h ((Real.sqrt ρ)⁻¹ • A) ≤ energy h C :=
+  ⟨locallyFinite_smul (inv_pos.2 (Real.sqrt_pos.2 hρ)) A_lf, scaled_density hρ, fun C hC hd => by
+    rw [attained h hh hρ]; exact universal_any_density h hh hρ C hC hd⟩
+
+end TriangularDensity
+
+-- ===== FILE formal_cert/Triangular/Controls.lean  sha256 6d348f57f754a44f3f68fc211f6684f2e8b3bb1d6fbfe8f6fbcb31b05756c7da  (verbatim) =====
+import Triangular.Riesz
+import Triangular.RieszFinite
+import Triangular.AnyDensity
+
+/-!
+# Controls and statement checks for D1/D1b/D2
+
+The first three sections are kernel facts first written by the independent verification runs
+(`results/discovery/D1/verification.md`, `D2/verification.md`), kept here so they ship with the release.
+The last section (homogeneity of the Riesz corollary) was added by the producer after the pre-publication review.
+-/
+
+namespace TriangularControls
+
+open OAI.AtomicTriangular TriangularDensity
+open scoped ContDiff
+
+/-! ## Statement shape (D1 verifier) -/
+
+/-- `riesz s (r²) = r^{-s}` for `r > 0`: the potential is the Riesz kernel in the distance. -/
+theorem riesz_sq (s r : ℝ) (hr : 0 < r) : TriangularRiesz.riesz s (r ^ 2) = r ^ (-s) := by
+  unfold TriangularRiesz.riesz
+  rw [← Real.rpow_natCast, ← Real.rpow_mul hr.le]
+  congr 1
+  push_cast
+  ring
+
+/-- Upstream's smoothness order `(⊤ : ℕ∞)` is `C^∞`, not analytic. -/
+theorem smoothness_order_is_infty : (((⊤ : ℕ∞)) : WithTop ℕ∞) = ∞ := rfl
+
+/-! ## Negative control (D1 verifier): `riesz (-2) = t` is not admissible -/
+
+theorem riesz_neg_two_not_admissible : ¬ AdmissiblePotential (TriangularRiesz.riesz (-2)) := by
+  intro h
+  have h3 := h.2.2 1 1 one_pos
+  have hfun : TriangularRiesz.riesz (-2) = fun t => t := by
+    funext t
+    unfold TriangularRiesz.riesz
+    norm_num
+  rw [hfun] at h3
+  simp at h3 <;> linarith
+
+/-! ## Density-one reduction (D2 verifier) -/
+
+theorem densityRho_one_iff (C : Set Plane) : DensityRho 1 C ↔ DensityOne C := Iff.rfl
+
+theorem rho_one (h : ℝ → ℝ) (hh : AdmissiblePotential h) (C : Set Plane) (hC : LocallyFinite C)
+    (hd : DensityOne C) : latticeEnergy h ≤ energy h C := by
+  have := universal_any_density h hh one_pos C hC hd
+  simpa using this
+
+/-! ## Homogeneity of the Riesz corollary (producer, post-review) -/
+
+/-- The rescaled Riesz lattice energy is `ρ^{s/2}` times the density-one one, in `[0, ∞]`. -/
+theorem riesz_lattice_homogeneous (s : ℝ) {ρ : ℝ} (hρ : 0 < ρ) :
+    latticeEnergy (fun t => TriangularRiesz.riesz s (ρ⁻¹ * t)) =
+      ENNReal.ofReal (ρ ^ (s / 2)) * latticeEnergy (TriangularRiesz.riesz s) := by
+  unfold latticeEnergy
+  rw [← ENNReal.tsum_mul_left]
+  congr 1
+  funext a
+  rw [← ENNReal.ofReal_mul (Real.rpow_nonneg hρ.le _)]
+  congr 1
+  unfold TriangularRiesz.riesz
+  beta_reduce
+  rw [Real.mul_rpow (inv_nonneg.2 hρ.le) (sq_nonneg _), Real.inv_rpow hρ.le, ← Real.rpow_neg hρ.le, neg_neg]
+
+/-- **Corollary (Riesz at every density).** `ρ^{s/2} Σ_{a ∈ A \ 0} |a|^{-s} ≤ E_s(C)` for density-`ρ` configurations. -/
+theorem riesz_any_density_homogeneous {s : ℝ} (hs : 0 < s) {ρ : ℝ} (hρ : 0 < ρ) (C : Set Plane)
+    (hC : LocallyFinite C) (hd : DensityRho ρ C) :
+    ENNReal.ofReal (ρ ^ (s / 2)) * latticeEnergy (TriangularRiesz.riesz s) ≤ energy (TriangularRiesz.riesz s) C := by
+  rw [← riesz_lattice_homogeneous s hρ]
+  exact riesz_any_density hs hρ C hC hd
+
+end TriangularControls
+
+-- ===== FILE formal_cert/Triangular/UniversalOptimality.lean  sha256 7f1b10d29863fe385c8cbe4984804f8d1b3ea437c0e2d32a89c4ffb178bb36ce  (verbatim) =====
+import Triangular.AnyDensity
+
+/-!
+# D3: universal optimality in the sense of Cohn–Kumar–Miller–Radchenko–Viazovska, and non-uniqueness
+
+`UniversallyOptimal ρ C` transcribes Definition 1.3 of CKMRV (Ann. Math. 196, 2022) in upstream's notions of
+density and lower energy: `C` has density `ρ` and minimises the `g`-energy among all locally finite density-`ρ`
+configurations, for every admissible (smooth, completely monotone) `g` of squared distance. One gap: CKMRV
+(Defs 1.2–1.3) also require the energy of `C` itself to exist as a limit; here only the lower energy (`liminf`) is
+used, so `UniversallyOptimal` is strictly weaker than CKMRV's notion.
+
+* `triangular_universally_optimal`: `ρ^{-1/2} A` is universally optimal for every `ρ > 0`. It rests on upstream's
+  `universal_energy_minimum`, whose proof is kernel-checked and axiom-clean; what remains conditional is that upstream's
+  definitions faithfully express the intended mathematics.
+* `vacancy_energy`: the lattice with one point removed, `A \ {0}`, has the same lower energy for every admissible `g`.
+* `vacancy_not_isometric_image`: `A \ {0}` is not an isometric image of `A` (isometries of the plane are affine).
+* `universal_optimum_not_unique`: so universal optima, in this lower-energy notion, are not unique up to isometry among
+  all configurations. This is the remark after CKMRV Theorem 1.4 ("removing a single particle changes neither the
+  density nor the energy"); it shows that "the minimiser is the triangular lattice" is false among *all*
+  configurations. Uniqueness among *periodic* configurations (the form CKMRV prove in dimensions 8 and 24) is open in
+  dimension 2 and is not addressed here.
+-/
+
+namespace TriangularUniversalOptimality
+
+open OAI.AtomicTriangular TriangularDensity Filter Topology Set
+open scoped Pointwise
+
+/-- CKMRV Definition 1.3, in upstream's density and lower-energy notions. -/
+def UniversallyOptimal (ρ : ℝ) (C : Set Plane) : Prop :=
+  LocallyFinite C ∧ DensityRho ρ C ∧
+    ∀ g : ℝ → ℝ, AdmissiblePotential g → ∀ C' : Set Plane, LocallyFinite C' → DensityRho ρ C' →
+      energy g C ≤ energy g C'
+
+/-- **Universal optimality of the triangular lattice at every density** (conditional on upstream). -/
+theorem triangular_universally_optimal {ρ : ℝ} (hρ : 0 < ρ) :
+    UniversallyOptimal ρ ((Real.sqrt ρ)⁻¹ • A) := by
+  refine ⟨locallyFinite_smul (inv_pos.2 (Real.sqrt_pos.2 hρ)) A_lf, scaled_density hρ, ?_⟩
+  intro g hg C' hC' hd
+  exact (triangular_optimal_any_density g hg hρ).2.2 C' hC' hd
+
+/-! ## The vacancy configuration -/
+
+/-- The triangular lattice with the point at the origin removed. -/
+def vacancy : Set Plane := A \ {0}
+
+lemma triangularPoint_zero : triangularPoint (0, 0) = 0 := by
+  unfold triangularPoint
+  ext i
+  fin_cases i <;> simp [EuclideanSpace.single_apply]
+
+lemma zero_mem_A : (0 : Plane) ∈ A := ⟨(0, 0), triangularPoint_zero⟩
+
+lemma vacancy_lf : LocallyFinite vacancy := by
+  intro R
+  exact (A_lf R).subset (Set.inter_subset_inter_left _ Set.diff_subset)
+
+lemma diskPoints_vacancy (R : ℝ) : diskPoints vacancy R = (diskPoints A R).erase 0 := by
+  unfold diskPoints OAI.TriangularUniversal.diskPoints
+  rw [dif_pos (vacancy_lf R), dif_pos (A_lf R)]
+  ext x
+  simp only [Set.Finite.mem_toFinset, Finset.mem_erase, vacancy, Set.mem_inter_iff, Set.mem_diff,
+    Set.mem_singleton_iff]
+  tauto
+
+lemma zero_mem_diskPoints {R : ℝ} (hR : 0 ≤ R) : (0 : Plane) ∈ diskPoints A R := by
+  unfold diskPoints OAI.TriangularUniversal.diskPoints
+  rw [dif_pos (A_lf R)]
+  simp only [Set.Finite.mem_toFinset]
+  exact ⟨zero_mem_A, Metric.mem_closedBall_self hR⟩
+
+lemma diskCount_vacancy {R : ℝ} (hR : 0 ≤ R) : diskCount vacancy R = diskCount A R - 1 := by
+  unfold diskCount OAI.TriangularUniversal.diskCount
+  rw [show OAI.TriangularUniversal.diskPoints vacancy R = diskPoints vacancy R from rfl, diskPoints_vacancy,
+    Finset.card_erase_of_mem (zero_mem_diskPoints hR)]
+
+lemma one_le_diskCount {R : ℝ} (hR : 0 ≤ R) : 1 ≤ diskCount A R :=
+  Finset.card_pos.2 ⟨0, zero_mem_diskPoints hR⟩
+
+lemma tendsto_inv_area : Tendsto (fun R : ℝ => 1 / (Real.pi * R ^ 2)) atTop (𝓝 0) := by
+  have h : Tendsto (fun R : ℝ => Real.pi * R ^ 2) atTop atTop :=
+    (tendsto_pow_atTop two_ne_zero).const_mul_atTop Real.pi_pos
+  exact h.inv_tendsto_atTop.congr fun R => by simp only [Pi.inv_apply, one_div]
+
+lemma vacancy_density : DensityOne vacancy := by
+  have h := A_d1.sub tendsto_inv_area
+  rw [sub_zero] at h
+  unfold DensityOne OAI.TriangularUniversal.DensityOne
+  refine h.congr' ?_
+  filter_upwards [eventually_ge_atTop (0 : ℝ)] with R hR
+  rw [show OAI.TriangularUniversal.diskCount vacancy R = diskCount vacancy R from rfl, diskCount_vacancy hR,
+    Nat.cast_sub (one_le_diskCount hR)]
+  show (diskCount A R : ℝ) / (Real.pi * R ^ 2) - 1 / (Real.pi * R ^ 2) =
+    ((diskCount A R : ℝ) - ((1 : ℕ) : ℝ)) / (Real.pi * R ^ 2)
+  rw [Nat.cast_one, sub_div]
+
+lemma count_tendsto : Tendsto (fun R : ℝ => (diskCount A R : ℝ)) atTop atTop := by
+  have hg : Tendsto (fun R : ℝ => Real.pi * R ^ 2) atTop atTop :=
+    (tendsto_pow_atTop two_ne_zero).const_mul_atTop Real.pi_pos
+  have h := (show DensityOne A from A_d1).pos_mul_atTop one_pos hg
+  refine h.congr' ?_
+  filter_upwards [eventually_gt_atTop (0 : ℝ)] with R hR
+  have : Real.pi * R ^ 2 ≠ 0 := by positivity
+  exact div_mul_cancel₀ _ this
+
+/-- The correction factor `N / (N - 1)`. -/
+noncomputable def corr (R : ℝ) : ENNReal :=
+  ENNReal.ofReal ((diskCount A R : ℝ) / ((diskCount A R : ℝ) - 1))
+
+lemma corr_tendsto : Tendsto corr atTop (𝓝 1) := by
+  have h1 : Tendsto (fun R : ℝ => (diskCount A R : ℝ) + (-1)) atTop atTop :=
+    tendsto_atTop_add_const_right _ _ count_tendsto
+  have h2 : Tendsto (fun R : ℝ => 1 + ((diskCount A R : ℝ) + (-1))⁻¹) atTop (𝓝 (1 + 0)) :=
+    tendsto_const_nhds.add h1.inv_tendsto_atTop
+  rw [add_zero] at h2
+  have h3 : Tendsto (fun R : ℝ => (diskCount A R : ℝ) / ((diskCount A R : ℝ) - 1)) atTop (𝓝 1) := by
+    refine h2.congr' ?_
+    filter_upwards [count_tendsto.eventually_ge_atTop 2] with R hR
+    have hne : (diskCount A R : ℝ) - 1 ≠ 0 := by linarith
+    rw [← sub_eq_add_neg]
+    field_simp
+    ring
+  have := ENNReal.tendsto_ofReal h3
+  rwa [ENNReal.ofReal_one] at this
+
+lemma pair_sum_le (g : ℝ → ℝ) (R : ℝ) :
+    ∑ x ∈ diskPoints vacancy R, ∑ y ∈ (diskPoints vacancy R).erase x, ENNReal.ofReal (g (‖x - y‖ ^ 2)) ≤
+      ∑ x ∈ diskPoints A R, ∑ y ∈ (diskPoints A R).erase x, ENNReal.ofReal (g (‖x - y‖ ^ 2)) := by
+  rw [diskPoints_vacancy]
+  calc ∑ x ∈ (diskPoints A R).erase 0, ∑ y ∈ ((diskPoints A R).erase 0).erase x, ENNReal.ofReal (g (‖x - y‖ ^ 2))
+      ≤ ∑ x ∈ (diskPoints A R).erase 0, ∑ y ∈ (diskPoints A R).erase x, ENNReal.ofReal (g (‖x - y‖ ^ 2)) :=
+        Finset.sum_le_sum fun x _ =>
+          Finset.sum_le_sum_of_subset (Finset.erase_subset_erase x (Finset.erase_subset 0 _))
+    _ ≤ ∑ x ∈ diskPoints A R, ∑ y ∈ (diskPoints A R).erase x, ENNReal.ofReal (g (‖x - y‖ ^ 2)) :=
+        Finset.sum_le_sum_of_subset (Finset.erase_subset 0 _)
+
+lemma coeff_eq {N : ℕ} (hN : 2 ≤ N) :
+    (((N - 1 : ℕ) : ENNReal))⁻¹ = ENNReal.ofReal ((N : ℝ) / ((N : ℝ) - 1)) * ((N : ENNReal))⁻¹ := by
+  have hN1 : (0 : ℝ) < (N : ℝ) - 1 := by
+    have : (2 : ℝ) ≤ N := by exact_mod_cast hN
+    linarith
+  have hN0 : (0 : ℝ) < (N : ℝ) := by linarith
+  rw [show ((N - 1 : ℕ) : ENNReal) = ENNReal.ofReal ((N : ℝ) - 1) by
+        rw [← ENNReal.ofReal_natCast, Nat.cast_sub (by omega : 1 ≤ N), Nat.cast_one],
+      show (N : ENNReal) = ENNReal.ofReal (N : ℝ) from (ENNReal.ofReal_natCast N).symm,
+      ← ENNReal.ofReal_inv_of_pos hN1, ← ENNReal.ofReal_inv_of_pos hN0,
+      ← ENNReal.ofReal_mul (div_nonneg hN0.le hN1.le)]
+  congr 1
+  field_simp
+
+lemma diskEnergy_vacancy_le (g : ℝ → ℝ) :
+    ∀ᶠ R in atTop, diskEnergy g vacancy R ≤ corr R * diskEnergy g A R := by
+  filter_upwards [eventually_ge_atTop (0 : ℝ), count_tendsto.eventually_ge_atTop 2] with R hR hN
+  have hN' : 2 ≤ diskCount A R := by exact_mod_cast hN
+  unfold diskEnergy OAI.TriangularUniversal.diskEnergy
+  rw [show OAI.TriangularUniversal.diskCount vacancy R = diskCount vacancy R from rfl, diskCount_vacancy hR,
+    show OAI.TriangularUniversal.diskPoints vacancy R = diskPoints vacancy R from rfl,
+    show OAI.TriangularUniversal.diskPoints A R = diskPoints A R from rfl,
+    show OAI.TriangularUniversal.diskCount A R = diskCount A R from rfl, coeff_eq hN', mul_assoc]
+  unfold corr
+  have hs := pair_sum_le g R
+  gcongr
+
+/-- **The vacancy configuration is also a minimiser**, for every admissible `g`. -/
+theorem vacancy_energy (g : ℝ → ℝ) (hg : AdmissiblePotential g) : energy g vacancy = latticeEnergy g := by
+  apply le_antisymm
+  · have hA := (universal_energy_minimum g A hg A_lf A_d1).2
+    have hc := corr_tendsto
+    calc energy g vacancy = liminf (diskEnergy g vacancy) atTop := rfl
+      _ ≤ liminf (corr * diskEnergy g A) atTop := liminf_le_liminf (diskEnergy_vacancy_le g)
+      _ ≤ limsup corr atTop * liminf (diskEnergy g A) atTop := by
+          apply ENNReal.liminf_mul_le <;> left <;> rw [hc.limsup_eq] <;> simp
+      _ = latticeEnergy g := by
+          rw [hc.limsup_eq, one_mul, hA]
+          rfl
+  · exact (universal_energy_minimum g vacancy hg vacancy_lf vacancy_density).1
+
+/-! ## The vacancy configuration is not an isometric copy of the lattice -/
+
+lemma triangularPoint_comb (x y : ℤ × ℤ) :
+    triangularPoint (2 * x.1 - y.1, 2 * x.2 - y.2) = (2 : ℝ) • triangularPoint x - triangularPoint y := by
+  unfold triangularPoint
+  ext i
+  fin_cases i <;> simp [EuclideanSpace.single_apply] <;> ring
+
+lemma A_comb {a b : Plane} (ha : a ∈ A) (hb : b ∈ A) : (2 : ℝ) • a - b ∈ A := by
+  obtain ⟨x, rfl⟩ := ha
+  obtain ⟨y, rfl⟩ := hb
+  exact ⟨_, triangularPoint_comb x y⟩
+
+theorem vacancy_not_isometric_image : ¬ ∃ f : Plane → Plane, Isometry f ∧ f '' A = vacancy := by
+  rintro ⟨f, hf, hfA⟩
+  set φ := hf.affineIsometryOfStrictConvexSpace
+  have hφ : ∀ p, φ p = f p := fun p => rfl
+  have key : ∀ a b : Plane, f ((2 : ℝ) • a - b) = (2 : ℝ) • f a - f b := by
+    intro a b
+    have h := φ.toAffineMap.map_vadd a (a - b)
+    have h2 := φ.toAffineMap.linearMap_vsub a b
+    simp only [vadd_eq_add, vsub_eq_sub, AffineIsometry.coe_toAffineMap, hφ] at h h2
+    rw [show (2 : ℝ) • a - b = (a - b) + a by module, h, h2]
+    module
+  have hp : triangularPoint (1, 0) ∈ vacancy := by
+    refine ⟨⟨(1, 0), rfl⟩, ?_⟩
+    intro h0
+    have := TriangularRiesz.norm_sq_triangularPoint 1 0
+    simp only [Set.mem_singleton_iff] at h0
+    rw [h0, norm_zero] at this
+    have hb := TriangularRiesz.b_pos
+    norm_num at this
+    exact absurd this (by positivity)
+  have hq : triangularPoint (2, 0) ∈ vacancy := by
+    refine ⟨⟨(2, 0), rfl⟩, ?_⟩
+    intro h0
+    have := TriangularRiesz.norm_sq_triangularPoint 2 0
+    simp only [Set.mem_singleton_iff] at h0
+    rw [h0, norm_zero] at this
+    have hb := TriangularRiesz.b_pos
+    norm_num at this
+    exact absurd this (by positivity)
+  rw [← hfA] at hp hq
+  obtain ⟨a, ha, hfa⟩ := hp
+  obtain ⟨b, hb, hfb⟩ := hq
+  have h0 : f ((2 : ℝ) • a - b) = 0 := by
+    rw [key, hfa, hfb, ← triangularPoint_comb]
+    convert triangularPoint_zero using 2 <;> norm_num
+  have hmem : (0 : Plane) ∈ f '' A := ⟨_, A_comb ha hb, h0⟩
+  rw [hfA] at hmem
+  exact hmem.2 rfl
+
+/-- `A \ {0}` is universally optimal at density one. -/
+theorem vacancy_universally_optimal : UniversallyOptimal 1 vacancy := by
+  refine ⟨vacancy_lf, vacancy_density, ?_⟩
+  intro g hg C' hC' hd
+  rw [vacancy_energy g hg]
+  exact (universal_energy_minimum g C' hg hC' hd).1
+
+/-- **Non-uniqueness.** There is a universal optimum at density one that is not an isometric copy of the triangular
+lattice: the minimiser is not determined, only the minimum value. -/
+theorem universal_optimum_not_unique :
+    ∃ C : Set Plane, UniversallyOptimal 1 C ∧ ¬ ∃ f : Plane → Plane, Isometry f ∧ f '' A = C :=
+  ⟨vacancy, vacancy_universally_optimal, vacancy_not_isometric_image⟩
+
+end TriangularUniversalOptimality
+
+-- ===== FILE formal_cert/Triangular/Axioms.lean  sha256 ee372fbc85e382ab2454ebd11a0c6c275dc388d17901eb210744cf9d863a4fbc  (verbatim) =====
+import Triangular.Riesz
+import Triangular.RieszFinite
+import Triangular.AnyDensity
+import Triangular.Controls
+import Triangular.UniversalOptimality
+
+/-! Axiom audit of the D1 corollary, with planted controls. -/
+
+#print axioms TriangularRiesz.riesz_admissible
+#print axioms TriangularRiesz.triangular_riesz_optimal
+#print axioms OAI.AtomicTriangular.universal_energy_minimum
+#print axioms TriangularRiesz.norm_sq_triangularPoint
+#print axioms TriangularRiesz.latticeEnergy_riesz_lt_top
+#print axioms OAI.SevenEighths.LatticeSummability.summable_normForm_neg_rpow
+#print axioms TriangularDensity.universal_any_density
+#print axioms TriangularDensity.riesz_any_density
+#print axioms TriangularDensity.scaled_density
+#print axioms TriangularDensity.attained
+#print axioms TriangularDensity.triangular_optimal_any_density
+#print axioms TriangularDensity.unscaled_false
+#print axioms TriangularControls.riesz_sq
+#print axioms TriangularControls.riesz_neg_two_not_admissible
+#print axioms TriangularControls.rho_one
+#print axioms TriangularControls.riesz_lattice_homogeneous
+#print axioms TriangularControls.riesz_any_density_homogeneous
+#print axioms TriangularUniversalOptimality.triangular_universally_optimal
+#print axioms TriangularUniversalOptimality.vacancy_energy
+#print axioms TriangularUniversalOptimality.vacancy_not_isometric_image
+#print axioms TriangularUniversalOptimality.vacancy_universally_optimal
+#print axioms TriangularUniversalOptimality.universal_optimum_not_unique
+
+theorem ctl_sorry : TriangularRiesz.riesz 1 1 = 0 := by sorry
+axiom ctl_cheat : False
+theorem ctl_axiom : TriangularRiesz.riesz 1 1 = 0 := ctl_cheat.elim
+#print axioms ctl_sorry
+#print axioms ctl_axiom
