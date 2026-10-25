@@ -1,0 +1,40 @@
+[ARCHIVED KERNEL OUTPUT] #print axioms run of formal_cert/Triangular/Axioms.lean (producer's run,
+AutoevolveAI commit d50dfc43b681c6e1733e58eb893ef4743871033d, after a clean sequential rebuild of the chain).
+Self-reported by the submitting session; re-run before trusting (CLAUDE.md: agent self-reports are not evidence).
+
+{
+ "file": "/home/callensxavier_gmail_com/AutoevolveAI/.claude/worktrees/openai-math-discovery/formal_cert/Triangular/Axioms.lean",
+ "module": null,
+ "rc": 0,
+ "seconds": 11.7,
+ "output": "'TriangularRiesz.riesz_admissible' depends on axioms: [propext, Classical.choice, Quot.sound]
+'TriangularRiesz.triangular_riesz_optimal' depends on axioms: [propext, Classical.choice, Quot.sound]
+'OAI.AtomicTriangular.universal_energy_minimum' depends on axioms: [propext, Classical.choice, Quot.sound]
+'TriangularRiesz.norm_sq_triangularPoint' depends on axioms: [propext, Classical.choice, Quot.sound]
+'TriangularRiesz.latticeEnergy_riesz_lt_top' depends on axioms: [propext, Classical.choice, Quot.sound]
+'OAI.SevenEighths.LatticeSummability.summable_normForm_neg_rpow' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'TriangularDensity.universal_any_density' depends on axioms: [propext, Classical.choice, Quot.sound]
+'TriangularDensity.riesz_any_density' depends on axioms: [propext, Classical.choice, Quot.sound]
+'TriangularDensity.scaled_density' depends on axioms: [propext, Classical.choice, Quot.sound]
+'TriangularDensity.attained' depends on axioms: [propext, Classical.choice, Quot.sound]
+'TriangularDensity.triangular_optimal_any_density' depends on axioms: [propext, Classical.choice, Quot.sound]
+'TriangularDensity.unscaled_false' depends on axioms: [propext, Classical.choice, Quot.sound]
+'TriangularControls.riesz_sq' depends on axioms: [propext, Classical.choice, Quot.sound]
+'TriangularControls.riesz_neg_two_not_admissible' depends on axioms: [propext, Classical.choice, Quot.sound]
+'TriangularControls.rho_one' depends on axioms: [propext, Classical.choice, Quot.sound]
+'TriangularControls.riesz_lattice_homogeneous' depends on axioms: [propext, Classical.choice, Quot.sound]
+'TriangularControls.riesz_any_density_homogeneous' depends on axioms: [propext, Classical.choice, Quot.sound]
+'TriangularUniversalOptimality.triangular_universally_optimal' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'TriangularUniversalOptimality.vacancy_energy' depends on axioms: [propext, Classical.choice, Quot.sound]
+'TriangularUniversalOptimality.vacancy_not_isometric_image' depends on axioms: [propext, Classical.choice, Quot.sound]
+'TriangularUniversalOptimality.vacancy_universally_optimal' depends on axioms: [propext, Classical.choice, Quot.sound]
+'TriangularUniversalOptimality.universal_optimum_not_unique' depends on axioms: [propext, Classical.choice, Quot.sound]
+/home/callensxavier_gmail_com/AutoevolveAI/.claude/worktrees/openai-math-discovery/formal_cert/Triangular/Axioms.lean:32:8: warning: declaration uses `sorry`
+'ctl_sorry' depends on axioms: [propext, sorryAx, Classical.choice, Quot.sound]
+'ctl_axiom' depends on axioms: [ctl_cheat, propext, Classical.choice, Quot.sound]
+"
+}
